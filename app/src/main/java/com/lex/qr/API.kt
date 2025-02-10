@@ -55,4 +55,20 @@ class API {
         }.body()
         return response
     }
+    suspend fun getSubjects(): List<Subject>? {
+        val response: List<Subject>? = client.get("$url/admin/subject/all") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+        }.body()
+        return response
+    }
+    suspend fun getGroups(): List<Group>? {
+        val response: List<Group>? = client.get("$url/admin/group/all") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+        }.body()
+        return response
+    }
 }

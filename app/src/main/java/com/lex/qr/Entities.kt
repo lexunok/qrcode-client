@@ -51,3 +51,15 @@ data class User(
     @SerialName("group_id") val groupId: String?,
     @SerialName("created_at") val createdAt: String
 )
+@Serializable
+data class Group(
+    val id: String,
+    val name: String,
+    @SerialName("created_at") val createdAt: String
+)
+@Serializable
+data class Subject(
+    val id: String,
+    val name: String,
+    @SerialName("created_at") val createdAt: String
+)

@@ -41,12 +41,13 @@ class MainActivity : ComponentActivity() {
                 Box (modifier = Modifier
                     .fillMaxSize()
                     .background(color = Blue)) {
-
+                    var key by remember { mutableStateOf<String?>(null) }
                     var user by remember { mutableStateOf<User?>(null) }
                     val changeUser = { value: User? -> user = value }
+                    val changeKey = { value: String? -> key = value }
 
                     if (user != null) {
-                        MainPage(api, user!!, changeUser)
+                        MainPage(api, user!!, key, changeUser, changeKey)
                     }
                     else {
                         LoginPage (api, changeUser)

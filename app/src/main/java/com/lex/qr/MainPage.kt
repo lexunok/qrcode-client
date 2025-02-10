@@ -3,6 +3,7 @@ package com.lex.qr
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,10 +39,13 @@ import com.lex.qr.ui.theme.Green
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
+enum class StaffPage {
+    MAIN, SUBJECT, GROUP
+}
 @Composable
-fun MainPage(api: API, user: User, onLogout: (User?) -> Unit) {
+fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, changeKey: (String?) -> Unit) {
 
-    var key by remember { mutableStateOf<String?>(null) }
+    var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -51,7 +55,7 @@ fun MainPage(api: API, user: User, onLogout: (User?) -> Unit) {
         .padding(20.dp)
     ) {
 
-        Title("${user.firstName} ${user.lastName}", Modifier.align(Alignment.TopCenter))
+        Title(title, Modifier.align(Alignment.TopCenter))
 
         IconButton(
             onClick = { onLogout(null) }, modifier = Modifier.align(Alignment.BottomEnd)
@@ -69,104 +73,188 @@ fun MainPage(api: API, user: User, onLogout: (User?) -> Unit) {
 
         if (user.role == Role.STAFF) {
             val createClassScope = rememberCoroutineScope()
-            val getStudentsScope = rememberCoroutineScope()
+            val getSubjectsScope = rememberCoroutineScope()
+            val getGroupsScope = rememberCoroutineScope()
 
             var createClassResponse by remember { mutableStateOf<CreateClassResponse?>(null) }
-            var students by remember { mutableStateOf<List<Student>>(emptyList()) }
+            var page by remember { mutableStateOf(StaffPage.MAIN) }
+            var groups by remember { mutableStateOf<List<Group>>(emptyList()) }
+            var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
 
-            val onListClick = {
-                getStudentsScope.launch {
+            var selectedSubject by remember { mutableStateOf<Subject?>(null) }
+            var selectedGroup by remember { mutableStateOf<Group?>(null) }
+
+            when(page) {
+                StaffPage.MAIN -> {
+
+                    val getStudentsScope = rememberCoroutineScope()
+                    var students by remember { mutableStateOf<List<Student>>(emptyList()) }
+
                     key?.let {
-                        val response = api.getStudents(key!!)
-                        response?.let {
-                            students = response
-                        }
+                        QrCodeView(
+                            data = it,
+                            modifier = Modifier
+                                .size(300.dp)
+                                .align(Alignment.Center)
+                        )
                     }
-                }
-                Unit
-            }
-            val onQRClick = {
-                createClassScope.launch {
-                    val request = CreateClassRequest(
-                        staffId = "12059a92-65d1-481d-b9e8-5ea397ae2725",
-                        subjectId = "14ef8f6c-16ca-44f1-a006-ff4e5fc32b03",
-                        groupId = "60f4accc-abac-446d-b4bc-cd7538334079",
-                        geolocation = "1234"
-                    )
-                    val response:CreateClassResponse? = api.createClass(request)
-                    response?.let {
-                        createClassResponse = response
-                    }
-                }
-            }
 
-            createClassResponse?.let {
-                val id = createClassResponse?.publicId
-                id?.let {
-                    key = id
-                    QrCodeView(
-                        data = it,
-                        modifier = Modifier
-                            .size(300.dp)
-                            .align(Alignment.Center)
-                    )
-                }
-            }
-            if (students.isNotEmpty()) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.Center),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(students) { item ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                    if (students.isNotEmpty()) {
+                        LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp)
-                                .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
-                            ,
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
-                            ),
+                                .align(Alignment.Center),
+                            contentPadding = PaddingValues(16.dp)
                         ) {
-                            var color = Color.Red
-                            if (item.isActive) {
-                                color = Green
+                            items(students) { item ->
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
+                                    ,
+                                    elevation = CardDefaults.cardElevation(
+                                        defaultElevation = 4.dp
+                                    ),
+                                ) {
+                                    var color = Color.Red
+                                    if (item.isActive) {
+                                        color = Green
+                                    }
+                                    Text(
+                                        color = color,
+                                        text = "${item.firstName} ${item.lastName}",
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
                             }
-                            Text(
-                                color = color,
-                                text = "${item.firstName} ${item.lastName}",
-                                fontSize = 18.sp,
-                                modifier = Modifier.padding(16.dp)
-                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = {
+                            getStudentsScope.launch {
+                                key?.let {
+                                    val response = api.getStudents(key)
+                                    response?.let {
+                                        students = response
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
+                            .padding(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(
+                                id = R.drawable.baseline_format_list_bulleted_24
+                            ),
+                            contentDescription = "List of Students",
+                            tint = Blue
+                        )
+                    }
+                    QRCodeButton(
+                        Modifier.align(Alignment.BottomCenter)
+                    ) {
+                        page = StaffPage.SUBJECT
+                        title = "Выберите предмет"
+                        getSubjectsScope.launch {
+                            val response = api.getSubjects()
+                            response?.let {
+                                subjects = response
+                            }
+                        }
+                    }
+                }
+                StaffPage.SUBJECT -> {
+                    if (subjects.isNotEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            items(subjects) { item ->
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    modifier = Modifier.clickable {
+                                        page = StaffPage.GROUP
+                                        title = "Выберите группу"
+                                        selectedSubject = item
+                                        getGroupsScope.launch {
+                                            val response = api.getGroups()
+                                            response?.let {
+                                                groups = response
+                                            }
+                                        }
+                                    }
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp)),
+                                    elevation = CardDefaults.cardElevation(
+                                        defaultElevation = 4.dp
+                                    ),
+                                ) {
+                                    Text(
+                                        color = Blue,
+                                        text = item.name,
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                StaffPage.GROUP -> {
+                    if (groups.isNotEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            items(groups) { item ->
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    modifier = Modifier.clickable {
+                                        page = StaffPage.MAIN
+                                        title = "${user.firstName} ${user.lastName}"
+                                        selectedGroup = item
+                                        createClassScope.launch {
+                                            if (selectedSubject!=null && selectedGroup!=null) {
+                                                val request = CreateClassRequest(
+                                                    staffId = user.id,
+                                                    subjectId = selectedSubject!!.id,
+                                                    groupId = selectedGroup!!.id,
+                                                    geolocation = "1234"
+                                                )
+                                                val response:CreateClassResponse? = api.createClass(request)
+                                                response?.let {
+                                                    createClassResponse = response
+                                                    changeKey(createClassResponse!!.publicId)
+                                                }
+                                            }
+                                        }
+                                    }
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp)),
+                                    elevation = CardDefaults.cardElevation(
+                                        defaultElevation = 4.dp
+                                    ),
+                                ) {
+                                    Text(
+                                        color = Blue,
+                                        text = item.name,
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
-            IconButton(
-                onClick = onListClick, modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(
-                        id = R.drawable.baseline_format_list_bulleted_24
-                    ),
-                    contentDescription = "List of Students",
-                    tint = Blue
-                )
-            }
-
-            //Сделать Переход на список предметов и группы
-            QRCodeButton(
-                Modifier.align(Alignment.BottomCenter)
-            ) {
-
-            }
-
         }
         else {
             val scanScope  = rememberCoroutineScope()
