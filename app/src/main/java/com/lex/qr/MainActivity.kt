@@ -43,14 +43,16 @@ class MainActivity : ComponentActivity() {
                     .background(color = Blue)) {
                     var key by remember { mutableStateOf<String?>(null) }
                     var user by remember { mutableStateOf<User?>(null) }
+                    var isLoading by remember { mutableStateOf(false) }
+
                     val changeUser = { value: User? -> user = value }
                     val changeKey = { value: String? -> key = value }
-
+                    val onLoading = {value: Boolean -> isLoading = value}
                     if (user != null) {
-                        MainPage(api, user!!, key, changeUser, changeKey)
+                        MainPage(api, user!!, key, isLoading, changeUser, onLoading, changeKey)
                     }
                     else {
-                        LoginPage (api, changeUser)
+                        LoginPage (api, isLoading, onLoading, changeUser)
                     }
                 }
             }

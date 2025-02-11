@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -43,7 +44,13 @@ enum class StaffPage {
     MAIN, SUBJECT, GROUP
 }
 @Composable
-fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, changeKey: (String?) -> Unit) {
+fun MainPage(api: API,
+             user: User,
+             key:String?,
+             isLoading: Boolean,
+             onLogout: (User?) -> Unit,
+             onLoading: (Boolean) -> Unit,
+             changeKey: (String?) -> Unit) {
 
     var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
 
@@ -56,6 +63,10 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
     ) {
 
         Title(title, Modifier.align(Alignment.TopCenter))
+
+        if (isLoading) {
+            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
+        }
 
         IconButton(
             onClick = { onLogout(null) }, modifier = Modifier.align(Alignment.BottomEnd)
@@ -139,12 +150,14 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                                     students = emptyList()
                                 }
                                 else {
+                                    onLoading(true)
                                     key?.let {
                                         val response = api.getStudents(key)
                                         response?.let {
                                             students = response
                                         }
                                     }
+                                    onLoading(false)
                                 }
                             }
                         },
@@ -164,13 +177,15 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                     QRCodeButton(
                         Modifier.align(Alignment.BottomCenter)
                     ) {
-                        page = StaffPage.SUBJECT
-                        title = "Выберите предмет"
                         getSubjectsScope.launch {
+                            onLoading(true)
                             val response = api.getSubjects()
                             response?.let {
                                 subjects = response
                             }
+                            page = StaffPage.SUBJECT
+                            title = "Выберите предмет"
+                            onLoading(false)
                         }
                     }
                 }
@@ -184,14 +199,16 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                                 Card(
                                     colors = CardDefaults.cardColors(containerColor = Color.White),
                                     modifier = Modifier.clickable {
-                                        page = StaffPage.GROUP
-                                        title = "Выберите группу"
-                                        selectedSubject = item
                                         getGroupsScope.launch {
+                                            onLoading(true)
                                             val response = api.getGroups()
                                             response?.let {
                                                 groups = response
                                             }
+                                            page = StaffPage.GROUP
+                                            title = "Выберите группу"
+                                            selectedSubject = item
+                                            onLoading(false)
                                         }
                                     }
                                         .fillMaxWidth()
@@ -222,11 +239,10 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                                 Card(
                                     colors = CardDefaults.cardColors(containerColor = Color.White),
                                     modifier = Modifier.clickable {
-                                        page = StaffPage.MAIN
-                                        title = "${user.firstName} ${user.lastName}"
-                                        selectedGroup = item
                                         createClassScope.launch {
-                                            if (selectedSubject!=null && selectedGroup!=null) {
+                                            onLoading(true)
+                                            selectedGroup = item
+                                            if (selectedSubject!=null) {
                                                 val request = CreateClassRequest(
                                                     staffId = user.id,
                                                     subjectId = selectedSubject!!.id,
@@ -239,6 +255,9 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                                                     changeKey(createClassResponse!!.publicId)
                                                 }
                                             }
+                                            page = StaffPage.MAIN
+                                            title = "${user.firstName} ${user.lastName}"
+                                            onLoading(false)
                                         }
                                     }
                                         .fillMaxWidth()
@@ -275,11 +294,12 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
 
             val scanLauncher = rememberLauncherForActivityResult(ScanContract()) {
                 result ->
-                    if (result.contents != null && key !=null) {
+                    if (result.contents != null) {
                         scanScope.launch {
+                            onLoading(true)
                             val response = api.joinClass(
                                 JoinClassRequest(
-                                    classId = key!!,
+                                    classId = result.contents,
                                     studentId = user.id,
                                     studentGeolocation = "1234"
                                 )
@@ -287,6 +307,7 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                             if (response != null) {
                                 isSuccessJoining = response.isSuccess
                             }
+                            onLoading(false)
                         }
                     }
             }
