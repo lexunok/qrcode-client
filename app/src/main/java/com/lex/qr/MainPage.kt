@@ -90,9 +90,9 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                     val getStudentsScope = rememberCoroutineScope()
                     var students by remember { mutableStateOf<List<Student>>(emptyList()) }
 
-                    key?.let {
+                    if (key!=null && students.isEmpty()) {
                         QrCodeView(
-                            data = it,
+                            data = key,
                             modifier = Modifier
                                 .size(300.dp)
                                 .align(Alignment.Center)
@@ -135,10 +135,15 @@ fun MainPage(api: API, user: User, key:String?, onLogout: (User?) -> Unit, chang
                     IconButton(
                         onClick = {
                             getStudentsScope.launch {
-                                key?.let {
-                                    val response = api.getStudents(key)
-                                    response?.let {
-                                        students = response
+                                if (students.isNotEmpty()) {
+                                    students = emptyList()
+                                }
+                                else {
+                                    key?.let {
+                                        val response = api.getStudents(key)
+                                        response?.let {
+                                            students = response
+                                        }
                                     }
                                 }
                             }
