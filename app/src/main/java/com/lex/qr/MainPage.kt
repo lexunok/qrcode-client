@@ -1,5 +1,12 @@
 package com.lex.qr
 
+
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,9 +37,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.Task
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.lex.qr.ui.theme.Blue
@@ -44,15 +59,20 @@ enum class StaffPage {
     MAIN, SUBJECT, GROUP
 }
 @Composable
-fun MainPage(api: API,
-             user: User,
-             key:String?,
-             isLoading: Boolean,
-             onLogout: (User?) -> Unit,
-             onLoading: (Boolean) -> Unit,
-             changeKey: (String?) -> Unit) {
+fun MainPage(
+    api: API,
+    user: User,
+    key: String?,
+    isLoading: Boolean,
+    onLogout: (User?) -> Unit,
+    onLoading: (Boolean) -> Unit,
+    changeKey: (String?) -> Unit
+) {
 
     var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
+    val context = LocalContext.current
+    val locationSettingsClient = LocationServices.getSettingsClient(context)
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -109,7 +129,6 @@ fun MainPage(api: API,
                                 .align(Alignment.Center)
                         )
                     }
-
                     if (students.isNotEmpty()) {
                         LazyColumn(
                             modifier = Modifier
@@ -239,25 +258,47 @@ fun MainPage(api: API,
                                 Card(
                                     colors = CardDefaults.cardColors(containerColor = Color.White),
                                     modifier = Modifier.clickable {
-                                        createClassScope.launch {
-                                            onLoading(true)
-                                            selectedGroup = item
-                                            if (selectedSubject!=null) {
-                                                val request = CreateClassRequest(
-                                                    staffId = user.id,
-                                                    subjectId = selectedSubject!!.id,
-                                                    groupId = selectedGroup!!.id,
-                                                    geolocation = "1234"
-                                                )
-                                                val response:CreateClassResponse? = api.createClass(request)
-                                                response?.let {
-                                                    createClassResponse = response
-                                                    changeKey(createClassResponse!!.publicId)
+                                        if (ContextCompat.checkSelfPermission(
+                                                context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                                            val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
+                                            val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+
+                                            locationSettingsClient.checkLocationSettings(builder.build())
+                                                .addOnSuccessListener {
+                                                    val locationTask: Task<Location> = fusedLocationClient.lastLocation
+                                                    locationTask.addOnSuccessListener { location ->
+                                                        location?.let {
+                                                            selectedGroup = item
+                                                            val latitude = it.latitude
+                                                            val longitude = it.longitude
+                                                            createClassScope.launch {
+                                                                onLoading(true)
+                                                                val request = CreateClassRequest(
+                                                                    staffId = user.id,
+                                                                    subjectId = selectedSubject!!.id,
+                                                                    groupId = selectedGroup!!.id,
+                                                                    geolocation = "$latitude|$longitude"
+                                                                )
+                                                                val response: CreateClassResponse? =
+                                                                    api.createClass(request)
+                                                                response?.let {
+                                                                    createClassResponse = response
+                                                                    changeKey(createClassResponse!!.publicId)
+                                                                }
+                                                                page = StaffPage.MAIN
+                                                                title = "${user.firstName} ${user.lastName}"
+                                                                onLoading(false)
+                                                            }
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                            page = StaffPage.MAIN
-                                            title = "${user.firstName} ${user.lastName}"
-                                            onLoading(false)
+                                                .addOnFailureListener {
+                                                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                                                }
+                                        } else {
+                                            ActivityCompat.requestPermissions(context as Activity, arrayOf(
+                                                Manifest.permission.ACCESS_FINE_LOCATION), 1)
                                         }
                                     }
                                         .fillMaxWidth()
@@ -284,6 +325,7 @@ fun MainPage(api: API,
             val scanScope  = rememberCoroutineScope()
 
             var isSuccessJoining by remember { mutableStateOf(false) }
+            var lastLocation by remember { mutableStateOf<String?>(null) }
 
             val options = ScanOptions()
             options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
@@ -292,16 +334,20 @@ fun MainPage(api: API,
             options.setBeepEnabled(false)
             options.setBarcodeImageEnabled(true)
 
+            lastLocation?.let {
+                Title(lastLocation!!, Modifier.align(Alignment.Center))
+            }
+
             val scanLauncher = rememberLauncherForActivityResult(ScanContract()) {
                 result ->
-                    if (result.contents != null) {
+                    if (result.contents != null && lastLocation!=null) {
                         scanScope.launch {
                             onLoading(true)
                             val response = api.joinClass(
                                 JoinClassRequest(
                                     classId = result.contents,
                                     studentId = user.id,
-                                    studentGeolocation = "1234"
+                                    studentGeolocation = lastLocation!!
                                 )
                             )
                             if (response != null) {
@@ -324,7 +370,31 @@ fun MainPage(api: API,
 
             QRCodeButton(
                 Modifier.align(Alignment.BottomCenter)
-            ) { scanLauncher.launch(options) }
+            ) {
+                if (ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
+                    val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+
+                    locationSettingsClient.checkLocationSettings(builder.build())
+                        .addOnSuccessListener {
+                            val locationTask: Task<Location> = fusedLocationClient.lastLocation
+                            locationTask.addOnSuccessListener { location ->
+                                location?.let {
+                                    lastLocation = "${it.latitude}|${it.longitude}"
+                                    scanLauncher.launch(options)
+                                }
+                            }
+                        }
+                        .addOnFailureListener {
+                            context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                        }
+                } else {
+                    ActivityCompat.requestPermissions(context as Activity, arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION), 1)
+                }
+            }
 
         }
     }

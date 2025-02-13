@@ -19,7 +19,6 @@ import com.lex.qr.ui.theme.QRTheme
 
 
 class MainActivity : ComponentActivity() {
-
     private lateinit var api: API
 
     override fun onCreate(savedInstanceState: Bundle?) {

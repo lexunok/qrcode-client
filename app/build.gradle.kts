@@ -63,4 +63,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.lightspark:compose-qr-code:1.0.1")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }
