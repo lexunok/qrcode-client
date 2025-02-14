@@ -164,8 +164,8 @@ fun MainPage(
                                 students = emptyList()
                             }
                             else {
-                                onLoading(true)
                                 key?.let {
+                                    onLoading(true)
                                     val response = api.getStudents(key)
                                     response?.let {
                                         students = response
