@@ -24,7 +24,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +49,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import com.lex.qr.components.NavButton
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lightspark.composeqr.QrCodeView
@@ -88,19 +88,11 @@ fun MainPage(
             CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
         }
 
-        IconButton(
-            onClick = { onLogout(null) }, modifier = Modifier.align(Alignment.BottomEnd)
-                .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-                .padding(8.dp)
-        ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(
-                    id = R.drawable.baseline_logout_24
-                ),
-                contentDescription = "Logout",
-                tint = Blue
-            )
-        }
+        NavButton(
+            Modifier.align(Alignment.BottomEnd),
+            R.drawable.baseline_logout_24,
+            "Logout"
+        ) { onLogout(null) }
 
         if (user.role == Role.STAFF) {
             val createClassScope = rememberCoroutineScope()
@@ -162,39 +154,31 @@ fun MainPage(
                             }
                         }
                     }
-                    IconButton(
-                        onClick = {
-                            getStudentsScope.launch {
-                                if (students.isNotEmpty()) {
-                                    students = emptyList()
-                                }
-                                else {
-                                    onLoading(true)
-                                    key?.let {
-                                        val response = api.getStudents(key)
-                                        response?.let {
-                                            students = response
-                                        }
+                    NavButton(
+                        Modifier.align(Alignment.BottomStart),
+                        R.drawable.baseline_format_list_bulleted_24,
+                        "List of Students"
+                    ) {
+                        getStudentsScope.launch {
+                            if (students.isNotEmpty()) {
+                                students = emptyList()
+                            }
+                            else {
+                                onLoading(true)
+                                key?.let {
+                                    val response = api.getStudents(key)
+                                    response?.let {
+                                        students = response
                                     }
                                     onLoading(false)
                                 }
                             }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-                            .padding(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(
-                                id = R.drawable.baseline_format_list_bulleted_24
-                            ),
-                            contentDescription = "List of Students",
-                            tint = Blue
-                        )
+                        }
                     }
-                    QRCodeButton(
-                        Modifier.align(Alignment.BottomCenter)
+                    NavButton(
+                        Modifier.align(Alignment.BottomCenter),
+                        R.drawable.baseline_qr_code_24,
+                        "QR Generator or Scan"
                     ) {
                         getSubjectsScope.launch {
                             onLoading(true)
@@ -367,9 +351,10 @@ fun MainPage(
                     tint = Green
                 )
             }
-
-            QRCodeButton(
-                Modifier.align(Alignment.BottomCenter)
+            NavButton(
+                Modifier.align(Alignment.BottomCenter),
+                R.drawable.baseline_qr_code_24,
+                "QR Generator or Scan"
             ) {
                 if (ContextCompat.checkSelfPermission(
                         context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -395,23 +380,6 @@ fun MainPage(
                         Manifest.permission.ACCESS_FINE_LOCATION), 1)
                 }
             }
-
         }
-    }
-}
-@Composable
-fun QRCodeButton(modifier: Modifier, onQRClick: () -> Unit){
-    IconButton(
-        onClick = onQRClick, modifier = modifier
-            .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-            .padding(8.dp)
-    ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(
-                id = R.drawable.baseline_qr_code_24
-            ),
-            contentDescription = "QR Generator or Scan",
-            tint = Blue
-        )
     }
 }
