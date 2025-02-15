@@ -8,6 +8,13 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +30,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -84,9 +91,9 @@ fun MainPage(
 
         Title(title, Modifier.align(Alignment.TopCenter))
 
-        if (isLoading) {
-            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
-        }
+//        if (isLoading) {
+//            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
+//        }
 
         NavButton(
             Modifier.align(Alignment.BottomEnd),
@@ -109,47 +116,98 @@ fun MainPage(
 
             when(page) {
                 StaffPage.MAIN -> {
-
                     val getStudentsScope = rememberCoroutineScope()
                     var students by remember { mutableStateOf<List<Student>>(emptyList()) }
 
-                    if (key!=null && students.isEmpty()) {
-                        QrCodeView(
-                            data = key,
-                            modifier = Modifier
-                                .size(300.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
-                    if (students.isNotEmpty()) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.Center),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(students) { item ->
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                        .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
-                                    ,
-                                    elevation = CardDefaults.cardElevation(
-                                        defaultElevation = 4.dp
-                                    ),
-                                ) {
-                                    var color = Color.Red
-                                    if (item.isActive) {
-                                        color = Green
-                                    }
-                                    Text(
-                                        color = color,
-                                        text = "${item.firstName} ${item.lastName}",
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.padding(16.dp)
+                    val qrOffset by animateDpAsState(
+                        targetValue = if (students.isEmpty() && !isLoading) 0.dp else (-400).dp,
+                        animationSpec = tween(durationMillis = 300)
+                    )
+
+                    val listOffset by animateDpAsState(
+                        targetValue = if (students.isNotEmpty() || isLoading) 0.dp else 400.dp,
+                        animationSpec = tween(durationMillis = 300)
+                    )
+
+                    if (key != null)
+                    {
+                        if (students.isEmpty()) {
+                            QrCodeView(
+                                data = key,
+                                modifier = Modifier
+                                    .offset(x = qrOffset)
+                                    .size(300.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                        // Заглушки для загрузки
+                        if (isLoading) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .offset(x = listOffset)
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(5) { // 5 заглушек
+                                    val transition = rememberInfiniteTransition()
+                                    val colorAnimation by transition.animateColor(
+                                        initialValue = Color.White,
+                                        targetValue = Color.LightGray,
+                                        animationSpec = infiniteRepeatable(
+                                            animation = tween(durationMillis = 1000, easing = LinearEasing),
+                                            repeatMode = RepeatMode.Reverse
+                                        )
                                     )
+
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = colorAnimation),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                    ) {
+                                        Text(
+                                            color = Color.Transparent,
+                                            text = "",
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        if (students.isNotEmpty()) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .offset(x = listOffset)
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(students) { item ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
+                                        ,
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 4.dp
+                                        ),
+                                    ) {
+                                        var color = Color.Red
+                                        if (item.isActive) {
+                                            color = Green
+                                        }
+                                        Text(
+                                            color = color,
+                                            text = "${item.firstName} ${item.lastName}",
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
