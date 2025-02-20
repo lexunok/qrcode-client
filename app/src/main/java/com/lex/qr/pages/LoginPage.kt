@@ -1,4 +1,4 @@
-package com.lex.qr
+package com.lex.qr.pages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,11 +28,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lex.qr.utils.API
+import com.lex.qr.utils.User
 import com.lex.qr.components.Title
 import com.lex.qr.ui.theme.Blue
 
 @Composable
-fun LoginPage(api: API, isLoading: Boolean, onLoading: (Boolean) -> (Unit), onLogin: (User) -> Unit) {
+fun LoginPage(
+    api: API,
+    isLoading: Boolean,
+    onLoading: (Boolean) -> Unit,
+    onLogin: (User) -> Unit
+) {
     var users by remember { mutableStateOf<List<User>>(emptyList()) }
 
     LaunchedEffect(Unit) {

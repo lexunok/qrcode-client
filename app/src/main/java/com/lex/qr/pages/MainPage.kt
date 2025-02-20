@@ -1,12 +1,6 @@
-package com.lex.qr
+package com.lex.qr.pages
 
 
-import android.Manifest
-import android.app.Activity
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Location
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -36,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,25 +41,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.Task
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import com.lex.qr.R
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
 import com.lex.qr.components.Title
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
+import com.lex.qr.utils.API
+import com.lex.qr.utils.CreateClassRequest
+import com.lex.qr.utils.CreateClassResponse
+import com.lex.qr.utils.GeolocationClient
+import com.lex.qr.utils.Group
+import com.lex.qr.utils.JoinClassRequest
+import com.lex.qr.utils.Role
+import com.lex.qr.utils.Student
+import com.lex.qr.utils.Subject
+import com.lex.qr.utils.User
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
@@ -74,19 +72,20 @@ enum class StaffPage {
 @Composable
 fun MainPage(
     api: API,
+    geolocationClient: GeolocationClient,
     user: User,
     key: String?,
+    lastLocation: String,
     isLoading: Boolean,
     onLogout: (User?) -> Unit,
     onLoading: (Boolean) -> Unit,
     changeKey: (String?) -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        geolocationClient.checkGps()
+    }
 
     var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
-
-    val context = LocalContext.current
-    val locationSettingsClient = LocationServices.getSettingsClient(context)
-    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -322,47 +321,26 @@ fun MainPage(
                                             Card(
                                                 colors = CardDefaults.cardColors(containerColor = Color.White),
                                                 modifier = Modifier.clickable {
-                                                    if (ContextCompat.checkSelfPermission(
-                                                            context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-                                                        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
-                                                        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-
-                                                        locationSettingsClient.checkLocationSettings(builder.build())
-                                                            .addOnSuccessListener {
-                                                                val locationTask: Task<Location> = fusedLocationClient.lastLocation
-                                                                locationTask.addOnSuccessListener { location ->
-                                                                    location?.let {
-                                                                        selectedGroup = item
-                                                                        val latitude = it.latitude
-                                                                        val longitude = it.longitude
-                                                                        createClassScope.launch {
-                                                                            onLoading(true)
-                                                                            val request = CreateClassRequest(
-                                                                                staffId = user.id,
-                                                                                subjectId = selectedSubject!!.id,
-                                                                                groupId = selectedGroup!!.id,
-                                                                                geolocation = "$latitude|$longitude"
-                                                                            )
-                                                                            val response: CreateClassResponse? =
-                                                                                api.createClass(request)
-                                                                            response?.let {
-                                                                                createClassResponse = response
-                                                                                changeKey(createClassResponse!!.publicId)
-                                                                            }
-                                                                            page = StaffPage.MAIN
-                                                                            title = "${user.firstName} ${user.lastName}"
-                                                                            onLoading(false)
-                                                                        }
-                                                                    }
-                                                                }
+                                                    if (geolocationClient.checkGps() && lastLocation != "") {
+                                                        createClassScope.launch {
+                                                            onLoading(true)
+                                                            selectedGroup = item
+                                                            val request = CreateClassRequest(
+                                                                staffId = user.id,
+                                                                subjectId = item.id,
+                                                                groupId = item.id,
+                                                                geolocation = lastLocation
+                                                            )
+                                                            val response: CreateClassResponse? =
+                                                                api.createClass(request)
+                                                            response?.let {
+                                                                createClassResponse = response
+                                                                changeKey(createClassResponse!!.publicId)
                                                             }
-                                                            .addOnFailureListener {
-                                                                context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                                                            }
-                                                    } else {
-                                                        ActivityCompat.requestPermissions(context as Activity, arrayOf(
-                                                            Manifest.permission.ACCESS_FINE_LOCATION), 1)
+                                                            page = StaffPage.MAIN
+                                                            title = "${user.firstName} ${user.lastName}"
+                                                            onLoading(false)
+                                                        }
                                                     }
                                                 }
                                                     .fillMaxWidth()
@@ -392,7 +370,6 @@ fun MainPage(
             val scanScope  = rememberCoroutineScope()
 
             var isSuccessJoining by remember { mutableStateOf<Boolean?>(null) }
-            var lastLocation by remember { mutableStateOf<String?>(null) }
 
             val options = ScanOptions()
             options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
@@ -401,24 +378,23 @@ fun MainPage(
             options.setBeepEnabled(false)
             options.setBarcodeImageEnabled(true)
 
-            val scanLauncher = rememberLauncherForActivityResult(ScanContract()) {
-                result ->
-                    if (result.contents != null && lastLocation!=null) {
-                        scanScope.launch {
-                            onLoading(true)
-                            val response = api.joinClass(
-                                JoinClassRequest(
-                                    classId = result.contents,
-                                    studentId = user.id,
-                                    studentGeolocation = lastLocation!!
-                                )
+            val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+                if (result.contents != null && geolocationClient.checkGps() && lastLocation != "") {
+                    scanScope.launch {
+                        onLoading(true)
+                        val response = api.joinClass(
+                            JoinClassRequest(
+                                classId = result.contents,
+                                studentId = user.id,
+                                studentGeolocation = lastLocation
                             )
-                            if (response != null) {
-                                isSuccessJoining = response.isSuccess
-                            }
-                            onLoading(false)
+                        )
+                        if (response != null) {
+                            isSuccessJoining = response.isSuccess
                         }
+                        onLoading(false)
                     }
+                }
             }
             isSuccessJoining?.let {
                 if (isSuccessJoining as Boolean) {
@@ -446,31 +422,7 @@ fun MainPage(
                 Modifier.align(Alignment.BottomCenter),
                 R.drawable.baseline_qr_code_24,
                 "QR Generator or Scan"
-            ) {
-                if (ContextCompat.checkSelfPermission(
-                        context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-                    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
-                    val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-
-                    locationSettingsClient.checkLocationSettings(builder.build())
-                        .addOnSuccessListener {
-                            val locationTask: Task<Location> = fusedLocationClient.lastLocation
-                            locationTask.addOnSuccessListener { location ->
-                                location?.let {
-                                    lastLocation = "${it.latitude}|${it.longitude}"
-                                    scanLauncher.launch(options)
-                                }
-                            }
-                        }
-                        .addOnFailureListener {
-                            context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                        }
-                } else {
-                    ActivityCompat.requestPermissions(context as Activity, arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION), 1)
-                }
-            }
+            ) { scanLauncher.launch(options) }
         }
     }
 }

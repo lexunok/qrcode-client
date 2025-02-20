@@ -1,4 +1,4 @@
-package com.lex.qr
+package com.lex.qr.utils
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -22,7 +22,7 @@ class API {
     }
 
     suspend fun createClass(request: CreateClassRequest): CreateClassResponse? {
-        val response:CreateClassResponse? = client.post("$url/class/create") {
+        val response: CreateClassResponse? = client.post("$url/class/create") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }
@@ -31,7 +31,7 @@ class API {
         return response
     }
     suspend fun joinClass(request: JoinClassRequest): JoinClassResponse? {
-        val response:JoinClassResponse? = client.post("$url/class/join") {
+        val response: JoinClassResponse? = client.post("$url/class/join") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }

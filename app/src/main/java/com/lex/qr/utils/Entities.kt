@@ -1,4 +1,4 @@
-package com.lex.qr
+package com.lex.qr.utils
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
