@@ -35,7 +35,7 @@ fun NavButton(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.1f else 1f,
-        animationSpec = tween(durationMillis = 100)
+        animationSpec = tween(durationMillis = 50)
     )
 
     Box(
