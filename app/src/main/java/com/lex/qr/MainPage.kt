@@ -57,8 +57,10 @@ import com.google.android.gms.tasks.Task
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.lex.qr.components.NavButton
+import com.lex.qr.components.Title
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
+import com.lex.qr.ui.theme.Red
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
@@ -77,6 +79,7 @@ fun MainPage(
 ) {
 
     var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
+
     val context = LocalContext.current
     val locationSettingsClient = LocationServices.getSettingsClient(context)
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -366,7 +369,7 @@ fun MainPage(
         else {
             val scanScope  = rememberCoroutineScope()
 
-            var isSuccessJoining by remember { mutableStateOf(false) }
+            var isSuccessJoining by remember { mutableStateOf<Boolean?>(null) }
             var lastLocation by remember { mutableStateOf<String?>(null) }
 
             val options = ScanOptions()
@@ -375,10 +378,6 @@ fun MainPage(
             options.setCameraId(0)
             options.setBeepEnabled(false)
             options.setBarcodeImageEnabled(true)
-
-            lastLocation?.let {
-                Title(lastLocation!!, Modifier.align(Alignment.Center))
-            }
 
             val scanLauncher = rememberLauncherForActivityResult(ScanContract()) {
                 result ->
@@ -399,15 +398,27 @@ fun MainPage(
                         }
                     }
             }
-            if (isSuccessJoining) {
-                Icon(
-                    modifier = Modifier.align(Alignment.Center),
-                    imageVector = ImageVector.vectorResource(
-                        id = R.drawable.baseline_check_circle_outline_24
-                    ),
-                    contentDescription = "Scan is success",
-                    tint = Green
-                )
+            isSuccessJoining?.let {
+                if (isSuccessJoining as Boolean) {
+                    Icon(
+                        modifier = Modifier.align(Alignment.Center),
+                        imageVector = ImageVector.vectorResource(
+                            id = R.drawable.baseline_check_circle_outline_24
+                        ),
+                        contentDescription = "Scan is success",
+                        tint = Green
+                    )
+                }
+                else {
+                    Icon(
+                        modifier = Modifier.align(Alignment.Center),
+                        imageVector = ImageVector.vectorResource(
+                            id = R.drawable.baseline_error_outline_24
+                        ),
+                        contentDescription = "Scan is fail",
+                        tint = Red
+                    )
+                }
             }
             NavButton(
                 Modifier.align(Alignment.BottomCenter),

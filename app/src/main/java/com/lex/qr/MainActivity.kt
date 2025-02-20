@@ -47,11 +47,12 @@ class MainActivity : ComponentActivity() {
                     val changeUser = { value: User? -> user = value }
                     val changeKey = { value: String? -> key = value }
                     val onLoading = {value: Boolean -> isLoading = value}
+
                     if (user != null) {
                         MainPage(api, user!!, key, isLoading, changeUser, onLoading, changeKey)
                     }
                     else {
-                        LoginPage (api, isLoading, onLoading, changeUser)
+                        LoginPage(api, isLoading, onLoading, changeUser)
                     }
                 }
             }
@@ -59,7 +60,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//ГЕОЛОКАЦИЮ ОТПРАВЛЯТЬ СО СТУДЕНТСКОГО АККА
 //СДЕЛАТЬ АКТИВНОСТЬ QR CODE НА 20 МИНУТ
 //ЧЕЛОВЕК МОЖЕТ ТОЛЬКО ОДИН РАЗ ОТСКАНИРОВАТЬ КОД СО СВОЕГО АККА И УСТРОЙСТВА (НУЖНО ОТПРАВЛЯТЬ УСТРОЙСТВО НА СЕРВЕР)
 
