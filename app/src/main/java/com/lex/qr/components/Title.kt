@@ -14,6 +14,6 @@ fun Title(text: String, modifier: Modifier = Modifier) {
         color = Blue,
         textAlign = TextAlign.Center,
         modifier = modifier,
-        fontSize = 32.sp
+        fontSize = 24.sp
     )
 }

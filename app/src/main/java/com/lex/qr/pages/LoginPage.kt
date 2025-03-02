@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -23,11 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -83,6 +79,12 @@ fun LoginPage(
                     unfocusedTextColor = Blue,
                 ),
                 singleLine = true,
+                suffix = {
+                    Text(
+                        text = "@std.tyuiu.ru",
+                        color = Blue
+                    )
+                },
             )
             Text(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = 16.dp),
@@ -123,8 +125,8 @@ fun LoginPage(
             onClick = {
                 doLogin.launch {
                     //Сделать норм валидацию
-                    if (email.length > 10 && password.length > 10) {
-                        val user = api.login(LoginRequest(password, email))
+                    if (password.length > 8) {
+                        val user = api.login(LoginRequest(password, "$email@std.tyuiu.ru"))
                         user?.let {
                             onLogin(user)
                         }
