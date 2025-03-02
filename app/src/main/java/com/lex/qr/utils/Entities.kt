@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class Role {
-    STAFF, STUDENT
+    ADMIN, STAFF, STUDENT
 }
 
 @Serializable
@@ -47,7 +47,7 @@ data class User(
     val id: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,
-    val role: Role,
+    var role: Role,
     @SerialName("group_id") val groupId: String?,
     @SerialName("created_at") val createdAt: String
 )

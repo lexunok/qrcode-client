@@ -48,7 +48,7 @@ class API {
         return response
     }
     suspend fun getUsers(): List<User>? {
-        val response: List<User>? = client.get("$url/admin/user/all") {
+        val response: List<User>? = client.get("$url/admin/user") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }
@@ -56,7 +56,7 @@ class API {
         return response
     }
     suspend fun getSubjects(): List<Subject>? {
-        val response: List<Subject>? = client.get("$url/admin/subject/all") {
+        val response: List<Subject>? = client.get("$url/admin/subject") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }
@@ -64,7 +64,7 @@ class API {
         return response
     }
     suspend fun getGroups(): List<Group>? {
-        val response: List<Group>? = client.get("$url/admin/group/all") {
+        val response: List<Group>? = client.get("$url/admin/group") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }
