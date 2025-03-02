@@ -8,12 +8,19 @@ enum class Role {
 }
 
 @Serializable
+data class LoginRequest(
+    var password: String,
+    var email: String
+)
+
+@Serializable
 data class CreateClassRequest(
     @SerialName("staff_id") val staffId: String,
     @SerialName("subject_id")val subjectId: String,
     @SerialName("group_id") val groupId: String,
     val geolocation: String
 )
+
 
 @Serializable
 data class CreateClassResponse(

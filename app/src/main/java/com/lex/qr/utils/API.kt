@@ -21,6 +21,16 @@ class API {
         }
     }
 
+    suspend fun login(request: LoginRequest): User? {
+        val response: User? = client.post("$url/auth/login") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+            setBody(request)
+        }.body()
+        return response
+    }
+
     suspend fun createClass(request: CreateClassRequest): CreateClassResponse? {
         val response: CreateClassResponse? = client.post("$url/class/create") {
             headers {

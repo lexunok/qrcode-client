@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                         MainPage(api, geolocationClient, user!!, key, lastLocation, isLoading, changeUser, onLoading, changeKey)
                     }
                     else {
-                        LoginPage(api, isLoading, onLoading, changeUser)
+                        LoginPage(api, changeUser)
                     }
                 }
             }
@@ -87,5 +87,5 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//ЧЕЛОВЕК МОЖЕТ ТОЛЬКО ОДИН РАЗ ОТСКАНИРОВАТЬ КОД СО СВОЕГО АККА И УСТРОЙСТВА (НУЖНО ОТПРАВЛЯТЬ УСТРОЙСТВО НА СЕРВЕР)
+//ЧЕЛОВЕК МОЖЕТ ТОЛЬКО ОДИН РАЗ ОТСКАНИРОВАТЬ КОД СО СВОЕГО УСТРОЙСТВА (НУЖНО ОТПРАВЛЯТЬ УСТРОЙСТВО НА СЕРВЕР)
 

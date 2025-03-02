@@ -1,55 +1,54 @@
 package com.lex.qr.pages
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lex.qr.utils.API
 import com.lex.qr.utils.User
 import com.lex.qr.components.Title
 import com.lex.qr.ui.theme.Blue
+import com.lex.qr.ui.theme.LightGray
+import com.lex.qr.utils.LoginRequest
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginPage(
     api: API,
-    isLoading: Boolean,
-    onLoading: (Boolean) -> Unit,
     onLogin: (User) -> Unit
 ) {
-    var users by remember { mutableStateOf<List<User>>(emptyList()) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        onLoading(true)
-        val response = api.getUsers()
-        response?.let {
-            users = response
-        }
-        onLoading(false)
-    }
+    val doLogin = rememberCoroutineScope()
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -58,38 +57,90 @@ fun LoginPage(
         .background(color = Color.White, shape = RoundedCornerShape(12.dp))
         .padding(20.dp)
     ) {
-        Title("Вход", Modifier.fillMaxWidth())
-
-        if (isLoading) {
-            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
+        Column {
+            Title("Вход", Modifier.fillMaxWidth().padding(bottom = 80.dp))
+            Text(
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+                text = "Email",
+                color = Blue,
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp
+            )
+            OutlinedTextField (
+                value = email,
+                onValueChange = { newText -> email = newText },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Transparent),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Blue,
+                    unfocusedBorderColor = LightGray,
+                    focusedLabelColor = Blue,
+                    unfocusedLabelColor = Color.Transparent,
+                    cursorColor = Blue,
+                    focusedTextColor = Blue,
+                    unfocusedTextColor = Blue,
+                ),
+                singleLine = true,
+            )
+            Text(
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = 16.dp),
+                text = "Пароль",
+                color = Blue,
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp
+            )
+            OutlinedTextField (
+                value = password,
+                onValueChange = { newText -> password = newText },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Transparent),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Blue,
+                    unfocusedBorderColor = LightGray,
+                    focusedLabelColor = Blue,
+                    unfocusedLabelColor = Color.Transparent,
+                    cursorColor = Blue,
+                    focusedTextColor = Blue,
+                    unfocusedTextColor = Blue,
+                ),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation()
+            )
+            Text(
+                modifier = Modifier.padding(end = 4.dp, bottom = 8.dp, top = 16.dp).fillMaxWidth(),
+                text = "Забыли пароль?",
+                color = Blue,
+                textAlign = TextAlign.End,
+                fontSize = 16.sp,
+                textDecoration = TextDecoration.Underline
+            )
         }
-
-        if (users.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                items(users) { item ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        modifier = Modifier.clickable { onLogin(item) }
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp)
-                            ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 4.dp
-                        ),
-                    ) {
-                        Text(
-                            color = Blue,
-                            text = "${item.firstName} ${item.lastName}",
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(16.dp)
-                        )
+        Button(
+            onClick = {
+                doLogin.launch {
+                    //Сделать норм валидацию
+                    if (email.length > 10 && password.length > 10) {
+                        val user = api.login(LoginRequest(password, email))
+                        user?.let {
+                            onLogin(user)
+                        }
                     }
                 }
-            }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp),
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(
+                contentColor = Color.White,
+                containerColor = Blue
+            ),
+            contentPadding = PaddingValues(horizontal = 80.dp, vertical = 20.dp)
+        ) {
+            Text("Войти", fontSize = 20.sp)
         }
+
     }
 }
