@@ -45,6 +45,8 @@ data class Student(
 @Serializable
 data class User(
     val id: String,
+    val email: String,
+    val password: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,
     var role: Role,
@@ -55,11 +57,13 @@ data class User(
 data class Group(
     val id: String,
     val name: String,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("is_deleted") val isDeleted: Boolean
 )
 @Serializable
 data class Subject(
     val id: String,
     val name: String,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("is_deleted") val isDeleted: Boolean
 )
