@@ -27,8 +27,8 @@ fun RadioSelect(
             selected = selectedBool,
             onClick = { onSelectClick() },
             colors = RadioButtonDefaults.colors(
-                selectedColor = Blue, // Цвет выбранной радиокнопки
-                unselectedColor = Color.Gray // Цвет невыбранной радиокнопки
+                selectedColor = Blue,
+                unselectedColor = Color.Gray
             )
         )
         Text(
