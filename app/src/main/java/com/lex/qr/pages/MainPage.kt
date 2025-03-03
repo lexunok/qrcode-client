@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -74,10 +75,12 @@ import com.lex.qr.utils.CreateClassResponse
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.Group
 import com.lex.qr.utils.JoinClassRequest
+import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.Role
 import com.lex.qr.utils.Student
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.User
+import com.lex.qr.utils.UserPreferences
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
@@ -94,14 +97,16 @@ enum class CreateType{
 fun MainPage(
     api: API,
     geolocationClient: GeolocationClient,
+    userPrefs: UserPreferences,
     user: User,
     key: String?,
     lastLocation: String,
     isLoading: Boolean,
-    onLogout: (User?) -> Unit,
+    onLogout: (Boolean) -> Unit,
     onLoading: (Boolean) -> Unit,
     changeKey: (String?) -> Unit
 ) {
+
     LaunchedEffect(Unit) {
         geolocationClient.checkGps()
     }
@@ -163,15 +168,18 @@ fun MainPage(
             }
         }
 
-//        if (isLoading) {
-//            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
-//        }
+        if (isLoading) {
+            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
+        }
 
         NavButton(
             Modifier.align(Alignment.BottomEnd),
             R.drawable.baseline_logout_24,
             "Logout"
-        ) { onLogout(null) }
+        ) {
+            userPrefs.clearUser()
+            onLogout(false)
+        }
 
         when (user.role) {
             Role.ADMIN -> {

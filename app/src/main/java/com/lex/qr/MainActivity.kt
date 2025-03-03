@@ -11,30 +11,42 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.lex.qr.pages.LoginPage
 import com.lex.qr.pages.MainPage
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.QRTheme
 import com.lex.qr.utils.API
 import com.lex.qr.utils.GeolocationClient
+import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.User
+import com.lex.qr.utils.UserPreferences
 
 
 class MainActivity : ComponentActivity() {
     private lateinit var api: API
     private lateinit var geolocationClient: GeolocationClient
+    private lateinit var userPrefs: UserPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         api = API()
         geolocationClient = GeolocationClient(this)
+        userPrefs = UserPreferences(this)
 
         val lightTransparentStyle = SystemBarStyle.light(
             scrim = TRANSPARENT,
@@ -52,13 +64,31 @@ class MainActivity : ComponentActivity() {
                     .background(color = Blue)) {
 
                     var key by remember { mutableStateOf<String?>(null) }
+                    var isLoading by remember { mutableStateOf(true) }
+                    var isLoggedIn by remember { mutableStateOf(userPrefs.isLoggedIn()) }
+                    var lastLocation by remember { mutableStateOf("") }
                     var user by remember { mutableStateOf<User?>(null) }
-                    var isLoading by remember { mutableStateOf(false) }
 
-                    val changeUser = { value: User? -> user = value }
+                    val onLogin = {value: Boolean -> isLoggedIn = value}
                     val changeKey = { value: String? -> key = value }
                     val onLoading = {value: Boolean -> isLoading = value}
-                    var lastLocation by remember { mutableStateOf("") }
+                    val toUserAcc = {value: User -> user = value}
+
+                    if (isLoading) {
+                        Box (modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 28.dp, vertical = 64.dp)
+                            .shadow(12.dp)
+                            .background(color = Color.White, shape = RoundedCornerShape(12.dp))
+                            .padding(20.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = Blue, modifier = Modifier.size(100.dp).align(
+                                    Alignment.Center
+                                ), strokeWidth = 12.dp
+                            )
+                        }
+                    }
 
                     val requestPermissionsLauncher =
                         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -73,13 +103,31 @@ class MainActivity : ComponentActivity() {
                             arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
                         )
                         geolocationClient.checkGps()
+
+                        if (isLoggedIn) {
+                            val (savedEmail, savedPassword) = userPrefs.getUser()
+
+                            val loginRequest = LoginRequest(
+                                email = savedEmail ?: "",
+                                password = savedPassword ?: ""
+                            )
+
+                            val response = api.login(loginRequest)
+                            if (response != null) {
+                                user = response
+                                isLoggedIn = true
+                            } else {
+                                isLoggedIn = false
+                            }
+                        }
+                        isLoading = false
                     }
 
-                    if (user != null) {
-                        MainPage(api, geolocationClient, user!!, key, lastLocation, isLoading, changeUser, onLoading, changeKey)
+                    if (isLoggedIn && user!=null) {
+                        MainPage(api, geolocationClient, userPrefs, user!!, key, lastLocation, isLoading, onLogin, onLoading, changeKey)
                     }
-                    else {
-                        LoginPage(api, changeUser)
+                    else if (!isLoading) {
+                        LoginPage(api, userPrefs, onLogin, toUserAcc)
                     }
                 }
             }
