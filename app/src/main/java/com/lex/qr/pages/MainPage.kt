@@ -3,7 +3,6 @@ package com.lex.qr.pages
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -24,14 +23,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -64,31 +58,22 @@ import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
 import com.lex.qr.components.RadioSelect
 import com.lex.qr.components.Title
-import com.lex.qr.components.getTransitionDirection
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.utils.API
-import com.lex.qr.utils.CreateClassRequest
-import com.lex.qr.utils.CreateClassResponse
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.Group
 import com.lex.qr.utils.JoinClassRequest
-import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.Role
-import com.lex.qr.utils.Student
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.User
 import com.lex.qr.utils.UserPreferences
-import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
 interface Page
 
-enum class StaffPage : Page {
-    MAIN, SUBJECT, GROUP
-}
 enum class AdminPage : Page {
     EDITOR, LIST, CATEGORY, MAIN, CREATE
 }
@@ -105,17 +90,14 @@ fun MainPage(
     geolocationClient: GeolocationClient,
     userPrefs: UserPreferences,
     user: User,
-    key: String?,
     lastLocation: String,
-    isLoading: Boolean,
     onLogout: (Boolean) -> Unit,
-    onLoading: (Boolean) -> Unit,
-    changeKey: (String?) -> Unit
 ) {
 
     LaunchedEffect(Unit) {
         geolocationClient.checkGps()
     }
+    var isLoading by remember { mutableStateOf(false) }
 
     var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
 
@@ -225,26 +207,26 @@ fun MainPage(
 
                 AnimatedContent(
                     targetState = page,
-                    transitionSpec = {
-                        when (getTransitionDirection(initialState, targetState)) {
-                            PageTransitionDirection.LEFT -> {
-                                (slideInHorizontally { width -> -width } + fadeIn())
-                                    .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
-                            }
-                            PageTransitionDirection.RIGHT -> {
-                                (slideInHorizontally { width -> width } + fadeIn())
-                                    .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
-                            }
-                            PageTransitionDirection.UP -> {
-                                (slideInVertically { height -> -height } + fadeIn())
-                                    .togetherWith(slideOutVertically { height -> height } + fadeOut())
-                            }
-                            PageTransitionDirection.DOWN -> {
-                                (slideInVertically { height -> height } + fadeIn())
-                                    .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-                            }
-                        }
-                    },
+//                    transitionSpec = {
+//                        when (getTransitionDirection(initialState, targetState)) {
+//                            PageTransitionDirection.LEFT -> {
+//                                (slideInHorizontally { width -> -width } + fadeIn())
+//                                    .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
+//                            }
+//                            PageTransitionDirection.RIGHT -> {
+//                                (slideInHorizontally { width -> width } + fadeIn())
+//                                    .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
+//                            }
+//                            PageTransitionDirection.UP -> {
+//                                (slideInVertically { height -> -height } + fadeIn())
+//                                    .togetherWith(slideOutVertically { height -> height } + fadeOut())
+//                            }
+//                            PageTransitionDirection.DOWN -> {
+//                                (slideInVertically { height -> height } + fadeIn())
+//                                    .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+//                            }
+//                        }
+//                    },
                     modifier = Modifier.fillMaxSize()
                 ) { currentPage ->
                     when(currentPage) {
@@ -278,25 +260,25 @@ fun MainPage(
                                         onItemClick = { item ->
                                             when (item) {
                                                 is User -> {
-                                                    onLoading(true)
+                                                    isLoading = true
                                                     selectedUser = item
                                                     page = AdminPage.EDITOR
                                                     title = "Редактор пользователя"
-                                                    onLoading(false)
+                                                    isLoading = false
                                                 }
                                                 is Group -> {
-                                                    onLoading(true)
+                                                    isLoading = true
                                                     selectedGroup = item
                                                     page = AdminPage.EDITOR
                                                     title = "Редактор группы"
-                                                    onLoading(false)
+                                                    isLoading = false
                                                 }
                                                 is Subject -> {
-                                                    onLoading(true)
+                                                    isLoading = true
                                                     selectedSubject = item
                                                     page = AdminPage.EDITOR
                                                     title = "Редактор предмета"
-                                                    onLoading(false)
+                                                    isLoading = false
                                                 }
                                             }
                                         }
@@ -328,36 +310,36 @@ fun MainPage(
                                         getUsersScope.launch {
                                             page = AdminPage.LIST
                                             title = "Пользователи"
-                                            onLoading(true)
+                                            isLoading = true
                                             val response = api.getUsers()
                                             response?.let {
                                                 users = response
                                             }
-                                            onLoading(false)
+                                            isLoading = false
                                         }
                                     }
                                     AdminCardCategory("Группы") {
                                         getGroupsScope.launch {
                                             page = AdminPage.LIST
                                             title = "Группы"
-                                            onLoading(true)
+                                            isLoading = true
                                             val response = api.getGroups()
                                             response?.let {
                                                 groups = response
                                             }
-                                            onLoading(false)
+                                            isLoading = false
                                         }
                                     }
                                     AdminCardCategory("Предметы") {
                                         getSubjectsScope.launch {
                                             page = AdminPage.LIST
                                             title = "Предметы"
-                                            onLoading(true)
+                                            isLoading = true
                                             val response = api.getSubjects()
                                             response?.let {
                                                 subjects = response
                                             }
-                                            onLoading(false)
+                                            isLoading = false
                                         }
                                     }
                                 }
@@ -466,264 +448,7 @@ fun MainPage(
                 }
             }
             Role.STAFF -> {
-                val createClassScope = rememberCoroutineScope()
-                val getSubjectsScope = rememberCoroutineScope()
-                val getGroupsScope = rememberCoroutineScope()
-
-                var createClassResponse by remember { mutableStateOf<CreateClassResponse?>(null) }
-                var page by remember { mutableStateOf(StaffPage.MAIN) }
-                var groups by remember { mutableStateOf<List<Group>>(emptyList()) }
-                var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
-
-                var selectedSubject by remember { mutableStateOf<Subject?>(null) }
-                var selectedGroup by remember { mutableStateOf<Group?>(null) }
-
-                AnimatedContent(
-                    targetState = page,
-                    transitionSpec = {
-                        when (getTransitionDirection(initialState, targetState)) {
-                            PageTransitionDirection.LEFT -> {
-                                (slideInHorizontally { width -> -width } + fadeIn())
-                                    .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
-                            }
-                            PageTransitionDirection.RIGHT -> {
-                                (slideInHorizontally { width -> width } + fadeIn())
-                                    .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
-                            }
-                            PageTransitionDirection.UP -> {
-                                (slideInVertically { height -> -height } + fadeIn())
-                                    .togetherWith(slideOutVertically { height -> height } + fadeOut())
-                            }
-                            PageTransitionDirection.DOWN -> {
-                                (slideInVertically { height -> height } + fadeIn())
-                                    .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) { currentPage ->
-                    when(currentPage) {
-                        StaffPage.MAIN -> {
-                            Box(modifier = Modifier.fillMaxSize()){
-                                val getStudentsScope = rememberCoroutineScope()
-                                var students by remember { mutableStateOf<List<Student>>(emptyList()) }
-
-                                val qrOffset by animateDpAsState(
-                                    targetValue = if ((students.isEmpty() && !isLoading) || page != StaffPage.MAIN) 0.dp else (-400).dp,
-                                    animationSpec = tween(durationMillis = 300)
-                                )
-
-                                val listOffset by animateDpAsState(
-                                    targetValue = if (students.isNotEmpty() || (isLoading && page == StaffPage.MAIN)) 0.dp else 400.dp,
-                                    animationSpec = tween(durationMillis = 300)
-                                )
-
-                                if (key != null)
-                                {
-                                    if (students.isEmpty()) {
-                                        QrCodeView(
-                                            data = key,
-                                            modifier = Modifier
-                                                .offset(x = qrOffset)
-                                                .size(300.dp)
-                                                .align(Alignment.Center)
-                                        )
-                                    }
-                                    if (isLoading) {
-                                        LoadingColumn(
-                                            Modifier
-                                                .offset(x = listOffset)
-                                                .fillMaxWidth()
-                                                .align(Alignment.Center),
-                                            contentPadding = PaddingValues(16.dp)
-                                        )
-                                    }
-                                    if (students.isNotEmpty()) {
-                                        LazyColumn(
-                                            modifier = Modifier
-                                                .offset(x = listOffset)
-                                                .fillMaxWidth()
-                                                .align(Alignment.Center),
-                                            contentPadding = PaddingValues(16.dp)
-                                        ) {
-                                            items(students) { item ->
-                                                Card(
-                                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(8.dp)
-                                                        .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
-                                                    ,
-                                                    elevation = CardDefaults.cardElevation(
-                                                        defaultElevation = 4.dp
-                                                    ),
-                                                ) {
-                                                    var color = Color.Red
-                                                    if (item.isActive) {
-                                                        color = Green
-                                                    }
-                                                    Text(
-                                                        color = color,
-                                                        text = "${item.firstName} ${item.lastName}",
-                                                        fontSize = 18.sp,
-                                                        modifier = Modifier.padding(16.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                NavButton(
-                                    Modifier.align(Alignment.BottomStart),
-                                    R.drawable.baseline_format_list_bulleted_24,
-                                    "List of Students"
-                                ) {
-                                    getStudentsScope.launch {
-                                        if (students.isNotEmpty()) {
-                                            students = emptyList()
-                                        }
-                                        else {
-                                            key?.let {
-                                                onLoading(true)
-                                                val response = api.getStudents(key)
-                                                response?.let {
-                                                    students = response
-                                                }
-                                                onLoading(false)
-                                            }
-                                        }
-                                    }
-                                }
-                                NavButton(
-                                    Modifier.align(Alignment.BottomCenter),
-                                    R.drawable.baseline_qr_code_24,
-                                    "QR Generator or Scan"
-                                ) {
-                                    getSubjectsScope.launch {
-                                        page = StaffPage.SUBJECT
-                                        title = "Выберите предмет"
-                                        onLoading(true)
-                                        val response = api.getSubjects()
-                                        response?.let {
-                                            subjects = response
-                                        }
-                                        onLoading(false)
-                                    }
-                                }
-                            }
-                        }
-                        StaffPage.SUBJECT -> {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                if(isLoading){
-                                    LoadingColumn(
-                                        Modifier
-                                            .padding(top = 64.dp)
-                                            .fillMaxWidth(),
-                                        contentPadding = PaddingValues(16.dp)
-                                    )
-                                }
-                                if (subjects.isNotEmpty() && !isLoading) {
-                                    LazyColumn(
-                                        modifier = Modifier.padding(top = 64.dp).fillMaxWidth(),
-                                        contentPadding = PaddingValues(16.dp)
-                                    ) {
-                                        items(subjects) { item ->
-                                            Card(
-                                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                                modifier = Modifier.clickable {
-                                                    getGroupsScope.launch {
-                                                        page = StaffPage.GROUP
-                                                        title = "Выберите группу"
-                                                        selectedSubject = item
-                                                        onLoading(true)
-                                                        val response = api.getGroups()
-                                                        response?.let {
-                                                            groups = response
-                                                        }
-                                                        onLoading(false)
-                                                    }
-                                                }
-                                                    .fillMaxWidth()
-                                                    .padding(8.dp)
-                                                    .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp)),
-                                                elevation = CardDefaults.cardElevation(
-                                                    defaultElevation = 4.dp
-                                                ),
-                                            ) {
-                                                Text(
-                                                    color = Blue,
-                                                    text = item.name,
-                                                    fontSize = 18.sp,
-                                                    modifier = Modifier.padding(16.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        StaffPage.GROUP -> {
-                            Box(modifier = Modifier.fillMaxSize()){
-                                if (isLoading) {
-                                    LoadingColumn(
-                                        Modifier
-                                            .padding(top = 64.dp)
-                                            .fillMaxWidth(),
-                                        contentPadding = PaddingValues(16.dp)
-                                    )
-                                }
-                                if (groups.isNotEmpty() && !isLoading) {
-                                    LazyColumn(
-                                        modifier = Modifier.padding(top = 64.dp).fillMaxWidth(),
-                                        contentPadding = PaddingValues(16.dp)
-                                    ) {
-                                        items(groups) { item ->
-                                            Card(
-                                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                                modifier = Modifier.clickable {
-                                                    if (geolocationClient.checkGps() && lastLocation != "") {
-                                                        createClassScope.launch {
-                                                            onLoading(true)
-                                                            selectedGroup = item
-                                                            val request = CreateClassRequest(
-                                                                staffId = user.id,
-                                                                subjectId = item.id,
-                                                                groupId = item.id,
-                                                                geolocation = lastLocation
-                                                            )
-                                                            val response: CreateClassResponse? =
-                                                                api.createClass(request)
-                                                            response?.let {
-                                                                createClassResponse = response
-                                                                changeKey(createClassResponse!!.publicId)
-                                                            }
-                                                            page = StaffPage.MAIN
-                                                            title = "${user.firstName} ${user.lastName}"
-                                                            onLoading(false)
-                                                        }
-                                                    }
-                                                }
-                                                    .fillMaxWidth()
-                                                    .padding(8.dp)
-                                                    .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp)),
-                                                elevation = CardDefaults.cardElevation(
-                                                    defaultElevation = 4.dp
-                                                ),
-                                            ) {
-                                                Text(
-                                                    color = Blue,
-                                                    text = item.name,
-                                                    fontSize = 18.sp,
-                                                    modifier = Modifier.padding(16.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                StaffPage(api, user, geolocationClient, lastLocation) { value: String -> title = value }
             }
             Role.STUDENT -> {
                 val scanScope  = rememberCoroutineScope()
@@ -740,7 +465,7 @@ fun MainPage(
                 val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
                     if (result.contents != null && geolocationClient.checkGps() && lastLocation != "") {
                         scanScope.launch {
-                            onLoading(true)
+                            isLoading = true
                             val response = api.joinClass(
                                 JoinClassRequest(
                                     classId = result.contents,
@@ -751,7 +476,7 @@ fun MainPage(
                             if (response != null) {
                                 isSuccessJoining = response.isSuccess
                             }
-                            onLoading(false)
+                            isLoading = false
                         }
                     }
                 }

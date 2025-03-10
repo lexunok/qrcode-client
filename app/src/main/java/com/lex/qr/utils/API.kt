@@ -81,4 +81,21 @@ class API {
         }.body()
         return response
     }
+    suspend fun getClasses(request: GetClassRequest): List<GetClassResponse>? {
+        val response: List<GetClassResponse>? = client.post("$url/class/all") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+            setBody(request)
+        }.body()
+        return response
+    }
+    suspend fun getVisits(id: String): List<ClassResponse>? {
+        val response: List<ClassResponse>? = client.get("$url/class/visits/$id") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+        }.body()
+        return response
+    }
 }

@@ -40,9 +40,27 @@ data class JoinClassRequest(
 data class JoinClassResponse(
     @SerialName("is_success") val isSuccess: Boolean
 )
-
+@Serializable
+data class GetClassResponse(
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("public_id") val publicId: String
+)
+@Serializable
+data class GetClassRequest(
+    @SerialName("staff_id") val staffId: String,
+    @SerialName("subject_id") val subjectId: String,
+    @SerialName("group_id") val groupId: String
+)
+@Serializable
+data class ClassResponse(
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("subject_name") val subjectName: String,
+    @SerialName("is_active") val isActive: Boolean,
+    @SerialName("public_id") val publicId: String
+)
 @Serializable
 data class Student(
+    val id: String,
     @SerialName("student_id") val studentId: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,

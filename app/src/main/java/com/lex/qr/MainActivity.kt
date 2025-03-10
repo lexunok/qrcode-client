@@ -63,15 +63,12 @@ class MainActivity : ComponentActivity() {
                     .fillMaxSize()
                     .background(color = Blue)) {
 
-                    var key by remember { mutableStateOf<String?>(null) }
                     var isLoading by remember { mutableStateOf(true) }
                     var isLoggedIn by remember { mutableStateOf(userPrefs.isLoggedIn()) }
                     var lastLocation by remember { mutableStateOf("") }
                     var user by remember { mutableStateOf<User?>(null) }
 
                     val onLogin = {value: Boolean -> isLoggedIn = value}
-                    val changeKey = { value: String? -> key = value }
-                    val onLoading = {value: Boolean -> isLoading = value}
                     val toUserAcc = {value: User -> user = value}
 
                     if (isLoading) {
@@ -124,7 +121,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (isLoggedIn && user!=null) {
-                        MainPage(api, geolocationClient, userPrefs, user!!, key, lastLocation, isLoading, onLogin, onLoading, changeKey)
+                        MainPage(api, geolocationClient, userPrefs, user!!, lastLocation, onLogin)
                     }
                     else if (!isLoading) {
                         LoginPage(api, userPrefs, onLogin, toUserAcc)
