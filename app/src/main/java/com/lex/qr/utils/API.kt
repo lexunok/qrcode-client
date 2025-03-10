@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -92,6 +93,14 @@ class API {
     }
     suspend fun getVisits(id: String): List<ClassResponse>? {
         val response: List<ClassResponse>? = client.get("$url/class/visits/$id") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+        }.body()
+        return response
+    }
+    suspend fun deactivateStudent(id: String): Student? {
+        val response: Student? = client.delete("$url/class/deactivate/$id") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }

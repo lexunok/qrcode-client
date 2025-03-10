@@ -2,17 +2,15 @@ package com.lex.qr.pages
 
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,7 +31,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lex.qr.R
@@ -41,7 +45,6 @@ import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.utils.API
-import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.CreateClassRequest
 import com.lex.qr.utils.CreateClassResponse
 import com.lex.qr.utils.GeolocationClient
@@ -55,7 +58,7 @@ import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
 private enum class CurrentPage: Page {
-    MAIN, SUBJECT, GROUP, CLASSES, VISITS
+    QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY
 }
 
 @Composable
@@ -68,12 +71,14 @@ fun StaffPage(
 ) {
     val makeRequest = rememberCoroutineScope()
 
-    var createClassResponse by remember { mutableStateOf<CreateClassResponse?>(null) }
-    var page by remember { mutableStateOf(CurrentPage.MAIN) }
+    var page by remember { mutableStateOf(CurrentPage.QRCODE) }
+
     var groups by remember { mutableStateOf<List<Group>>(emptyList()) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var classes by remember { mutableStateOf<List<GetClassResponse>>(emptyList()) }
     var students by remember { mutableStateOf<List<Student>>(emptyList()) }
+
+    var createClassResponse by remember { mutableStateOf<CreateClassResponse?>(null) }
 
     var selectedSubject by remember { mutableStateOf<Subject?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -103,7 +108,28 @@ fun StaffPage(
 //        },
         modifier = Modifier.fillMaxSize()
     ) { currentPage ->
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectVerticalDragGestures { _, dragAmount ->
+                    if (dragAmount > 0) {
+                        page = CurrentPage.ACTIVITY
+                        changeTitle("Присутствующие")
+                        createClassResponse?.let {
+                            makeRequest.launch {
+                                isLoading = true
+                                api.getStudents(it.publicId)?.let { response ->
+                                    students = response
+                                }
+                                isLoading = false
+                            }
+                        }
+                    } else if (dragAmount < 0) {
+                        page = CurrentPage.QRCODE
+                        changeTitle("Главная")
+                    }
+                }
+            }){
             if (isLoading) {
                 LoadingColumn(
                     Modifier
@@ -115,10 +141,7 @@ fun StaffPage(
             }
             else {
                 when(currentPage) {
-                    CurrentPage.MAIN -> {
-    //                    val getStudentsScope = rememberCoroutineScope()
-    //                    var students by remember { mutableStateOf<List<Student>>(emptyList()) }
-
+                    CurrentPage.QRCODE -> {
     //                    val qrOffset by animateDpAsState(
     //                        targetValue = if ((students.isEmpty() && !isLoading) || page != CurrentPage.MAIN) 0.dp else (-400).dp,
     //                        animationSpec = tween(durationMillis = 300)
@@ -138,40 +161,62 @@ fun StaffPage(
                                         .align(Alignment.Center)
                                 )
                         }
-    //                        if (students.isNotEmpty()) {
-    //                            LazyColumn(
-    //                                modifier = Modifier
-    //                                    .offset(x = listOffset)
-    //                                    .fillMaxWidth()
-    //                                    .align(Alignment.Center),
-    //                                contentPadding = PaddingValues(16.dp)
-    //                            ) {
-    //                                items(students) { item ->
-    //                                    Card(
-    //                                        colors = CardDefaults.cardColors(containerColor = Color.White),
-    //                                        modifier = Modifier
-    //                                            .fillMaxWidth()
-    //                                            .padding(8.dp)
-    //                                            .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
-    //                                        ,
-    //                                        elevation = CardDefaults.cardElevation(
-    //                                            defaultElevation = 4.dp
-    //                                        ),
-    //                                    ) {
-    //                                        var color = Color.Red
-    //                                        if (item.isActive) {
-    //                                            color = Green
-    //                                        }
-    //                                        Text(
-    //                                            color = color,
-    //                                            text = "${item.firstName} ${item.lastName}",
-    //                                            fontSize = 18.sp,
-    //                                            modifier = Modifier.padding(16.dp)
-    //                                        )
-    //                                    }
-    //                                }
-    //                            }
-    //                        }
+                    }
+                    CurrentPage.ACTIVITY -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(top = 64.dp)
+                                .fillMaxWidth(),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            items(students) { item ->
+                                var color = Red
+                                var isActive by remember { mutableStateOf(item.isActive) }
+                                if (isActive) {
+                                    color = Green
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp)
+                                        .border(
+                                            width = 4.dp,
+                                            color = color,
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                ) {
+                                    Text(
+                                        color = color,
+                                        text = "${item.firstName} ${item.lastName}",
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(8.dp).fillMaxWidth(0.8f)
+                                    )
+                                    if (isActive) {
+                                        Box(
+                                            modifier = Modifier
+                                                .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
+                                                .clickable {
+                                                    makeRequest.launch {
+                                                        isLoading = true
+                                                        val response = api.deactivateStudent(item.id)
+                                                        response?.let {
+                                                            isActive = response.isActive
+                                                        }
+                                                        isLoading = false
+                                                    }
+                                                }
+                                        ) {
+                                            Icon(
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_close_40),
+                                                contentDescription = "Kick student from class",
+                                                modifier = Modifier.fillMaxSize(),
+                                                tint = Red
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     CurrentPage.SUBJECT -> {
                         LazyColumn(
@@ -216,7 +261,6 @@ fun StaffPage(
                                     )
                                 }
                             }
-
                         }
                     }
                     CurrentPage.GROUP -> {
@@ -270,7 +314,7 @@ fun StaffPage(
                                                                 createClassResponse = it
                                                             }
                                                         }
-                                                        page = CurrentPage.MAIN
+                                                        page = CurrentPage.QRCODE
                                                         changeTitle("Главная")
                                                         isLoading = false
                                                     }
@@ -363,7 +407,7 @@ fun StaffPage(
                                     modifier = Modifier
                                         .clickable {
                                             isListClicked = false
-                                            page = CurrentPage.MAIN
+                                            page = CurrentPage.QRCODE
                                             changeTitle("Главная")
                                         }
                                         .fillMaxWidth()
@@ -413,8 +457,8 @@ fun StaffPage(
             ) {
                 makeRequest.launch {
                     isListClicked = false
-                    if (page != CurrentPage.MAIN) {
-                        page = CurrentPage.MAIN
+                    if (page != CurrentPage.QRCODE) {
+                        page = CurrentPage.QRCODE
                         changeTitle("Главная")
                     }
                     else {
