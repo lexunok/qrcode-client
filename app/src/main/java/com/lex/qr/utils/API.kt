@@ -1,5 +1,6 @@
 package com.lex.qr.utils
 
+import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -92,12 +93,18 @@ class API {
         return response
     }
     suspend fun getVisits(id: String): List<ClassResponse>? {
-        val response: List<ClassResponse>? = client.get("$url/class/visits/$id") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-        }.body()
-        return response
+        try {
+            val response: List<ClassResponse>? = client.get("$url/class/visits/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }.body()
+            return response
+        }
+        catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            return null
+        }
     }
     suspend fun deactivateStudent(id: String): Student? {
         val response: Student? = client.delete("$url/class/deactivate/$id") {

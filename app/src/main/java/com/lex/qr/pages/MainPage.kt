@@ -99,7 +99,7 @@ fun MainPage(
     }
     var isLoading by remember { mutableStateOf(false) }
 
-    var title by remember { mutableStateOf("${user.firstName} ${user.lastName}") }
+    var title by remember { mutableStateOf("Главная") }
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -451,62 +451,7 @@ fun MainPage(
                 StaffPage(api, user, geolocationClient, lastLocation) { value: String -> title = value }
             }
             Role.STUDENT -> {
-                val scanScope  = rememberCoroutineScope()
-
-                var isSuccessJoining by remember { mutableStateOf<Boolean?>(null) }
-
-                val options = ScanOptions()
-                options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                options.setPrompt("")
-                options.setCameraId(0)
-                options.setBeepEnabled(false)
-                options.setBarcodeImageEnabled(true)
-
-                val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-                    if (result.contents != null && geolocationClient.checkGps() && lastLocation != "") {
-                        scanScope.launch {
-                            isLoading = true
-                            val response = api.joinClass(
-                                JoinClassRequest(
-                                    classId = result.contents,
-                                    studentId = user.id,
-                                    studentGeolocation = lastLocation
-                                )
-                            )
-                            if (response != null) {
-                                isSuccessJoining = response.isSuccess
-                            }
-                            isLoading = false
-                        }
-                    }
-                }
-                isSuccessJoining?.let {
-                    if (isSuccessJoining as Boolean) {
-                        Icon(
-                            modifier = Modifier.align(Alignment.Center),
-                            imageVector = ImageVector.vectorResource(
-                                id = R.drawable.baseline_check_circle_outline_24
-                            ),
-                            contentDescription = "Scan is success",
-                            tint = Green
-                        )
-                    }
-                    else {
-                        Icon(
-                            modifier = Modifier.align(Alignment.Center),
-                            imageVector = ImageVector.vectorResource(
-                                id = R.drawable.baseline_error_outline_24
-                            ),
-                            contentDescription = "Scan is fail",
-                            tint = Red
-                        )
-                    }
-                }
-                NavButton(
-                    Modifier.align(Alignment.BottomCenter),
-                    R.drawable.baseline_qr_code_24,
-                    "QR Generator or Scan"
-                ) { scanLauncher.launch(options) }
+                StudentPage(api, user, geolocationClient, lastLocation) { value: String -> title = value }
             }
         }
     }

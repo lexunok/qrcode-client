@@ -57,7 +57,7 @@ import com.lex.qr.utils.User
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
-private enum class CurrentPage: Page {
+private enum class CurrentStaffPage: Page {
     QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY
 }
 
@@ -71,7 +71,7 @@ fun StaffPage(
 ) {
     val makeRequest = rememberCoroutineScope()
 
-    var page by remember { mutableStateOf(CurrentPage.QRCODE) }
+    var page by remember { mutableStateOf(CurrentStaffPage.QRCODE) }
 
     var groups by remember { mutableStateOf<List<Group>>(emptyList()) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
@@ -113,7 +113,7 @@ fun StaffPage(
             .pointerInput(Unit) {
                 detectVerticalDragGestures { _, dragAmount ->
                     if (dragAmount > 0) {
-                        page = CurrentPage.ACTIVITY
+                        page = CurrentStaffPage.ACTIVITY
                         changeTitle("Присутствующие")
                         createClassResponse?.let {
                             makeRequest.launch {
@@ -125,7 +125,7 @@ fun StaffPage(
                             }
                         }
                     } else if (dragAmount < 0) {
-                        page = CurrentPage.QRCODE
+                        page = CurrentStaffPage.QRCODE
                         changeTitle("Главная")
                     }
                 }
@@ -141,7 +141,7 @@ fun StaffPage(
             }
             else {
                 when(currentPage) {
-                    CurrentPage.QRCODE -> {
+                    CurrentStaffPage.QRCODE -> {
     //                    val qrOffset by animateDpAsState(
     //                        targetValue = if ((students.isEmpty() && !isLoading) || page != CurrentPage.MAIN) 0.dp else (-400).dp,
     //                        animationSpec = tween(durationMillis = 300)
@@ -162,7 +162,7 @@ fun StaffPage(
                                 )
                         }
                     }
-                    CurrentPage.ACTIVITY -> {
+                    CurrentStaffPage.ACTIVITY -> {
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
@@ -218,7 +218,7 @@ fun StaffPage(
                             }
                         }
                     }
-                    CurrentPage.SUBJECT -> {
+                    CurrentStaffPage.SUBJECT -> {
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
@@ -231,7 +231,7 @@ fun StaffPage(
                                     modifier = Modifier
                                         .clickable {
                                             makeRequest.launch {
-                                                page = CurrentPage.GROUP
+                                                page = CurrentStaffPage.GROUP
                                                 changeTitle("Выберите группу")
                                                 selectedSubject = item
                                                 isLoading = true
@@ -263,7 +263,7 @@ fun StaffPage(
                             }
                         }
                     }
-                    CurrentPage.GROUP -> {
+                    CurrentStaffPage.GROUP -> {
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
@@ -294,30 +294,27 @@ fun StaffPage(
                                                             Log.i("ERROR", e.toString())
                                                         }
                                                     }
-                                                    page = CurrentPage.CLASSES
+                                                    page = CurrentStaffPage.CLASSES
                                                     isLoading = false
                                                 }
-                                            } else {
-                                                if (geolocationClient.checkGps() && lastLocation != "") {
-                                                    makeRequest.launch {
-                                                        isLoading = true
-                                                        selectedSubject?.let { subject ->
-                                                            val request = CreateClassRequest(
-                                                                staffId = user.id,
-                                                                subjectId = subject.id,
-                                                                groupId = item.id,
-                                                                geolocation = lastLocation
-                                                            )
-                                                            val response: CreateClassResponse? =
-                                                                api.createClass(request)
-                                                            response?.let {
-                                                                createClassResponse = it
-                                                            }
+                                            } else if (geolocationClient.checkGps() && lastLocation != "") {
+                                                makeRequest.launch {
+                                                    isLoading = true
+                                                    selectedSubject?.let { subject ->
+                                                        val request = CreateClassRequest(
+                                                            staffId = user.id,
+                                                            subjectId = subject.id,
+                                                            groupId = item.id,
+                                                            geolocation = lastLocation
+                                                        )
+                                                        val response: CreateClassResponse? = api.createClass(request)
+                                                        response?.let {
+                                                            createClassResponse = it
                                                         }
-                                                        page = CurrentPage.QRCODE
-                                                        changeTitle("Главная")
-                                                        isLoading = false
                                                     }
+                                                    page = CurrentStaffPage.QRCODE
+                                                    changeTitle("Главная")
+                                                    isLoading = false
                                                 }
                                             }
                                         }
@@ -342,7 +339,7 @@ fun StaffPage(
                             }
                         }
                     }
-                    CurrentPage.CLASSES -> {
+                    CurrentStaffPage.CLASSES -> {
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
@@ -355,7 +352,7 @@ fun StaffPage(
                                     modifier = Modifier
                                         .clickable {
                                             makeRequest.launch {
-                                                page = CurrentPage.VISITS
+                                                page = CurrentStaffPage.VISITS
                                                 changeTitle("Присутствующие")
                                                 isLoading = true
                                                 try {
@@ -390,7 +387,7 @@ fun StaffPage(
                             }
                         }
                     }
-                    CurrentPage.VISITS -> {
+                    CurrentStaffPage.VISITS -> {
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
@@ -407,7 +404,7 @@ fun StaffPage(
                                     modifier = Modifier
                                         .clickable {
                                             isListClicked = false
-                                            page = CurrentPage.QRCODE
+                                            page = CurrentStaffPage.QRCODE
                                             changeTitle("Главная")
                                         }
                                         .fillMaxWidth()
@@ -440,7 +437,7 @@ fun StaffPage(
             ) {
                 makeRequest.launch {
                     isListClicked = true
-                    page = CurrentPage.SUBJECT
+                    page = CurrentStaffPage.SUBJECT
                     changeTitle("Выберите предмет")
                     isLoading = true
                     val response = api.getSubjects()
@@ -457,12 +454,12 @@ fun StaffPage(
             ) {
                 makeRequest.launch {
                     isListClicked = false
-                    if (page != CurrentPage.QRCODE) {
-                        page = CurrentPage.QRCODE
+                    if (page != CurrentStaffPage.QRCODE) {
+                        page = CurrentStaffPage.QRCODE
                         changeTitle("Главная")
                     }
                     else {
-                        page = CurrentPage.SUBJECT
+                        page = CurrentStaffPage.SUBJECT
                         changeTitle("Выберите предмет")
                         isLoading = true
                         val response = api.getSubjects()
