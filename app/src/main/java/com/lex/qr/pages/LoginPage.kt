@@ -45,8 +45,8 @@ fun LoginPage(
     onLogin: (Boolean) -> Unit,
     toUserAcc: (User) -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("spirin") }
+    var password by remember { mutableStateOf("spirin2505") }
 
     val doLogin = rememberCoroutineScope()
 

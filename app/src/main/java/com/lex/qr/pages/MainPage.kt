@@ -1,21 +1,14 @@
 package com.lex.qr.pages
 
 
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +16,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -40,32 +40,33 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
+import androidx.compose.ui.zIndex
 import com.lex.qr.R
 import com.lex.qr.components.AdminCardCategory
 import com.lex.qr.components.LazyListContent
 import com.lex.qr.components.LoadingColumn
+import com.lex.qr.components.MenuProfile
 import com.lex.qr.components.NavButton
 import com.lex.qr.components.RadioSelect
 import com.lex.qr.components.Title
 import com.lex.qr.ui.theme.Blue
-import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.utils.API
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.Group
-import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.Role
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.User
@@ -98,72 +99,21 @@ fun MainPage(
         geolocationClient.checkGps()
     }
     var isLoading by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
 
     var title by remember { mutableStateOf("Главная") }
 
     Box (modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 28.dp, vertical = 64.dp)
+        .padding(horizontal = 24.dp, vertical = 56.dp)
         .shadow(12.dp)
         .background(color = Color.White, shape = RoundedCornerShape(12.dp))
-        .padding(20.dp)
+        .padding(16.dp)
     ) {
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .align(Alignment.TopCenter)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                var isPressed by remember { mutableStateOf(false) }
-
-                val scale by animateFloatAsState(
-                    targetValue = if (isPressed) 1.1f else 1f,
-                    animationSpec = tween(durationMillis = 50)
-                )
-
-                Title(title, Modifier.weight(8f))
-                Box(
-                    modifier = Modifier
-                        .weight(2f)
-                        .scale(scale)
-                        .size(64.dp)
-                        .clickable { user.role = Role.ADMIN }
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onPress = {
-                                    isPressed = true
-                                    tryAwaitRelease()
-                                    isPressed = false
-                                    user.role = Role.ADMIN
-                                }
-                            )
-                        }
-                ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_account_circle_24),
-                        contentDescription = "Кнопка профиля",
-                        modifier = Modifier.fillMaxSize(),
-                        tint = Blue
-                    )
-                }
-            }
-        }
+        Title(title, Modifier.fillMaxWidth(0.8f).padding(8.dp).align(Alignment.TopCenter))
 
         if (isLoading) {
             CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
-        }
-
-        NavButton(
-            Modifier.align(Alignment.BottomEnd),
-            R.drawable.baseline_logout_24,
-            "Logout"
-        ) {
-            userPrefs.clearUser()
-            onLogout(false)
         }
 
         when (user.role) {
@@ -454,5 +404,13 @@ fun MainPage(
                 StudentPage(api, user, geolocationClient, lastLocation) { value: String -> title = value }
             }
         }
+        MenuProfile(
+            modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp),
+            user = user,
+            showMenu = showMenu,
+            userPrefs = userPrefs,
+            changeMenu = {value: Boolean -> showMenu = value},
+            onLogout = onLogout
+        )
     }
 }
