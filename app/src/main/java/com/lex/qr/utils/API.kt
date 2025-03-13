@@ -11,6 +11,7 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
@@ -31,9 +32,9 @@ class API {
             })
         }
     }
-
+    //Добавить проверки
     suspend fun login(request: LoginRequest): User? {
-        return client.post("$url/auth/login") {
+        return client.post("$url/profile/login") {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }
@@ -94,29 +95,36 @@ class API {
         }.body()
     }
     suspend fun getVisits(id: String): List<ClassResponse>? {
-        try {
-            val response: List<ClassResponse>? = client.get("$url/class/visits/$id") {
+        return try {
+            val response: List<ClassResponse> = client.get("$url/class/visits/$id") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
             }.body()
-            return response
+            response
         }
         catch (e: Exception) {
             Log.i("ERROR", e.toString())
-            return null
+            null
         }
     }
     suspend fun deactivateStudent(id: String): Student? {
-        return client.delete("$url/class/deactivate/$id") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-        }.body()
+        return try {
+            val student: Student = client.delete("$url/class/deactivate/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }.body()
+
+            student
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
+        }
     }
     suspend fun uploadAvatar(id: String, imageBytes: ByteArray): Boolean {
         return try {
-            client.post("$url/auth/avatar/$id") {
+            client.post("$url/profile/avatar/$id") {
                 setBody(MultiPartFormDataContent(
                     formData {
                         append("avatar", imageBytes, Headers.build {
@@ -125,6 +133,20 @@ class API {
                         })
                     }
                 ))
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+    //Тут будет ответ наверн
+    suspend fun evaluate(request: RatingRequest): Boolean {
+        return try {
+            client.put("$url/class/evaluate") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
             }.status.isSuccess()
         } catch (e: Exception) {
             e.printStackTrace()

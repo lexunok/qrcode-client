@@ -14,6 +14,12 @@ data class LoginRequest(
 )
 
 @Serializable
+data class RatingRequest(
+    var id: String,
+    var rating: Int
+)
+
+@Serializable
 data class CreateClassRequest(
     @SerialName("staff_id") val staffId: String,
     @SerialName("subject_id")val subjectId: String,
@@ -31,19 +37,20 @@ data class CreateClassResponse(
 
 @Serializable
 data class JoinClassRequest(
-    @SerialName("class_id") val classId: String,
+    @SerialName("public_id") val publicId: String,
     @SerialName("student_id") val studentId: String,
     @SerialName("student_geolocation") val studentGeolocation: String
 )
 
 @Serializable
 data class JoinClassResponse(
-    @SerialName("is_success") val isSuccess: Boolean
+    val id: String?
 )
 @Serializable
 data class GetClassResponse(
     @SerialName("created_at") val createdAt: String,
-    @SerialName("public_id") val publicId: String
+    @SerialName("public_id") val publicId: String,
+    val rating: Double?
 )
 @Serializable
 data class GetClassRequest(
@@ -53,6 +60,7 @@ data class GetClassRequest(
 )
 @Serializable
 data class ClassResponse(
+    val rating: Int?,
     @SerialName("created_at") val createdAt: String,
     @SerialName("subject_name") val subjectName: String,
     @SerialName("is_active") val isActive: Boolean,
@@ -61,6 +69,7 @@ data class ClassResponse(
 @Serializable
 data class Student(
     val id: String,
+    val rating: Double?,
     @SerialName("student_id") val studentId: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,

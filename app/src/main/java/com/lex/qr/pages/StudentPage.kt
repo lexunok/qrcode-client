@@ -66,7 +66,7 @@ fun StudentPage(
 
         var visits by remember { mutableStateOf<List<ClassResponse>>(emptyList()) }
 
-        var isSuccessJoining by remember { mutableStateOf<Boolean?>(null) }
+        var currentClassId by remember { mutableStateOf<String?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
         val options = ScanOptions()
@@ -82,13 +82,13 @@ fun StudentPage(
                     isLoading = true
                     val response = api.joinClass(
                         JoinClassRequest(
-                            classId = result.contents,
+                            publicId = result.contents,
                             studentId = user.id,
                             studentGeolocation = lastLocation
                         )
                     )
                     if (response != null) {
-                        isSuccessJoining = response.isSuccess
+                        currentClassId = response.id
                     }
                     isLoading = false
                 }
@@ -107,27 +107,25 @@ fun StudentPage(
         else {
             when (page) {
                 CurrentStudentPage.MAIN -> {
-                    isSuccessJoining?.let {
-                        if (isSuccessJoining as Boolean) {
-                            Icon(
-                                modifier = Modifier.align(Alignment.Center),
-                                imageVector = ImageVector.vectorResource(
-                                    id = R.drawable.baseline_check_circle_outline_24
-                                ),
-                                contentDescription = "Scan is success",
-                                tint = Green
-                            )
-                        }
-                        else {
-                            Icon(
-                                modifier = Modifier.align(Alignment.Center),
-                                imageVector = ImageVector.vectorResource(
-                                    id = R.drawable.baseline_error_outline_24
-                                ),
-                                contentDescription = "Scan is fail",
-                                tint = Red
-                            )
-                        }
+                    if (currentClassId != null) {
+                        Icon(
+                            modifier = Modifier.align(Alignment.Center),
+                            imageVector = ImageVector.vectorResource(
+                                id = R.drawable.baseline_check_circle_outline_24
+                            ),
+                            contentDescription = "Scan is success",
+                            tint = Green
+                        )
+                    }
+                    else {
+                        Icon(
+                            modifier = Modifier.align(Alignment.Center),
+                            imageVector = ImageVector.vectorResource(
+                                id = R.drawable.baseline_error_outline_24
+                            ),
+                            contentDescription = "Scan is fail",
+                            tint = Red
+                        )
                     }
                 }
                 CurrentStudentPage.VISITS -> {

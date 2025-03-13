@@ -54,7 +54,7 @@ fun MenuProfile(modifier: Modifier,
 ) {
     val context = LocalContext.current
     val makeRequest = rememberCoroutineScope()
-    var avatarUrl by remember { mutableStateOf("https://qrcode-wva2.shuttle.app/api/auth/avatar/${user.id}") }
+    var avatarUrl by remember { mutableStateOf("https://qrcode-wva2.shuttle.app/api/profile/avatar/${user.id}") }
 
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
@@ -88,7 +88,7 @@ fun MenuProfile(modifier: Modifier,
         ) {
             Image(
                 painter = painter,
-                contentDescription = "User Avatar",
+                contentDescription = "Аватарка",
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape),
