@@ -4,6 +4,7 @@ package com.lex.qr.pages
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
@@ -41,11 +43,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +58,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.components.AdminCardCategory
 import com.lex.qr.components.LazyListContent
@@ -98,6 +105,7 @@ fun MainPage(
     LaunchedEffect(Unit) {
         geolocationClient.checkGps()
     }
+
     var isLoading by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -407,6 +415,7 @@ fun MainPage(
         MenuProfile(
             modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp),
             user = user,
+            api = api,
             showMenu = showMenu,
             userPrefs = userPrefs,
             changeMenu = {value: Boolean -> showMenu = value},

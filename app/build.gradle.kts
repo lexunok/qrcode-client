@@ -63,5 +63,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.lightspark:compose-qr-code:1.0.1")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.play.location)
 }
