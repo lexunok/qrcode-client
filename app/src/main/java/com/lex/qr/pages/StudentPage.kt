@@ -6,12 +6,18 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,8 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.journeyapps.barcodescanner.ScanContract
@@ -36,12 +44,15 @@ import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
+import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.ui.theme.Red
+import com.lex.qr.ui.theme.Yellow
 import com.lex.qr.utils.API
 import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.GetClassResponse
 import com.lex.qr.utils.JoinClassRequest
+import com.lex.qr.utils.RatingRequest
 import com.lex.qr.utils.User
 import kotlinx.coroutines.launch
 
@@ -66,6 +77,7 @@ fun StudentPage(
 
         var visits by remember { mutableStateOf<List<ClassResponse>>(emptyList()) }
 
+        var currentRating by remember { mutableStateOf(0) }
         var currentClassId by remember { mutableStateOf<String?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
@@ -108,14 +120,36 @@ fun StudentPage(
             when (page) {
                 CurrentStudentPage.MAIN -> {
                     if (currentClassId != null) {
-                        Icon(
-                            modifier = Modifier.align(Alignment.Center),
-                            imageVector = ImageVector.vectorResource(
-                                id = R.drawable.baseline_check_circle_outline_24
-                            ),
-                            contentDescription = "Scan is success",
-                            tint = Green
-                        )
+                        if(currentRating == 0) {
+                            Text(
+                                color = Blue,
+                                text = "Поставьте оценку",
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp).align(Alignment.Center).offset(y =48.dp)
+                            )
+                        }
+                        Row(modifier = Modifier.align(Alignment.Center)) {
+                            (1..5).forEach { star ->
+                                Icon(
+                                    imageVector = if (star <= currentRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                    contentDescription = "Оценка $star",
+                                    tint = if (star <= currentRating) Yellow else LightGray,
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clickable {
+                                            makeRequest.launch {
+                                                currentClassId?.let {
+                                                    if(api.evaluate(RatingRequest(it,star))) {
+                                                        currentRating = star
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        .padding(4.dp)
+                                )
+                            }
+                        }
                     }
                     else {
                         Icon(
@@ -160,6 +194,14 @@ fun StudentPage(
                                     fontSize = 18.sp,
                                     modifier = Modifier.padding(16.dp)
                                 )
+                                item.rating?.let {
+                                    Text(
+                                        color = Yellow,
+                                        text = it.toString(),
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
                             }
                         }
                     }

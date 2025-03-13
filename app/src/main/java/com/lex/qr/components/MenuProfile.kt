@@ -83,14 +83,14 @@ fun MenuProfile(modifier: Modifier,
 
     Box(modifier) {
         IconButton(
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(56.dp),
             onClick = { changeMenu(!showMenu) }
         ) {
             Image(
                 painter = painter,
                 contentDescription = "Аватарка",
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(56.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )

@@ -44,6 +44,7 @@ import com.lex.qr.components.NavButton
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
+import com.lex.qr.ui.theme.Yellow
 import com.lex.qr.utils.API
 import com.lex.qr.utils.CreateClassRequest
 import com.lex.qr.utils.CreateClassResponse
@@ -191,6 +192,14 @@ fun StaffPage(
                                         fontSize = 18.sp,
                                         modifier = Modifier.padding(8.dp).fillMaxWidth(0.8f)
                                     )
+                                    item.rating?.let {
+                                        Text(
+                                            color = Yellow,
+                                            text = it.toString(),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.padding(4.dp)
+                                        )
+                                    }
                                     if (isActive) {
                                         Box(
                                             modifier = Modifier
@@ -377,11 +386,19 @@ fun StaffPage(
                                         defaultElevation = 4.dp
                                     ),
                                 ) {
+                                    item.rating?.let {
+                                        Text(
+                                            color = Yellow,
+                                            text = it.toString(),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.padding(12.dp)
+                                        )
+                                    }
                                     Text(
                                         color = Blue,
                                         text = item.createdAt,
                                         fontSize = 18.sp,
-                                        modifier = Modifier.padding(16.dp)
+                                        modifier = Modifier.padding(4.dp)
                                     )
                                 }
                             }
@@ -424,6 +441,14 @@ fun StaffPage(
                                         fontSize = 18.sp,
                                         modifier = Modifier.padding(16.dp)
                                     )
+                                    item.rating?.let {
+                                        Text(
+                                            color = Yellow,
+                                            text = it.toString(),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.padding(4.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

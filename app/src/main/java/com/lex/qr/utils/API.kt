@@ -140,6 +140,7 @@ class API {
         }
     }
     //Тут будет ответ наверн
+    //Не крашится но и валидации нет ведь нет модели
     suspend fun evaluate(request: RatingRequest): Boolean {
         return try {
             client.put("$url/class/evaluate") {
