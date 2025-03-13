@@ -50,6 +50,30 @@ class API {
             setBody(request)
         }.body()
     }
+    suspend fun createUser(request: CreateUserRequest): User? {
+        return client.post("$url/admin/user") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+            setBody(request)
+        }.body()
+    }
+    suspend fun createGroup(request: CreateGroupRequest): Group? {
+        return client.post("$url/admin/group") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+            setBody(request)
+        }.body()
+    }
+    suspend fun createSubject(request: CreateSubjectRequest): Subject? {
+        return client.post("$url/admin/subject") {
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
+            setBody(request)
+        }.body()
+    }
     suspend fun joinClass(request: JoinClassRequest): JoinClassResponse? {
         return client.post("$url/class/join") {
             headers {
@@ -122,6 +146,34 @@ class API {
             null
         }
     }
+    suspend fun deactivateGroup(id: String): Group? {
+        return try {
+            val group: Group = client.delete("$url/admin/group/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }.body()
+
+            group
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
+        }
+    }
+    suspend fun deactivateSubject(id: String): Subject? {
+        return try {
+            val subject: Subject = client.delete("$url/admin/subject/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }.body()
+
+            subject
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
+        }
+    }
     suspend fun uploadAvatar(id: String, imageBytes: ByteArray): Boolean {
         return try {
             client.post("$url/profile/avatar/$id") {
@@ -152,6 +204,35 @@ class API {
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    suspend fun updateGroup(id: String, request: CreateGroupRequest): Group? {
+        return try {
+            val group: Group = client.put("$url/admin/group/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }.body()
+            group
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
+        }
+    }
+    suspend fun updateSubject(id: String, request: CreateSubjectRequest): Subject? {
+        return try {
+            val subject: Subject = client.put("$url/admin/subject/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }.body()
+            subject
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
         }
     }
 }

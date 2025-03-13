@@ -42,7 +42,6 @@ fun NavButton(
         modifier = modifier
             .size(64.dp)
             .scale(scale)
-            .clickable { onNavClick() }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {

@@ -58,7 +58,7 @@ import com.lex.qr.utils.User
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
-private enum class CurrentStaffPage: Page {
+enum class CurrentStaffPage: Page {
     QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY
 }
 

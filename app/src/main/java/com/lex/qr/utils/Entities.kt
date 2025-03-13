@@ -20,6 +20,26 @@ data class RatingRequest(
 )
 
 @Serializable
+data class CreateUserRequest(
+    val email: String,
+    val password: String,
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String,
+    val role: String,
+    @SerialName("group_id") val groupId: String?
+)
+
+@Serializable
+data class CreateGroupRequest(
+    val name: String
+)
+
+@Serializable
+data class CreateSubjectRequest(
+    val name: String
+)
+
+@Serializable
 data class CreateClassRequest(
     @SerialName("staff_id") val staffId: String,
     @SerialName("subject_id")val subjectId: String,
