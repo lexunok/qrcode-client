@@ -190,14 +190,19 @@ fun StaffPage(
                                         color = color,
                                         text = "${item.firstName} ${item.lastName}",
                                         fontSize = 18.sp,
-                                        modifier = Modifier.padding(8.dp).fillMaxWidth(0.8f)
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .padding(paddingValues = PaddingValues(start = 8.dp, end = 1.dp))
+                                            .fillMaxWidth(0.8f)
                                     )
                                     item.rating?.let {
                                         Text(
                                             color = Yellow,
                                             text = it.toString(),
                                             fontSize = 18.sp,
-                                            modifier = Modifier.padding(4.dp)
+                                            modifier = Modifier
+                                                .padding(vertical = 8.dp)
+                                                .padding(paddingValues = PaddingValues(start = 1.dp, end = 8.dp))
                                         )
                                     }
                                     if (isActive) {

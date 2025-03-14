@@ -174,6 +174,20 @@ class API {
             null
         }
     }
+    suspend fun deleteUser(id: String): String? {
+        return try {
+            val response: String = client.delete("$url/admin/user/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }.body()
+
+            response
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
+        }
+    }
     suspend fun uploadAvatar(id: String, imageBytes: ByteArray): Boolean {
         return try {
             client.post("$url/profile/avatar/$id") {
@@ -207,6 +221,20 @@ class API {
         }
     }
 
+    suspend fun updateUser(id: String, request: UpdateUserRequest): User? {
+        return try {
+            val user: User = client.put("$url/admin/user/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }.body()
+            user
+        } catch (e: Exception) {
+            Log.i("ERROR", e.toString())
+            null
+        }
+    }
     suspend fun updateGroup(id: String, request: CreateGroupRequest): Group? {
         return try {
             val group: Group = client.put("$url/admin/group/$id") {

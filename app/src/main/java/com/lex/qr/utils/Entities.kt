@@ -86,6 +86,16 @@ data class ClassResponse(
     @SerialName("is_active") val isActive: Boolean,
     @SerialName("public_id") val publicId: String
 )
+
+@Serializable
+data class UpdateUserRequest(
+    val email: String,
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String,
+    val role: String,
+    @SerialName("group_id") val groupId: String?
+)
+
 @Serializable
 data class Student(
     val id: String,

@@ -22,6 +22,10 @@ fun getTransitionDirection(from: Page, to: Page): PageTransitionDirection {
                 from == CurrentAdminPage.MAIN && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
                 from == CurrentAdminPage.CREATE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
                 from == CurrentAdminPage.CREATE && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.CREATE && to == CurrentAdminPage.CREATEADD -> PageTransitionDirection.RIGHT
+                from == CurrentAdminPage.CREATEADD && to == CurrentAdminPage.CREATE -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.CREATEADD && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.CREATEADD && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
                 else -> PageTransitionDirection.RIGHT
             }
         }
