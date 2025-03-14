@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,7 +92,8 @@ fun MenuProfile(modifier: Modifier,
                 contentDescription = "Аватарка",
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .border(width = 2.dp, color = Blue, shape = CircleShape),
                 contentScale = ContentScale.Crop
             )
         }

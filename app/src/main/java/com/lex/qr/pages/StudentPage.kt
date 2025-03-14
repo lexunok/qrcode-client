@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -24,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,6 +56,7 @@ import com.lex.qr.utils.GetClassResponse
 import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.RatingRequest
 import com.lex.qr.utils.User
+import com.lex.qr.utils.formatDateTime
 import kotlinx.coroutines.launch
 
 private enum class CurrentStudentPage: Page {
@@ -77,7 +80,7 @@ fun StudentPage(
 
         var visits by remember { mutableStateOf<List<ClassResponse>>(emptyList()) }
 
-        var currentRating by remember { mutableStateOf(0) }
+        var currentRating by remember { mutableIntStateOf(0) }
         var currentClassId by remember { mutableStateOf<String?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
@@ -166,7 +169,8 @@ fun StudentPage(
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 64.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.9f),
                         contentPadding = PaddingValues(16.dp)
                     ) {
                         items(visits) { item ->
@@ -174,8 +178,18 @@ fun StudentPage(
                             if (item.isActive) {
                                 color = Green
                             }
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                            var rating = 0
+                            if (item.rating != null) {
+                                rating = item.rating
+                            }
+                            Text(
+                                textAlign = TextAlign.Center,
+                                color = Blue,
+                                text = formatDateTime(item.createdAt),
+                                fontSize = 18.sp,
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                            )
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp)
@@ -184,24 +198,21 @@ fun StudentPage(
                                         color = color,
                                         shape = RoundedCornerShape(8.dp)
                                     ),
-                                elevation = CardDefaults.cardElevation(
-                                    defaultElevation = 4.dp
-                                ),
                             ) {
                                 Text(
+                                    textAlign = TextAlign.Center,
                                     color = color,
-                                    text = "${item.subjectName}:\n${item.createdAt}",
+                                    text = item.subjectName,
                                     fontSize = 18.sp,
-                                    modifier = Modifier.padding(16.dp)
+                                    modifier = Modifier.fillMaxWidth(0.85f).padding(vertical = 8.dp)
                                 )
-                                item.rating?.let {
-                                    Text(
-                                        color = Yellow,
-                                        text = it.toString(),
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.padding(12.dp)
-                                    )
-                                }
+                                Text(
+                                    textAlign = TextAlign.Center,
+                                    color = Yellow,
+                                    text = rating.toString(),
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                                )
                             }
                         }
                     }

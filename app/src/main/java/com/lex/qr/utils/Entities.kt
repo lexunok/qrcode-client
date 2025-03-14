@@ -2,6 +2,7 @@ package com.lex.qr.utils
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.LocalDateTime
 
 enum class Role {
     ADMIN, STAFF, STUDENT
@@ -68,7 +69,9 @@ data class JoinClassResponse(
 )
 @Serializable
 data class GetClassResponse(
-    @SerialName("created_at") val createdAt: String,
+    @SerialName("created_at")
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val createdAt: LocalDateTime,
     @SerialName("public_id") val publicId: String,
     val rating: Double?
 )
@@ -81,7 +84,9 @@ data class GetClassRequest(
 @Serializable
 data class ClassResponse(
     val rating: Int?,
-    @SerialName("created_at") val createdAt: String,
+    @SerialName("created_at")
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val createdAt: LocalDateTime,
     @SerialName("subject_name") val subjectName: String,
     @SerialName("is_active") val isActive: Boolean,
     @SerialName("public_id") val publicId: String
@@ -99,7 +104,7 @@ data class UpdateUserRequest(
 @Serializable
 data class Student(
     val id: String,
-    val rating: Double?,
+    val rating: Int?,
     @SerialName("student_id") val studentId: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,

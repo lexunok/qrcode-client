@@ -2,12 +2,21 @@ package com.lex.qr.pages
 
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,16 +41,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
+import com.lex.qr.components.getTransitionDirection
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
@@ -55,6 +72,7 @@ import com.lex.qr.utils.Group
 import com.lex.qr.utils.Student
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.User
+import com.lex.qr.utils.formatDateTime
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
@@ -85,8 +103,8 @@ fun StaffPage(
     var isLoading by remember { mutableStateOf(false) }
     var isListClicked by remember { mutableStateOf(false) }
 
-    AnimatedContent(
-        targetState = page,
+//    AnimatedContent(
+//        targetState = page,
 //        transitionSpec = {
 //            when (getTransitionDirection(initialState, targetState)) {
 //                PageTransitionDirection.LEFT -> {
@@ -107,27 +125,30 @@ fun StaffPage(
 //                }
 //            }
 //        },
-        modifier = Modifier.fillMaxSize()
-    ) { currentPage ->
+//        modifier = Modifier.fillMaxSize()
+//    ) { currentPage ->
         Box(modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectVerticalDragGestures { _, dragAmount ->
-                    if (dragAmount > 0) {
-                        page = CurrentStaffPage.ACTIVITY
-                        changeTitle("Присутствующие")
-                        createClassResponse?.let {
-                            makeRequest.launch {
-                                isLoading = true
-                                api.getStudents(it.publicId)?.let { response ->
-                                    students = response
+                    if (page == CurrentStaffPage.QRCODE || page == CurrentStaffPage.ACTIVITY) {
+                        if (dragAmount > 0 && createClassResponse!=null) {
+                            page = CurrentStaffPage.ACTIVITY
+                            changeTitle("Присутствующие")
+                            createClassResponse?.let {
+                                makeRequest.launch {
+                                    isLoading = true
+                                    api.getStudents(it.publicId)?.let { response ->
+                                        students = response
+                                    }
+                                    isLoading = false
                                 }
-                                isLoading = false
                             }
+                            //Область видимости плохая
+                        } else if (dragAmount < 0) {
+                            page = CurrentStaffPage.QRCODE
+                            changeTitle("Главная")
                         }
-                    } else if (dragAmount < 0) {
-                        page = CurrentStaffPage.QRCODE
-                        changeTitle("Главная")
                     }
                 }
             }){
@@ -141,7 +162,7 @@ fun StaffPage(
                 )
             }
             else {
-                when(currentPage) {
+                when(page) {
                     CurrentStaffPage.QRCODE -> {
     //                    val qrOffset by animateDpAsState(
     //                        targetValue = if ((students.isEmpty() && !isLoading) || page != CurrentPage.MAIN) 0.dp else (-400).dp,
@@ -167,7 +188,8 @@ fun StaffPage(
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f),
                             contentPadding = PaddingValues(16.dp)
                         ) {
                             items(students) { item ->
@@ -176,39 +198,65 @@ fun StaffPage(
                                 if (isActive) {
                                     color = Green
                                 }
-                                Row(
+                                var rating = 0
+                                if (item.rating != null) {
+                                    rating = item.rating
+                                }
+                                val painter = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data("https://qrcode-wva2.shuttle.app/api/profile/avatar/${item.studentId}")
+                                        .error(R.drawable.baseline_account_circle_24)
+                                        .placeholder(R.drawable.baseline_account_circle_24)
+                                        .build(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
+                                        .padding(8.dp)
                                         .border(
                                             width = 4.dp,
                                             color = color,
                                             shape = RoundedCornerShape(8.dp)
                                         )
+                                        .padding(vertical = 12.dp, horizontal = 8.dp)
                                 ) {
-                                    Text(
-                                        color = color,
-                                        text = "${item.firstName} ${item.lastName}",
-                                        fontSize = 18.sp,
+                                    Image(
+                                        painter = painter,
+                                        contentDescription = "Аватарка",
                                         modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .padding(paddingValues = PaddingValues(start = 8.dp, end = 1.dp))
-                                            .fillMaxWidth(0.8f)
+                                            .padding(4.dp)
+                                            .align(Alignment.CenterHorizontally)
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .border(
+                                                width = 2.dp,
+                                                color = Blue,
+                                                shape = CircleShape
+                                            ),
+                                        contentScale = ContentScale.Crop
                                     )
-                                    item.rating?.let {
+                                    Row(Modifier.fillMaxWidth()) {
                                         Text(
-                                            color = Yellow,
-                                            text = it.toString(),
+                                            textAlign = TextAlign.Center,
+                                            color = color,
+                                            text = "${item.firstName} ${item.lastName}",
                                             fontSize = 18.sp,
-                                            modifier = Modifier
-                                                .padding(vertical = 8.dp)
-                                                .padding(paddingValues = PaddingValues(start = 1.dp, end = 8.dp))
+                                            modifier = Modifier.fillMaxWidth(0.85f)
+                                        )
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            color = Yellow,
+                                            text = rating.toString(),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.fillMaxWidth()
                                         )
                                     }
                                     if (isActive) {
                                         Box(
                                             modifier = Modifier
-                                                .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
+                                                .padding(8.dp)
+                                                .align(Alignment.CenterHorizontally)
                                                 .clickable {
                                                     makeRequest.launch {
                                                         isLoading = true
@@ -236,7 +284,8 @@ fun StaffPage(
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f),
                             contentPadding = PaddingValues(16.dp)
                         ) {
                             items(subjects) { item ->
@@ -268,10 +317,11 @@ fun StaffPage(
                                     ),
                                 ) {
                                     Text(
+                                        textAlign = TextAlign.Center,
                                         color = Blue,
                                         text = item.name,
                                         fontSize = 18.sp,
-                                        modifier = Modifier.padding(16.dp)
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp)
                                     )
                                 }
                             }
@@ -281,7 +331,8 @@ fun StaffPage(
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f),
                             contentPadding = PaddingValues(16.dp)
                         ) {
                             items(groups) { item ->
@@ -344,10 +395,11 @@ fun StaffPage(
                                     ),
                                 ) {
                                     Text(
+                                        textAlign = TextAlign.Center,
                                         color = Blue,
                                         text = item.name,
                                         fontSize = 18.sp,
-                                        modifier = Modifier.padding(16.dp)
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp)
                                     )
                                 }
                             }
@@ -357,7 +409,8 @@ fun StaffPage(
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f),
                             contentPadding = PaddingValues(16.dp)
                         ) {
                             items(classes) { item ->
@@ -391,20 +444,22 @@ fun StaffPage(
                                         defaultElevation = 4.dp
                                     ),
                                 ) {
+                                    Text(
+                                        textAlign = TextAlign.Center,
+                                        color = Blue,
+                                        text = formatDateTime(item.createdAt),
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp)
+                                    )
                                     item.rating?.let {
                                         Text(
+                                            textAlign = TextAlign.Center,
                                             color = Yellow,
-                                            text = it.toString(),
+                                            text = "Средний рейтинг: $it",
                                             fontSize = 18.sp,
-                                            modifier = Modifier.padding(12.dp)
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                                         )
                                     }
-                                    Text(
-                                        color = Blue,
-                                        text = item.createdAt,
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.padding(4.dp)
-                                    )
                                 }
                             }
                         }
@@ -413,7 +468,8 @@ fun StaffPage(
                         LazyColumn(
                             modifier = Modifier
                                 .padding(top = 64.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f),
                             contentPadding = PaddingValues(16.dp)
                         ) {
                             items(students) { item ->
@@ -421,37 +477,55 @@ fun StaffPage(
                                 if (item.isActive) {
                                     color = Green
                                 }
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                var rating = 0
+                                if (item.rating != null) {
+                                    rating = item.rating
+                                }
+
+                                val painter = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data("https://qrcode-wva2.shuttle.app/api/profile/avatar/${item.studentId}")
+                                        .error(R.drawable.baseline_account_circle_24)
+                                        .placeholder(R.drawable.baseline_account_circle_24)
+                                        .build(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Column(
                                     modifier = Modifier
-                                        .clickable {
-                                            isListClicked = false
-                                            page = CurrentStaffPage.QRCODE
-                                            changeTitle("Главная")
-                                        }
                                         .fillMaxWidth()
                                         .padding(8.dp)
                                         .border(
                                             width = 4.dp,
                                             color = color,
                                             shape = RoundedCornerShape(8.dp)
-                                        ),
-                                    elevation = CardDefaults.cardElevation(
-                                        defaultElevation = 4.dp
-                                    ),
+                                        )
+                                        .padding(vertical = 12.dp, horizontal = 8.dp)
                                 ) {
-                                    Text(
-                                        color = color,
-                                        text = "${item.firstName} ${item.lastName}",
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.padding(16.dp)
+                                    Image(
+                                        painter = painter,
+                                        contentDescription = "Аватарка",
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .align(Alignment.CenterHorizontally)
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .border(width = 2.dp, color = Blue, shape = CircleShape),
+                                        contentScale = ContentScale.Crop
                                     )
-                                    item.rating?.let {
+                                    Row(Modifier.fillMaxWidth()) {
                                         Text(
-                                            color = Yellow,
-                                            text = it.toString(),
+                                            textAlign = TextAlign.Center,
+                                            color = color,
+                                            text = "${item.firstName} ${item.lastName}",
                                             fontSize = 18.sp,
-                                            modifier = Modifier.padding(4.dp)
+                                            modifier = Modifier.fillMaxWidth(0.85f)
+                                        )
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            color = Yellow,
+                                            text = rating.toString(),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.fillMaxWidth()
                                         )
                                     }
                                 }
@@ -501,5 +575,4 @@ fun StaffPage(
                 }
             }
         }
-    }
 }

@@ -45,11 +45,6 @@ fun MainPage(
     onLogout: (Boolean) -> Unit,
 ) {
 
-    LaunchedEffect(Unit) {
-        geolocationClient.checkGps()
-    }
-
-    var isLoading by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     var title by remember { mutableStateOf("Главная") }
@@ -67,10 +62,6 @@ fun MainPage(
             .align(Alignment.TopCenter)
         ) {
             Title(title, Modifier.fillMaxWidth().align(Alignment.Center).padding(vertical = 12.dp))
-        }
-
-        if (isLoading) {
-            CircularProgressIndicator(color = Blue, modifier = Modifier.size(100.dp).align(Alignment.Center), strokeWidth = 12.dp)
         }
 
         when (user.role) {

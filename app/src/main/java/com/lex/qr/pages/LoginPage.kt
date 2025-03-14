@@ -116,19 +116,18 @@ fun LoginPage(
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation()
             )
-            Text(
-                modifier = Modifier.padding(end = 4.dp, bottom = 8.dp, top = 16.dp).fillMaxWidth(),
-                text = "Забыли пароль?",
-                color = Blue,
-                textAlign = TextAlign.End,
-                fontSize = 16.sp,
-                textDecoration = TextDecoration.Underline
-            )
+//            Text(
+//                modifier = Modifier.padding(end = 4.dp, bottom = 8.dp, top = 16.dp).fillMaxWidth(),
+//                text = "Забыли пароль?",
+//                color = Blue,
+//                textAlign = TextAlign.End,
+//                fontSize = 16.sp,
+//                textDecoration = TextDecoration.Underline
+//            )
         }
         Button(
             onClick = {
-                //Сделать норм валидацию
-                if (email.length > 4 && password.length > 8) {
+                if (email.isNotEmpty() && password.isNotEmpty()) {
                     doLogin.launch {
                         try {
                             val response = api.login(LoginRequest(email = "$email@std.tyuiu.ru", password = password))
