@@ -53,6 +53,7 @@ import com.lex.qr.components.NavButton
 import com.lex.qr.components.RadioSelect
 import com.lex.qr.components.getTransitionDirection
 import com.lex.qr.ui.theme.Blue
+import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.utils.API
 import com.lex.qr.utils.CreateGroupRequest
@@ -66,7 +67,7 @@ import com.lex.qr.utils.User
 import kotlinx.coroutines.launch
 
 enum class CurrentAdminPage : Page {
-    EDITOR, LIST, CATEGORY, MAIN, CREATE, CREATEADD
+    EDITOR, LIST, CATEGORY, MAIN, CREATE, SELECT_USER_GROUP
 }
 
 private enum class ObjectType{
@@ -162,6 +163,9 @@ fun AdminPage(
     api: API,
     changeTitle: (String) -> Unit
 ) {
+    var page by remember { mutableStateOf(CurrentAdminPage.MAIN) }
+    var isLoading by remember { mutableStateOf(false) }
+
     val getUsersScope = rememberCoroutineScope()
     val getGroupsScope = rememberCoroutineScope()
     val getSubjectsScope = rememberCoroutineScope()
@@ -170,7 +174,6 @@ fun AdminPage(
     val putObjectScope = rememberCoroutineScope()
     val deleteObjectScope = rememberCoroutineScope()
 
-    var page by remember { mutableStateOf(CurrentAdminPage.MAIN) }
     var users by remember { mutableStateOf<List<User>>(emptyList()) }
     var groups by remember { mutableStateOf<List<Group>>(emptyList()) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
@@ -179,21 +182,18 @@ fun AdminPage(
     var selectedGroup by remember { mutableStateOf<Group?>(null) }
     var selectedSubject by remember { mutableStateOf<Subject?>(null) }
 
-    var isLoading by remember { mutableStateOf(false) }
-
     var selectedOption by remember { mutableStateOf(ObjectType.NULL) }
-    var buttonText by remember { mutableStateOf("Выбор группы") }
 
-    var createEmail by remember { mutableStateOf("") }
-    var createPassword by remember { mutableStateOf("") }
-    var createFirstName by remember { mutableStateOf("") }
-    var createLastName by remember { mutableStateOf("") }
-    var createRole by remember { mutableStateOf(Role.STUDENT) }
-    var createName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf(Role.STUDENT) }
+    var userGroup by remember { mutableStateOf<Group?>(null) }
+    var name by remember { mutableStateOf("") }
 
-    //В CREATE и EDITOR добавить обрезку email до @ для избежания ситуаций email@gmail.com@std.tyuiu.ru
-    //В EDITOR добавить изменение Group
     //В EDITOR не работает изменение пользователя, удаление работает
+    //В EDITOR убрать костыль
 
     Box(modifier = Modifier.fillMaxSize()){
         AnimatedContent(
@@ -233,10 +233,13 @@ fun AdminPage(
                                 .verticalScroll(rememberScrollState())
                             ) {
                                 selectedUser?.let { user ->
-                                    var email by remember { mutableStateOf(user.email.substringBefore("@")) }
-                                    var firstName by remember { mutableStateOf(user.firstName) }
-                                    var lastName by remember { mutableStateOf(user.lastName) }
-                                    var role by remember { mutableStateOf(user.role) }
+                                    getGroupsScope.launch {
+                                        val response = api.getGroups()
+                                        response?.let {
+                                            groups = response
+                                            userGroup = response.find { it.id == userGroup?.id }
+                                        }
+                                    }
                                     CreatePageText("Почта")
                                     CreatePageInput(
                                         email,
@@ -260,65 +263,65 @@ fun AdminPage(
                                         role == Role.STUDENT,
                                         "Студент"
                                     ) { role = Role.STUDENT }
+                                    CreatePageButton(text = userGroup?.name ?: "Выбор группы") {
+                                        getGroupsScope.launch {
+                                            page = CurrentAdminPage.SELECT_USER_GROUP
+                                            changeTitle("Группы")
+                                        }
+                                    }
                                     CreatePageButton("Сохранить") {
                                         putObjectScope.launch {
                                             api.updateUser(
                                                 user.id,
-                                                UpdateUserRequest("$email$tyuiuEmail", firstName, lastName, role.name, null)
+                                                UpdateUserRequest(email.substringBefore("@") + tyuiuEmail, firstName, lastName, role.name,
+                                                    userGroup?.id
+                                                )
                                             )
-                                            users = emptyList()
-                                            page = CurrentAdminPage.CATEGORY
-                                            selectedUser = null
+                                            page = CurrentAdminPage.MAIN
+                                            changeTitle("Главная")
                                         }
                                     }
                                     CreatePageButton("Удалить") {
                                         deleteObjectScope.launch {
                                             api.deleteUser(user.id)
-                                            users = emptyList()
-                                            page = CurrentAdminPage.CATEGORY
-                                            selectedUser = null
+                                            page = CurrentAdminPage.MAIN
+                                            changeTitle("Главная")
                                         }
                                     }
                                 }
                                 selectedGroup?.let { group ->
-                                    var name by remember { mutableStateOf(group.name) }
                                     CreatePageText("Название")
                                     CreatePageInput(name) { newName -> name = newName }
                                     CreatePageButton("Сохранить") {
                                         putObjectScope.launch {
                                             api.updateGroup(group.id, CreateGroupRequest(name))
-                                            groups = emptyList()
-                                            page = CurrentAdminPage.CATEGORY
-                                            selectedGroup = null
+                                            page = CurrentAdminPage.MAIN
+                                            changeTitle("Главная")
                                         }
                                     }
                                     CreatePageButton("Удалить") {
                                         deleteObjectScope.launch {
                                             api.deactivateGroup(group.id)
-                                            groups = emptyList()
-                                            page = CurrentAdminPage.CATEGORY
-                                            selectedGroup = null
+                                            page = CurrentAdminPage.MAIN
+                                            changeTitle("Главная")
                                         }
                                     }
                                 }
                                 selectedSubject?.let { subject ->
-                                    var name by remember { mutableStateOf(subject.name) }
                                     CreatePageText("Название")
                                     CreatePageInput(name) { newName -> name = newName }
                                     CreatePageButton("Сохранить") {
                                         putObjectScope.launch {
                                             api.updateSubject(subject.id, CreateSubjectRequest(name))
-                                            subjects = emptyList()
-                                            page = CurrentAdminPage.CATEGORY
-                                            selectedSubject = null
+                                            page = CurrentAdminPage.MAIN
+                                            changeTitle("Главная")
                                         }
                                     }
                                     CreatePageButton("Удалить") {
                                         deleteObjectScope.launch {
                                             api.deactivateSubject(subject.id)
-                                            subjects = emptyList()
-                                            page = CurrentAdminPage.CATEGORY
-                                            selectedSubject = null
+                                            page = CurrentAdminPage.MAIN
+                                            changeTitle("Главная")
                                         }
                                     }
                                 }
@@ -352,6 +355,13 @@ fun AdminPage(
                                             is User -> {
                                                 isLoading = true
                                                 selectedUser = item
+                                                email = item.email.substringBefore("@")
+                                                firstName = item.firstName
+                                                lastName = item.lastName
+                                                role = item.role
+                                                userGroup = item.groupId?.let {
+                                                    Group(it, "", "", false)
+                                                }
                                                 page = CurrentAdminPage.EDITOR
                                                 changeTitle("Редактор пользователя")
                                                 isLoading = false
@@ -359,6 +369,7 @@ fun AdminPage(
                                             is Group -> {
                                                 isLoading = true
                                                 selectedGroup = item
+                                                name = item.name
                                                 page = CurrentAdminPage.EDITOR
                                                 changeTitle("Редактор группы")
                                                 isLoading = false
@@ -366,6 +377,7 @@ fun AdminPage(
                                             is Subject -> {
                                                 isLoading = true
                                                 selectedSubject = item
+                                                name = item.name
                                                 page = CurrentAdminPage.EDITOR
                                                 changeTitle("Редактор предмета")
                                                 isLoading = false
@@ -466,33 +478,33 @@ fun AdminPage(
                                     ObjectType.USER -> {
                                         CreatePageText("Введите почту")
                                         CreatePageInput(
-                                            createEmail,
+                                            email,
                                             suffix = { Text(text = tyuiuEmail, color = Blue) },
-                                            onValueChange = { newEmail -> createEmail = newEmail }
+                                            onValueChange = { newEmail -> email = newEmail }
                                         )
                                         CreatePageText("Введите пароль")
-                                        CreatePageInput(createPassword) { newPassword -> createPassword = newPassword }
+                                        CreatePageInput(password) { newPassword -> password = newPassword }
                                         CreatePageText("Введите имя")
-                                        CreatePageInput(createFirstName) { newFirstName -> createFirstName = newFirstName }
+                                        CreatePageInput(firstName) { newFirstName -> firstName = newFirstName }
                                         CreatePageText("Введите фамилию")
-                                        CreatePageInput(createLastName) { newLastName -> createLastName = newLastName }
+                                        CreatePageInput(lastName) { newLastName -> lastName = newLastName }
                                         CreatePageText("Выберите роль")
                                         RadioSelect(
-                                            createRole == Role.ADMIN,
+                                            role == Role.ADMIN,
                                             "Админ"
-                                        ) { createRole = Role.ADMIN }
+                                        ) { role = Role.ADMIN }
                                         RadioSelect(
-                                            createRole == Role.STAFF,
+                                            role == Role.STAFF,
                                             "Преподаватель"
-                                        ) { createRole = Role.STAFF }
+                                        ) { role = Role.STAFF }
                                         RadioSelect(
-                                            createRole == Role.STUDENT,
+                                            role == Role.STUDENT,
                                             "Студент"
-                                        ) { createRole = Role.STUDENT }
-                                        CreatePageButton(text = buttonText) {
+                                        ) { role = Role.STUDENT }
+                                        CreatePageButton(text = userGroup?.name ?: "Выбор группы") {
                                             getGroupsScope.launch {
                                                 getGroupsScope.launch {
-                                                    page = CurrentAdminPage.CREATEADD
+                                                    page = CurrentAdminPage.SELECT_USER_GROUP
                                                     changeTitle("Группы")
                                                     isLoading = true
                                                     val response = api.getGroups()
@@ -506,7 +518,7 @@ fun AdminPage(
                                     }
                                     ObjectType.SUBJECT, ObjectType.GROUP -> {
                                         CreatePageText("Введите название")
-                                        CreatePageInput(createName) { newName -> createName = newName }
+                                        CreatePageInput(name) { newName -> name = newName }
                                     }
                                     ObjectType.NULL -> {}
                                 }
@@ -515,22 +527,23 @@ fun AdminPage(
                                         when (selectedOption) {
                                             ObjectType.USER -> {
                                                 api.createUser(
-                                                    CreateUserRequest("$createEmail$tyuiuEmail", createPassword, createFirstName, createLastName,
-                                                        createRole.name, selectedGroup?.id
+                                                    CreateUserRequest(email.substringBefore("@") + tyuiuEmail, password, firstName, lastName,
+                                                        role.name, userGroup?.id
                                                     )
                                                 )
                                             }
-                                            ObjectType.GROUP -> api.createGroup(CreateGroupRequest(createName))
-                                            ObjectType.SUBJECT -> api.createSubject(CreateSubjectRequest(createName))
+                                            ObjectType.GROUP -> api.createGroup(CreateGroupRequest(name))
+                                            ObjectType.SUBJECT -> api.createSubject(CreateSubjectRequest(name))
                                             ObjectType.NULL -> {}
                                         }
                                         page = CurrentAdminPage.MAIN
+                                        changeTitle("Главная")
                                     }
                                 }
                             }
                         }
                     }
-                    CurrentAdminPage.CREATEADD -> {
+                    CurrentAdminPage.SELECT_USER_GROUP -> {
                         Box(modifier = Modifier.fillMaxSize()) {
                             if(isLoading){
                                 LoadingColumn(
@@ -553,20 +566,25 @@ fun AdminPage(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(8.dp)
-                                                .border(width = 4.dp, color = Blue, shape = RoundedCornerShape(8.dp))
+                                                .border(width = 4.dp, color = if (userGroup?.id == item.id) Green else Blue, shape = RoundedCornerShape(8.dp))
                                                 .clickable {
                                                     isLoading = true
-                                                    selectedGroup = item
-                                                    buttonText = selectedGroup?.name.toString()
-                                                    page = CurrentAdminPage.CREATE
-                                                    changeTitle("Окно создания")
+                                                    userGroup = item
+                                                    if (selectedUser == null) {
+                                                        page = CurrentAdminPage.CREATE
+                                                        changeTitle("Окно создания")
+                                                    }
+                                                    else {
+                                                        page = CurrentAdminPage.EDITOR
+                                                        changeTitle("Редактор пользователя")
+                                                    }
                                                     isLoading = false
                                                 },
                                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
                                             Text(
-                                                color = Blue,
+                                                color = if (userGroup?.id == item.id) Green else Blue,
                                                 text = item.name,
                                                 fontSize = 24.sp,
                                                 modifier = Modifier.padding(16.dp)
@@ -591,6 +609,12 @@ fun AdminPage(
             selectedUser = null
             selectedSubject = null
             selectedGroup = null
+            email = ""
+            firstName = ""
+            lastName = ""
+            role = Role.STUDENT
+            userGroup = null
+            name = ""
             page = CurrentAdminPage.CATEGORY
             changeTitle("Выберите категорию")
         }
@@ -600,8 +624,14 @@ fun AdminPage(
             R.drawable.baseline_add_24,
             "Add new object"
         ) {
-            selectedGroup = null
             groups = emptyList()
+            email = ""
+            password = ""
+            firstName = ""
+            lastName = ""
+            role = Role.STUDENT
+            userGroup = null
+            name = ""
             page = CurrentAdminPage.CREATE
             changeTitle("Окно создания")
         }
