@@ -161,6 +161,7 @@ private fun CreatePageButton(
 @Composable
 fun AdminPage(
     api: API,
+    onToast: (String?) -> Unit,
     changeTitle: (String) -> Unit
 ) {
     var page by remember { mutableStateOf(CurrentAdminPage.MAIN) }
@@ -235,10 +236,15 @@ fun AdminPage(
                                 selectedUser?.let { user ->
                                     getGroupsScope.launch {
                                         val response = api.getGroups()
-                                        response?.let {
-                                            groups = response
-                                            userGroup = response.find { it.id == userGroup?.id }
-                                        }
+                                        response.fold(
+                                            onSuccess = { res ->
+                                                groups = res
+                                                userGroup = res.find { it.id == userGroup?.id }
+                                            },
+                                            onFailure = {
+                                                onToast(it.message)
+                                            }
+                                        )
                                     }
                                     CreatePageText("Почта")
                                     CreatePageInput(
@@ -271,11 +277,17 @@ fun AdminPage(
                                     }
                                     CreatePageButton("Сохранить") {
                                         putObjectScope.launch {
-                                            api.updateUser(
+                                            val response = api.updateUser(
                                                 user.id,
-                                                UpdateUserRequest(email.substringBefore("@") + tyuiuEmail, firstName, lastName, role.name,
+                                                UpdateUserRequest(email.substringBefore("@") + tyuiuEmail, password, firstName, lastName, role.name,
                                                     userGroup?.id
                                                 )
+                                            )
+                                            response.fold(
+                                                onSuccess = { },
+                                                onFailure = {
+                                                    onToast(it.message)
+                                                }
                                             )
                                             page = CurrentAdminPage.MAIN
                                             changeTitle("Главная")
@@ -283,7 +295,13 @@ fun AdminPage(
                                     }
                                     CreatePageButton("Удалить") {
                                         deleteObjectScope.launch {
-                                            api.deleteUser(user.id)
+                                            val response = api.deleteUser(user.id)
+                                            response.fold(
+                                                onSuccess = { },
+                                                onFailure = {
+                                                    onToast(it.message)
+                                                }
+                                            )
                                             page = CurrentAdminPage.MAIN
                                             changeTitle("Главная")
                                         }
@@ -294,14 +312,26 @@ fun AdminPage(
                                     CreatePageInput(name) { newName -> name = newName }
                                     CreatePageButton("Сохранить") {
                                         putObjectScope.launch {
-                                            api.updateGroup(group.id, CreateGroupRequest(name))
+                                            val response = api.updateGroup(group.id, CreateGroupRequest(name))
+                                            response.fold(
+                                                onSuccess = { },
+                                                onFailure = {
+                                                    onToast(it.message)
+                                                }
+                                            )
                                             page = CurrentAdminPage.MAIN
                                             changeTitle("Главная")
                                         }
                                     }
                                     CreatePageButton("Удалить") {
                                         deleteObjectScope.launch {
-                                            api.deactivateGroup(group.id)
+                                            val response = api.deleteGroup(group.id)
+                                            response.fold(
+                                                onSuccess = { },
+                                                onFailure = {
+                                                    onToast(it.message)
+                                                }
+                                            )
                                             page = CurrentAdminPage.MAIN
                                             changeTitle("Главная")
                                         }
@@ -312,14 +342,26 @@ fun AdminPage(
                                     CreatePageInput(name) { newName -> name = newName }
                                     CreatePageButton("Сохранить") {
                                         putObjectScope.launch {
-                                            api.updateSubject(subject.id, CreateSubjectRequest(name))
+                                            val response = api.updateSubject(subject.id, CreateSubjectRequest(name))
+                                            response.fold(
+                                                onSuccess = { },
+                                                onFailure = {
+                                                    onToast(it.message)
+                                                }
+                                            )
                                             page = CurrentAdminPage.MAIN
                                             changeTitle("Главная")
                                         }
                                     }
                                     CreatePageButton("Удалить") {
                                         deleteObjectScope.launch {
-                                            api.deactivateSubject(subject.id)
+                                            val response = api.deleteSubject(subject.id)
+                                            response.fold(
+                                                onSuccess = { },
+                                                onFailure = {
+                                                    onToast(it.message)
+                                                }
+                                            )
                                             page = CurrentAdminPage.MAIN
                                             changeTitle("Главная")
                                         }
@@ -414,9 +456,14 @@ fun AdminPage(
                                         changeTitle("Пользователи")
                                         isLoading = true
                                         val response = api.getUsers()
-                                        response?.let {
-                                            users = response
-                                        }
+                                        response.fold(
+                                            onSuccess = {
+                                                users = it
+                                            },
+                                            onFailure = {
+                                                onToast(it.message)
+                                            }
+                                        )
                                         isLoading = false
                                     }
                                 }
@@ -426,9 +473,14 @@ fun AdminPage(
                                         changeTitle("Группы")
                                         isLoading = true
                                         val response = api.getGroups()
-                                        response?.let {
-                                            groups = response
-                                        }
+                                        response.fold(
+                                            onSuccess = {
+                                                groups = it
+                                            },
+                                            onFailure = {
+                                                onToast(it.message)
+                                            }
+                                        )
                                         isLoading = false
                                     }
                                 }
@@ -438,9 +490,15 @@ fun AdminPage(
                                         changeTitle("Предметы")
                                         isLoading = true
                                         val response = api.getSubjects()
-                                        response?.let {
-                                            subjects = response
-                                        }
+                                        response.fold(
+                                            onSuccess = {
+                                                subjects = it
+                                            },
+                                            onFailure = {
+                                                onToast(it.message)
+                                            }
+                                        )
+
                                         isLoading = false
                                     }
                                 }
@@ -508,9 +566,14 @@ fun AdminPage(
                                                     changeTitle("Группы")
                                                     isLoading = true
                                                     val response = api.getGroups()
-                                                    response?.let {
-                                                        groups = response
-                                                    }
+                                                    response.fold(
+                                                        onSuccess = {
+                                                            groups = it
+                                                        },
+                                                        onFailure = {
+                                                            onToast(it.message)
+                                                        }
+                                                    )
                                                     isLoading = false
                                                 }
                                             }

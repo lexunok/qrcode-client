@@ -40,26 +40,31 @@ import com.lex.qr.R
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.utils.API
+import com.lex.qr.utils.Claims
 import com.lex.qr.utils.User
 import com.lex.qr.utils.UserPreferences
+import com.lex.qr.utils.avatarUrl
+import com.lex.qr.utils.url
 import kotlinx.coroutines.launch
 
 @Composable
 fun MenuProfile(modifier: Modifier,
                 api: API,
-                user: User,
+                user: Claims,
                 showMenu:Boolean,
                 userPrefs: UserPreferences,
                 changeMenu: (Boolean) -> Unit,
-                onLogout: (Boolean) -> Unit
-) {
+                onLogout: (Boolean) -> Unit,
+                onToast: (String?) -> Unit,
+                ) {
     val context = LocalContext.current
     val makeRequest = rememberCoroutineScope()
-    var avatarUrl by remember { mutableStateOf("https://qrcode-wva2.shuttle.app/api/profile/avatar/${user.id}") }
+    var avatarUrl by remember { mutableStateOf("$avatarUrl/${user.id}") }
 
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(avatarUrl)
+            .addHeader("Authorization", "Bearer ${api.getToken()}")
             .error(R.drawable.baseline_account_circle_24)
             .placeholder(R.drawable.baseline_account_circle_24)
             .build(),
@@ -67,16 +72,21 @@ fun MenuProfile(modifier: Modifier,
     )
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val inputStream = context.contentResolver.openInputStream(it)
+        uri?.let { path ->
+            val inputStream = context.contentResolver.openInputStream(path)
             val imageBytes = inputStream?.readBytes()
             inputStream?.close()
             imageBytes?.let { bytes ->
                 makeRequest.launch {
-                    if (api.uploadAvatar(user.id, bytes)) {
-                        //Убрать костыль, нужно с сервера url присылать при upload
-                        avatarUrl += "?t=${System.currentTimeMillis()}"
-                    }
+                    val response = api.uploadAvatar(bytes)
+                    response.fold(
+                        onSuccess = {
+                            avatarUrl += "?t=${System.currentTimeMillis()}"
+                        },
+                        onFailure = {
+                            onToast(it.message)
+                        }
+                    )
                 }
             }
         }
@@ -133,6 +143,7 @@ fun MenuProfile(modifier: Modifier,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
+                            api.updateToken(null)
                             userPrefs.clearUser()
                             onLogout(false)
                         },

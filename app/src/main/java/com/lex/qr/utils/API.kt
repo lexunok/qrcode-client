@@ -1,14 +1,18 @@
 package com.lex.qr.utils
 
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -19,9 +23,12 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+const val url: String = "https://qrcode-wva2.shuttle.app/api"
+const val avatarUrl: String = "$url/profile/avatar"
+
 class API {
 
-    private val url: String = "https://qrcode-wva2.shuttle.app/api"
+    private var jwtToken: String? = null
 
     private val client: HttpClient = HttpClient(Android) {
         install(ContentNegotiation) {
@@ -31,166 +38,334 @@ class API {
                 ignoreUnknownKeys = true
             })
         }
-    }
-    //Добавить проверки
-    suspend fun login(request: LoginRequest): User? {
-        return client.post("$url/profile/login") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
+        defaultRequest {
+            jwtToken?.let {
+                header("Authorization", "Bearer $it")
             }
-            setBody(request)
-        }.body()
-    }
-
-    suspend fun createClass(request: CreateClassRequest): CreateClassResponse? {
-        return client.post("$url/class/create") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-            setBody(request)
-        }.body()
-    }
-    suspend fun createUser(request: CreateUserRequest): User? {
-        return client.post("$url/admin/user") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-            setBody(request)
-        }.body()
-    }
-    suspend fun createGroup(request: CreateGroupRequest): Group? {
-        return client.post("$url/admin/group") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-            setBody(request)
-        }.body()
-    }
-    suspend fun createSubject(request: CreateSubjectRequest): Subject? {
-        return client.post("$url/admin/subject") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-            setBody(request)
-        }.body()
-    }
-    suspend fun joinClass(request: JoinClassRequest): JoinClassResponse? {
-        return client.post("$url/class/join") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-            setBody(request)
-        }.body()
-    }
-    suspend fun getStudents(key: String): List<Student>? {
-        return client.get("$url/class/students/$key") {
-                headers {
-                    append(HttpHeaders.ContentType, "application/json")
-                }
-            }.body()
-    }
-    suspend fun getUsers(): List<User>? {
-        return client.get("$url/admin/user") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-        }.body()
-    }
-    suspend fun getSubjects(): List<Subject>? {
-         return client.get("$url/admin/subject") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-        }.body()
-    }
-    suspend fun getGroups(): List<Group>? {
-        return client.get("$url/admin/group") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-        }.body()
-    }
-    suspend fun getClasses(request: GetClassRequest): List<GetClassResponse>? {
-        return client.post("$url/class/all") {
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
-            setBody(request)
-        }.body()
-    }
-    suspend fun getVisits(id: String): List<ClassResponse>? {
-        return try {
-            val response: List<ClassResponse> = client.get("$url/class/visits/$id") {
-                headers {
-                    append(HttpHeaders.ContentType, "application/json")
-                }
-            }.body()
-            response
-        }
-        catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
         }
     }
-    suspend fun deactivateStudent(id: String): Student? {
+    fun updateToken(newToken: String?) {
+        jwtToken = newToken
+    }
+    fun getToken() = jwtToken
+
+    suspend fun login(request: LoginRequest): Result<Claims> {
         return try {
-            val student: Student = client.delete("$url/class/deactivate/$id") {
+            val response = client.post("$url/auth/login") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
-            }.body()
-
-            student
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Claims>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
         }
     }
-    suspend fun deactivateGroup(id: String): Group? {
+
+    suspend fun createClass(request: CreateClassRequest): Result<CreateClassResponse> {
         return try {
-            val group: Group = client.delete("$url/admin/group/$id") {
+            val response = client.post("$url/class/create") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
-            }.body()
-
-            group
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<CreateClassResponse>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
         }
     }
-    suspend fun deactivateSubject(id: String): Subject? {
+    suspend fun createUser(request: CreateUserRequest): Result<User> {
         return try {
-            val subject: Subject = client.delete("$url/admin/subject/$id") {
+            val response = client.post("$url/admin/user") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
-            }.body()
-
-            subject
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<User>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
         }
     }
-    suspend fun deleteUser(id: String): String? {
+    suspend fun createGroup(request: CreateGroupRequest): Result<Group> {
         return try {
-            val response: String = client.delete("$url/admin/user/$id") {
+            val response = client.post("$url/admin/group") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
-            }.body()
-
-            response
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Group>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
         }
     }
-    suspend fun uploadAvatar(id: String, imageBytes: ByteArray): Boolean {
+    suspend fun createSubject(request: CreateSubjectRequest): Result<Subject> {
         return try {
-            client.post("$url/profile/avatar/$id") {
+            val response = client.post("$url/admin/subject") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Subject>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun joinClass(request: JoinClassRequest): Result<JoinClassResponse> {
+        return try {
+            val response = client.post("$url/class/join") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<JoinClassResponse>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getStudents(key: String): Result<List<Student>> {
+        return try {
+            val response = client.get("$url/class/students/$key") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<List<Student>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getUsers(): Result<List<User>> {
+        return try {
+            val response = client.get("$url/admin/user") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<List<User>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getSubjects(): Result<List<Subject>> {
+        return try {
+            val response = client.get("$url/admin/subject") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<List<Subject>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getGroups(): Result<List<Group>> {
+        return try {
+            val response = client.get("$url/admin/group") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<List<Group>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getClasses(request: GetClassRequest): Result<List<GetClassResponse>> {
+        return try {
+            val response = client.post("$url/class/all") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<List<GetClassResponse>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getVisits(id: String): Result<List<ClassResponse>> {
+        return try {
+            val response = client.get("$url/class/visits/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<List<ClassResponse>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun deactivateStudent(id: String): Result<Student> {
+        return try {
+            val response = client.delete("$url/class/deactivate/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Student>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun deleteGroup(id: String): Result<Group> {
+        return try {
+            val response = client.delete("$url/admin/group/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Group>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun deleteSubject(id: String): Result<Subject> {
+        return try {
+            val response = client.delete("$url/admin/subject/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Subject>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun deleteUser(id: String): Result<Boolean> {
+        return try {
+            val response = client.delete("$url/admin/user/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                Result.success(true)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun uploadAvatar(imageBytes: ByteArray): Result<SuccessResponse> {
+        return try {
+            val response = client.post("$url/profile/avatar") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
                 setBody(MultiPartFormDataContent(
                     formData {
                         append("avatar", imageBytes, Headers.build {
@@ -199,68 +374,99 @@ class API {
                         })
                     }
                 ))
-            }.status.isSuccess()
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<SuccessResponse>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
-    //Тут будет ответ наверн
-    //Не крашится но и валидации нет ведь нет модели
-    suspend fun evaluate(request: RatingRequest): Boolean {
-        return try {
-            client.put("$url/class/evaluate") {
-                headers {
-                    append(HttpHeaders.ContentType, "application/json")
-                }
-                setBody(request)
-            }.status.isSuccess()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            Result.failure(e)
         }
     }
 
-    suspend fun updateUser(id: String, request: UpdateUserRequest): User? {
+    suspend fun evaluate(request: Rating): Result<Rating> {
         return try {
-            val user: User = client.put("$url/admin/user/$id") {
+            val response = client.put("$url/class/evaluate") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
                 setBody(request)
-            }.body()
-            user
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Rating>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
         }
     }
-    suspend fun updateGroup(id: String, request: CreateGroupRequest): Group? {
+
+    suspend fun updateUser(id: String, request: UpdateUserRequest): Result<User> {
         return try {
-            val group: Group = client.put("$url/admin/group/$id") {
+            val response = client.put("$url/admin/user/$id") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
                 setBody(request)
-            }.body()
-            group
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<User>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
         }
     }
-    suspend fun updateSubject(id: String, request: CreateSubjectRequest): Subject? {
+    suspend fun updateGroup(id: String, request: CreateGroupRequest): Result<Group> {
         return try {
-            val subject: Subject = client.put("$url/admin/subject/$id") {
+            val response = client.put("$url/admin/group/$id") {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
                 setBody(request)
-            }.body()
-            subject
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Group>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
         } catch (e: Exception) {
-            Log.i("ERROR", e.toString())
-            null
+            Result.failure(e)
+        }
+    }
+    suspend fun updateSubject(id: String, request: CreateSubjectRequest): Result<Subject> {
+        return try {
+            val response = client.put("$url/admin/subject/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Subject>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

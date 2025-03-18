@@ -50,11 +50,12 @@ import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.ui.theme.Yellow
 import com.lex.qr.utils.API
+import com.lex.qr.utils.Claims
 import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.GetClassResponse
 import com.lex.qr.utils.JoinClassRequest
-import com.lex.qr.utils.RatingRequest
+import com.lex.qr.utils.Rating
 import com.lex.qr.utils.User
 import com.lex.qr.utils.formatDateTime
 import kotlinx.coroutines.launch
@@ -66,9 +67,10 @@ private enum class CurrentStudentPage: Page {
 @Composable
 fun StudentPage(
     api: API,
-    user: User,
+    user: Claims,
     geolocationClient: GeolocationClient,
     lastLocation: String,
+    onToast: (String?) -> Unit,
     changeTitle: (String) -> Unit,
 ) {
     Box (Modifier.fillMaxSize()) {
@@ -98,13 +100,17 @@ fun StudentPage(
                     val response = api.joinClass(
                         JoinClassRequest(
                             publicId = result.contents,
-                            studentId = user.id,
                             studentGeolocation = lastLocation
                         )
                     )
-                    if (response != null) {
-                        currentClassId = response.id
-                    }
+                    response.fold(
+                        onSuccess = {
+                            currentClassId = it.id
+                        },
+                        onFailure = {
+                            onToast(it.message)
+                        }
+                    )
                     isLoading = false
                 }
             }
@@ -142,10 +148,16 @@ fun StudentPage(
                                         .size(64.dp)
                                         .clickable {
                                             makeRequest.launch {
-                                                currentClassId?.let {
-                                                    if(api.evaluate(RatingRequest(it,star))) {
-                                                        currentRating = star
-                                                    }
+                                                currentClassId?.let { id ->
+                                                    val response = api.evaluate(Rating(id,star))
+                                                    response.fold(
+                                                        onSuccess = {
+                                                            currentRating = it.rating
+                                                        },
+                                                        onFailure = {
+                                                            onToast(it.message)
+                                                        }
+                                                    )
                                                 }
                                             }
                                         }
@@ -230,9 +242,14 @@ fun StudentPage(
                 changeTitle("Посещения")
                 isLoading = true
                 val response = api.getVisits(user.id)
-                response?.let {
-                    visits = response
-                }
+                response.fold(
+                    onSuccess = {
+                        visits = it
+                    },
+                    onFailure = {
+                        onToast(it.message)
+                    }
+                )
                 isLoading = false
             }
         }

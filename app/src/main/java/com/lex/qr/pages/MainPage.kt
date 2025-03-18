@@ -7,11 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,11 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.lex.qr.components.MenuProfile
 import com.lex.qr.components.Title
-import com.lex.qr.ui.theme.Blue
 import com.lex.qr.utils.API
+import com.lex.qr.utils.Claims
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.Role
-import com.lex.qr.utils.User
 import com.lex.qr.utils.UserPreferences
 
 interface Page
@@ -40,10 +36,11 @@ fun MainPage(
     api: API,
     geolocationClient: GeolocationClient,
     userPrefs: UserPreferences,
-    user: User,
+    user: Claims,
     lastLocation: String,
     onLogout: (Boolean) -> Unit,
-) {
+    onToast: (String?) -> Unit,
+    ) {
 
     var showMenu by remember { mutableStateOf(false) }
 
@@ -66,13 +63,13 @@ fun MainPage(
 
         when (user.role) {
             Role.ADMIN -> {
-                AdminPage(api) { value: String -> title = value }
+                AdminPage(api, onToast) { value: String -> title = value }
             }
             Role.STAFF -> {
-                StaffPage(api, user, geolocationClient, lastLocation) { value: String -> title = value }
+                StaffPage(api, user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
             }
             Role.STUDENT -> {
-                StudentPage(api, user, geolocationClient, lastLocation) { value: String -> title = value }
+                StudentPage(api, user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
             }
         }
         MenuProfile(
@@ -82,7 +79,8 @@ fun MainPage(
             showMenu = showMenu,
             userPrefs = userPrefs,
             changeMenu = {value: Boolean -> showMenu = value},
-            onLogout = onLogout
+            onLogout = onLogout,
+            onToast = onToast
         )
     }
 }

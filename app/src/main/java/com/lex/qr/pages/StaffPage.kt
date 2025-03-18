@@ -63,6 +63,7 @@ import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.ui.theme.Yellow
 import com.lex.qr.utils.API
+import com.lex.qr.utils.Claims
 import com.lex.qr.utils.CreateClassRequest
 import com.lex.qr.utils.CreateClassResponse
 import com.lex.qr.utils.GeolocationClient
@@ -72,6 +73,7 @@ import com.lex.qr.utils.Group
 import com.lex.qr.utils.Student
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.User
+import com.lex.qr.utils.avatarUrl
 import com.lex.qr.utils.formatDateTime
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
@@ -83,9 +85,10 @@ enum class CurrentStaffPage: Page {
 @Composable
 fun StaffPage(
     api: API,
-    user: User,
+    user: Claims,
     geolocationClient: GeolocationClient,
     lastLocation: String,
+    onToast: (String?) -> Unit,
     changeTitle: (String) -> Unit
 ) {
     val makeRequest = rememberCoroutineScope()
@@ -138,9 +141,15 @@ fun StaffPage(
                             createClassResponse?.let {
                                 makeRequest.launch {
                                     isLoading = true
-                                    api.getStudents(it.publicId)?.let { response ->
-                                        students = response
-                                    }
+                                    val response = api.getStudents(it.publicId)
+                                    response.fold(
+                                        onSuccess = {
+                                            students = it
+                                        },
+                                        onFailure = {
+                                            onToast(it.message)
+                                        }
+                                    )
                                     isLoading = false
                                 }
                             }
@@ -204,7 +213,8 @@ fun StaffPage(
                                 }
                                 val painter = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
-                                        .data("https://qrcode-wva2.shuttle.app/api/profile/avatar/${item.studentId}")
+                                        .data("$avatarUrl/${item.studentId}")
+                                        .addHeader("Authorization", "Bearer ${api.getToken()}")
                                         .error(R.drawable.baseline_account_circle_24)
                                         .placeholder(R.drawable.baseline_account_circle_24)
                                         .build(),
@@ -261,9 +271,14 @@ fun StaffPage(
                                                     makeRequest.launch {
                                                         isLoading = true
                                                         val response = api.deactivateStudent(item.id)
-                                                        response?.let {
-                                                            isActive = response.isActive
-                                                        }
+                                                        response.fold(
+                                                            onSuccess = {
+                                                                isActive = it.isActive
+                                                            },
+                                                            onFailure = {
+                                                                onToast(it.message)
+                                                            }
+                                                        )
                                                         isLoading = false
                                                     }
                                                 }
@@ -299,9 +314,14 @@ fun StaffPage(
                                                 selectedSubject = item
                                                 isLoading = true
                                                 val response = api.getGroups()
-                                                response?.let {
-                                                    groups = response
-                                                }
+                                                response.fold(
+                                                    onSuccess = {
+                                                        groups = it
+                                                    },
+                                                    onFailure = {
+                                                        onToast(it.message)
+                                                    }
+                                                )
                                                 isLoading = false
                                             }
                                         }
@@ -350,14 +370,15 @@ fun StaffPage(
                                                             subjectId = subject.id,
                                                             groupId = item.id,
                                                         )
-                                                        try {
-                                                            val response = api.getClasses(request)
-                                                            response?.let {
+                                                        val response = api.getClasses(request)
+                                                        response.fold(
+                                                            onSuccess = {
                                                                 classes = it
+                                                            },
+                                                            onFailure = {
+                                                                onToast(it.message)
                                                             }
-                                                        } catch (e: Exception) {
-                                                            Log.i("ERROR", e.toString())
-                                                        }
+                                                        )
                                                     }
                                                     page = CurrentStaffPage.CLASSES
                                                     isLoading = false
@@ -367,15 +388,19 @@ fun StaffPage(
                                                     isLoading = true
                                                     selectedSubject?.let { subject ->
                                                         val request = CreateClassRequest(
-                                                            staffId = user.id,
                                                             subjectId = subject.id,
                                                             groupId = item.id,
                                                             geolocation = lastLocation
                                                         )
-                                                        val response: CreateClassResponse? = api.createClass(request)
-                                                        response?.let {
-                                                            createClassResponse = it
-                                                        }
+                                                        val response = api.createClass(request)
+                                                        response.fold(
+                                                            onSuccess = {
+                                                                createClassResponse = it
+                                                            },
+                                                            onFailure = {
+                                                                onToast(it.message)
+                                                            }
+                                                        )
                                                     }
                                                     page = CurrentStaffPage.QRCODE
                                                     changeTitle("Главная")
@@ -422,14 +447,17 @@ fun StaffPage(
                                                 page = CurrentStaffPage.VISITS
                                                 changeTitle("Присутствующие")
                                                 isLoading = true
-                                                try {
-                                                    val response = api.getStudents(item.publicId)
-                                                    response?.let {
-                                                        students = response
+
+                                                val response = api.getStudents(item.publicId)
+                                                response.fold(
+                                                    onSuccess = {
+                                                        students = it
+                                                    },
+                                                    onFailure = {
+                                                        onToast(it.message)
                                                     }
-                                                } catch (e: Exception) {
-                                                    Log.i("ERROR", e.toString())
-                                                }
+                                                )
+
                                                 isLoading = false
                                             }
                                         }
@@ -484,7 +512,8 @@ fun StaffPage(
 
                                 val painter = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
-                                        .data("https://qrcode-wva2.shuttle.app/api/profile/avatar/${item.studentId}")
+                                        .data("$avatarUrl/${item.studentId}")
+                                        .addHeader("Authorization", "Bearer ${api.getToken()}")
                                         .error(R.drawable.baseline_account_circle_24)
                                         .placeholder(R.drawable.baseline_account_circle_24)
                                         .build(),
@@ -545,9 +574,14 @@ fun StaffPage(
                     changeTitle("Выберите предмет")
                     isLoading = true
                     val response = api.getSubjects()
-                    response?.let {
-                        subjects = response
-                    }
+                    response.fold(
+                        onSuccess = {
+                            subjects = it
+                        },
+                        onFailure = {
+                            onToast(it.message)
+                        }
+                    )
                     isLoading = false
                 }
             }
@@ -567,9 +601,14 @@ fun StaffPage(
                         changeTitle("Выберите предмет")
                         isLoading = true
                         val response = api.getSubjects()
-                        response?.let {
-                            subjects = response
-                        }
+                        response.fold(
+                            onSuccess = {
+                                subjects = it
+                            },
+                            onFailure = {
+                                onToast(it.message)
+                            }
+                        )
                         isLoading = false
                     }
                 }

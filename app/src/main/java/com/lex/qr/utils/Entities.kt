@@ -13,9 +13,14 @@ data class LoginRequest(
     var password: String,
     var email: String
 )
+@Serializable
+data class Error(
+    var status: Int,
+    var message: String
+)
 
 @Serializable
-data class RatingRequest(
+data class Rating(
     var id: String,
     var rating: Int
 )
@@ -42,7 +47,6 @@ data class CreateSubjectRequest(
 
 @Serializable
 data class CreateClassRequest(
-    @SerialName("staff_id") val staffId: String,
     @SerialName("subject_id")val subjectId: String,
     @SerialName("group_id") val groupId: String,
     val geolocation: String
@@ -59,13 +63,16 @@ data class CreateClassResponse(
 @Serializable
 data class JoinClassRequest(
     @SerialName("public_id") val publicId: String,
-    @SerialName("student_id") val studentId: String,
     @SerialName("student_geolocation") val studentGeolocation: String
 )
 
 @Serializable
 data class JoinClassResponse(
-    val id: String?
+    val id: String
+)
+@Serializable
+data class SuccessResponse(
+    @SerialName("is_success") val isSuccess: Boolean,
 )
 @Serializable
 data class GetClassResponse(
@@ -95,6 +102,7 @@ data class ClassResponse(
 @Serializable
 data class UpdateUserRequest(
     val email: String,
+    val password: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,
     val role: String,
@@ -116,6 +124,17 @@ data class User(
     val id: String,
     val email: String,
     val password: String,
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String,
+    var role: Role,
+    @SerialName("group_id") val groupId: String?,
+    @SerialName("created_at") val createdAt: String
+)
+@Serializable
+data class Claims(
+    val token: String,
+    val id: String,
+    val email: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,
     var role: Role,
