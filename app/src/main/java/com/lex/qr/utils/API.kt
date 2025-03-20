@@ -17,6 +17,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
@@ -24,7 +25,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 const val url: String = "https://qrcode-wva2.shuttle.app/api"
-const val avatarUrl: String = "$url/profile/avatar"
+const val avatarUrl: String = "https://api.imgbb.com/1/upload?key=48015623eba651182514366c617e96d7"
 
 class API {
 
@@ -360,15 +361,15 @@ class API {
             Result.failure(e)
         }
     }
-    suspend fun uploadAvatar(imageBytes: ByteArray): Result<SuccessResponse> {
+    suspend fun uploadAvatar(imageBytes: ByteArray): Result<String> {
         return try {
-            val response = client.post("$url/profile/avatar") {
+            val response = client.post(avatarUrl) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
                 }
                 setBody(MultiPartFormDataContent(
                     formData {
-                        append("avatar", imageBytes, Headers.build {
+                        append("image", imageBytes, Headers.build {
                             append(HttpHeaders.ContentType, "image/png")
                             append(HttpHeaders.ContentDisposition, "filename=avatar.png")
                         })
@@ -376,12 +377,22 @@ class API {
                 ))
             }
             if (response.status.isSuccess()) {
-                val data = response.body<SuccessResponse>()
-                Result.success(data)
-            }
-            else {
-                val error = response.body<Error>()
-                Result.failure(Exception(error.message))
+                val avatarInfo = response.body<AvatarResponse>()
+                val path = avatarInfo.data.url
+                val res = client.post("$url/profile/avatar?path=$path") {
+                    headers {
+                        append(HttpHeaders.ContentType, "application/json")
+                    }
+                }
+                if (res.status.isSuccess()) {
+                    Result.success(res.bodyAsText())
+                }
+                else {
+                    val error = res.body<Error>()
+                    Result.failure(Exception(error.message))
+                }
+            } else {
+                Result.failure(Exception(response.bodyAsText()))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -459,6 +470,47 @@ class API {
             }
             if (response.status.isSuccess()) {
                 val data = response.body<Subject>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun createUsersByFile(file: ByteArray): Result<Boolean> {
+        return try {
+            val response = client.post("$url/admin/user/file") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(MultiPartFormDataContent(
+                    formData {
+                        append("file", file)
+                    }
+                ))
+            }
+            if (response.status.isSuccess()) {
+                Result.success(true)
+            } else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getCurrent(): Result<Rating> {
+        return try {
+            val response = client.get("$url/class/current") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<Rating>()
                 Result.success(data)
             }
             else {

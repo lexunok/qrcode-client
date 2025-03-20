@@ -41,6 +41,7 @@ import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.utils.API
 import com.lex.qr.utils.Claims
+import com.lex.qr.utils.Role
 import com.lex.qr.utils.User
 import com.lex.qr.utils.UserPreferences
 import com.lex.qr.utils.avatarUrl
@@ -51,20 +52,21 @@ import kotlinx.coroutines.launch
 fun MenuProfile(modifier: Modifier,
                 api: API,
                 user: Claims,
+                role: Role,
                 showMenu:Boolean,
                 userPrefs: UserPreferences,
                 changeMenu: (Boolean) -> Unit,
                 onLogout: (Boolean) -> Unit,
                 onToast: (String?) -> Unit,
+                changeRole: (Role) -> Unit
                 ) {
     val context = LocalContext.current
     val makeRequest = rememberCoroutineScope()
-    var avatarUrl by remember { mutableStateOf("$avatarUrl/${user.id}") }
+    var avatarUrl by remember { mutableStateOf(user.avatarUrl) }
 
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(avatarUrl)
-            .addHeader("Authorization", "Bearer ${api.getToken()}")
             .error(R.drawable.baseline_account_circle_24)
             .placeholder(R.drawable.baseline_account_circle_24)
             .build(),
@@ -81,7 +83,8 @@ fun MenuProfile(modifier: Modifier,
                     val response = api.uploadAvatar(bytes)
                     response.fold(
                         onSuccess = {
-                            avatarUrl += "?t=${System.currentTimeMillis()}"
+                            onToast("Успешно")
+                            avatarUrl = it
                         },
                         onFailure = {
                             onToast(it.message)
@@ -139,6 +142,35 @@ fun MenuProfile(modifier: Modifier,
                     textAlign = TextAlign.Center,
                     color = Blue
                 )
+                if (role == Role.STAFF) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                changeRole(Role.ADMIN)
+                            },
+                        fontWeight = FontWeight.SemiBold,
+                        text = "В админ панель",
+                        fontSize = 16.sp,
+                        lineHeight = 32.sp,
+                        textAlign = TextAlign.Center,
+                        color = Red
+                    )
+                } else if (role == Role.ADMIN) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                changeRole(Role.STAFF)
+                            },
+                        fontWeight = FontWeight.SemiBold,
+                        text = "Закрыть админку",
+                        fontSize = 16.sp,
+                        lineHeight = 32.sp,
+                        textAlign = TextAlign.Center,
+                        color = Red
+                    )
+                }
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()

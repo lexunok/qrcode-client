@@ -70,10 +70,18 @@ data class JoinClassRequest(
 data class JoinClassResponse(
     val id: String
 )
+
+//AVATAR
 @Serializable
-data class SuccessResponse(
-    @SerialName("is_success") val isSuccess: Boolean,
+data class AvatarResponse(
+    val data: AvatarData,
 )
+@Serializable
+data class AvatarData(
+    @SerialName("url") val url: String,
+)
+
+
 @Serializable
 data class GetClassResponse(
     @SerialName("created_at")
@@ -116,6 +124,7 @@ data class Student(
     @SerialName("student_id") val studentId: String,
     @SerialName("first_name") val firstName: String,
     @SerialName("last_name") val lastName: String,
+    @SerialName("avatar_url") val avatarUrl: String?,
     @SerialName("is_active") val isActive: Boolean,
     @SerialName("public_id") val publicId: String
 )
@@ -128,6 +137,7 @@ data class User(
     @SerialName("last_name") val lastName: String,
     var role: Role,
     @SerialName("group_id") val groupId: String?,
+    @SerialName("avatar_url") val avatarUrl: String?,
     @SerialName("created_at") val createdAt: String
 )
 @Serializable
@@ -139,6 +149,8 @@ data class Claims(
     @SerialName("last_name") val lastName: String,
     var role: Role,
     @SerialName("group_id") val groupId: String?,
+    @SerialName("avatar_url") val avatarUrl: String?,
+    @SerialName("fcm_token") val fcmToken: String?,
     @SerialName("created_at") val createdAt: String
 )
 @Serializable

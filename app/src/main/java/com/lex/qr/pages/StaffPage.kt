@@ -213,8 +213,7 @@ fun StaffPage(
                                 }
                                 val painter = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
-                                        .data("$avatarUrl/${item.studentId}")
-                                        .addHeader("Authorization", "Bearer ${api.getToken()}")
+                                        .data(item.avatarUrl)
                                         .error(R.drawable.baseline_account_circle_24)
                                         .placeholder(R.drawable.baseline_account_circle_24)
                                         .build(),
@@ -512,8 +511,7 @@ fun StaffPage(
 
                                 val painter = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
-                                        .data("$avatarUrl/${item.studentId}")
-                                        .addHeader("Authorization", "Bearer ${api.getToken()}")
+                                        .data(item.avatarUrl)
                                         .error(R.drawable.baseline_account_circle_24)
                                         .placeholder(R.drawable.baseline_account_circle_24)
                                         .build(),

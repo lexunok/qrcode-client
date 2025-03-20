@@ -24,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +73,7 @@ fun StudentPage(
     lastLocation: String,
     onToast: (String?) -> Unit,
     changeTitle: (String) -> Unit,
-) {
+    ) {
     Box (Modifier.fillMaxSize()) {
 
         val scanScope  = rememberCoroutineScope()
@@ -86,6 +87,18 @@ fun StudentPage(
         var currentClassId by remember { mutableStateOf<String?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
+        LaunchedEffect(Unit) {
+            isLoading = true
+            val response = api.getCurrent()
+            response.fold(
+                onSuccess = {
+                    currentClassId = it.id
+                    currentRating = it.rating
+                },
+                onFailure = {}
+            )
+            isLoading = false
+        }
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
         options.setPrompt("")
@@ -165,16 +178,6 @@ fun StudentPage(
                                 )
                             }
                         }
-                    }
-                    else {
-                        Icon(
-                            modifier = Modifier.align(Alignment.Center),
-                            imageVector = ImageVector.vectorResource(
-                                id = R.drawable.baseline_error_outline_24
-                            ),
-                            contentDescription = "Scan is fail",
-                            tint = Red
-                        )
                     }
                 }
                 CurrentStudentPage.VISITS -> {

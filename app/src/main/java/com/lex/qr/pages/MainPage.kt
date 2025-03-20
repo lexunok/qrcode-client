@@ -43,7 +43,7 @@ fun MainPage(
     ) {
 
     var showMenu by remember { mutableStateOf(false) }
-
+    var role by remember { mutableStateOf(user.role) }
     var title by remember { mutableStateOf("Главная") }
 
     Box (modifier = Modifier
@@ -61,7 +61,7 @@ fun MainPage(
             Title(title, Modifier.fillMaxWidth().align(Alignment.Center).padding(vertical = 12.dp))
         }
 
-        when (user.role) {
+        when (role) {
             Role.ADMIN -> {
                 AdminPage(api, onToast) { value: String -> title = value }
             }
@@ -75,12 +75,14 @@ fun MainPage(
         MenuProfile(
             modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp),
             user = user,
+            role = role,
             api = api,
             showMenu = showMenu,
             userPrefs = userPrefs,
             changeMenu = {value: Boolean -> showMenu = value},
             onLogout = onLogout,
-            onToast = onToast
-        )
+            onToast = onToast,
+            changeRole = {value: Role -> role = value},
+            )
     }
 }
