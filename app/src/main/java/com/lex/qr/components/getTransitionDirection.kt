@@ -1,6 +1,7 @@
 package com.lex.qr.components
 
 import com.lex.qr.pages.CurrentAdminPage
+import com.lex.qr.pages.CurrentStaffPage
 import com.lex.qr.pages.Page
 import com.lex.qr.pages.PageTransitionDirection
 
@@ -31,14 +32,22 @@ fun getTransitionDirection(from: Page, to: Page): PageTransitionDirection {
                 else -> PageTransitionDirection.RIGHT
             }
         }
-//        from is CurrentStaffPage && to is CurrentStaffPage -> {
-//            when {
-//                from == CurrentStaffPage.MAIN && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.UP
-//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.GROUP -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.MAIN -> PageTransitionDirection.DOWN
-//                else -> PageTransitionDirection.RIGHT
-//            }
-//        }
+        from is CurrentStaffPage && to is CurrentStaffPage -> {
+            when {
+                from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.ACTIVITY -> PageTransitionDirection.UP
+                from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.GROUP -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.CLASSES -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.VISITS -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.DOWN
+                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
+                else -> PageTransitionDirection.RIGHT
+            }
+        }
         else -> PageTransitionDirection.RIGHT
     }
 }

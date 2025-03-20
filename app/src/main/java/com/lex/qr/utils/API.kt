@@ -111,6 +111,34 @@ class API {
             Result.failure(e)
         }
     }
+    suspend fun createUsers(fileContent: String): Result<Unit> {
+        return try {
+            val response = client.post("$url/admin/user/file") {
+                headers {
+                    append(HttpHeaders.ContentType, "multipart/form-data")
+                }
+                setBody(
+                    MultiPartFormDataContent(
+                        formData {
+                            append("file", fileContent.toByteArray(), Headers.build {
+                                append(HttpHeaders.ContentType, "text/csv")
+                                append(HttpHeaders.ContentDisposition, "filename=\"users.csv\"")
+                            })
+                        }
+                    )
+                )
+            }
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     suspend fun createGroup(request: CreateGroupRequest): Result<Group> {
         return try {
             val response = client.post("$url/admin/group") {
@@ -237,6 +265,25 @@ class API {
             }
             if (response.status.isSuccess()) {
                 val data = response.body<List<Group>>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getGroup(id: String): Result<Group> {
+        return try {
+            val response = client.get("$url/admin/group/$id") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()){
+                val data = response.body<Group>()
                 Result.success(data)
             }
             else {

@@ -1,5 +1,10 @@
 package com.lex.qr.pages
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -32,6 +37,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,14 +71,17 @@ import com.lex.qr.utils.Role
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UpdateUserRequest
 import com.lex.qr.utils.User
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.InputStream
 
 enum class CurrentAdminPage : Page {
     EDITOR, LIST, CATEGORY, MAIN, CREATE, SELECT_USER_GROUP
 }
 
 private enum class ObjectType{
-    SUBJECT, GROUP, USER, NULL
+    SUBJECT, GROUP, USER, USERS, NULL
 }
 
 private const val tyuiuEmail = "@std.tyuiu.ru"
@@ -169,6 +179,7 @@ fun AdminPage(
 
     val getUsersScope = rememberCoroutineScope()
     val getGroupsScope = rememberCoroutineScope()
+    val getGroupScope = rememberCoroutineScope()
     val getSubjectsScope = rememberCoroutineScope()
 
     val postObjectScope = rememberCoroutineScope()
@@ -193,8 +204,8 @@ fun AdminPage(
     var userGroup by remember { mutableStateOf<Group?>(null) }
     var name by remember { mutableStateOf("") }
 
-    //В EDITOR не работает изменение пользователя, удаление работает
-    //В EDITOR убрать костыль
+    var fileContent by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()){
         AnimatedContent(
@@ -234,16 +245,11 @@ fun AdminPage(
                                 .verticalScroll(rememberScrollState())
                             ) {
                                 selectedUser?.let { user ->
-                                    getGroupsScope.launch {
-                                        val response = api.getGroups()
-                                        response.fold(
-                                            onSuccess = { res ->
-                                                groups = res
-                                                userGroup = res.find { it.id == userGroup?.id }
-                                            },
-                                            onFailure = {
-                                                onToast(it.message)
-                                            }
+                                    getGroupScope.launch {
+                                        val response = userGroup?.let { api.getGroup(it.id) }
+                                        response?.fold(
+                                            onSuccess = { userGroup = it },
+                                            onFailure = { onToast(it.message) }
                                         )
                                     }
                                     CreatePageText("Почта")
@@ -455,16 +461,15 @@ fun AdminPage(
                                         page = CurrentAdminPage.LIST
                                         changeTitle("Пользователи")
                                         isLoading = true
-                                        val response = api.getUsers()
-                                        response.fold(
-                                            onSuccess = {
-                                                users = it
-                                            },
-                                            onFailure = {
-                                                onToast(it.message)
-                                            }
-                                        )
-                                        isLoading = false
+                                        try {
+                                            val response = api.getUsers()
+                                            response.fold(
+                                                onSuccess = { users = it },
+                                                onFailure = { onToast(it.message) }
+                                            )
+                                        } finally {
+                                            isLoading = false
+                                        }
                                     }
                                 }
                                 AdminCardCategory("Группы") {
@@ -472,16 +477,15 @@ fun AdminPage(
                                         page = CurrentAdminPage.LIST
                                         changeTitle("Группы")
                                         isLoading = true
-                                        val response = api.getGroups()
-                                        response.fold(
-                                            onSuccess = {
-                                                groups = it
-                                            },
-                                            onFailure = {
-                                                onToast(it.message)
-                                            }
-                                        )
-                                        isLoading = false
+                                        try {
+                                            val response = api.getGroups()
+                                            response.fold(
+                                                onSuccess = { groups = it },
+                                                onFailure = { onToast(it.message) }
+                                            )
+                                        } finally {
+                                            isLoading = false
+                                        }
                                     }
                                 }
                                 AdminCardCategory("Предметы") {
@@ -489,17 +493,15 @@ fun AdminPage(
                                         page = CurrentAdminPage.LIST
                                         changeTitle("Предметы")
                                         isLoading = true
-                                        val response = api.getSubjects()
-                                        response.fold(
-                                            onSuccess = {
-                                                subjects = it
-                                            },
-                                            onFailure = {
-                                                onToast(it.message)
-                                            }
-                                        )
-
-                                        isLoading = false
+                                        try {
+                                            val response = api.getSubjects()
+                                            response.fold(
+                                                onSuccess = { subjects = it },
+                                                onFailure = { onToast(it.message) }
+                                            )
+                                        } finally {
+                                            isLoading = false
+                                        }
                                     }
                                 }
                             }
@@ -524,6 +526,10 @@ fun AdminPage(
                                     selectedOption == ObjectType.USER,
                                     "Пользователь"
                                 ) { selectedOption = ObjectType.USER }
+                                RadioSelect(
+                                    selectedOption == ObjectType.USERS,
+                                    "Пользователи(csv)"
+                                ) { selectedOption = ObjectType.USERS }
                                 RadioSelect(
                                     selectedOption == ObjectType.GROUP,
                                     "Группа"
@@ -579,13 +585,46 @@ fun AdminPage(
                                             }
                                         }
                                     }
+                                    ObjectType.USERS -> {
+                                        val context = LocalContext.current
+                                        val launcher = rememberLauncherForActivityResult(
+                                            contract = ActivityResultContracts.GetContent(),
+                                            onResult = { uri ->
+                                                uri?.let { selectedFileUri ->
+                                                    try {
+                                                        isLoading = true
+                                                        fileContent = context.contentResolver.openInputStream(selectedFileUri)?.use { inputStream ->
+                                                            inputStream.bufferedReader().use { it.readText() }
+                                                        }
+                                                    } catch (e: Exception) {
+                                                        errorMessage = "Ошибка чтения файла"
+                                                        fileContent = null
+                                                    } finally {
+                                                        isLoading = false
+                                                    }
+                                                }
+                                            }
+                                        )
+                                        CreatePageButton("Выберите csv файл") {
+                                            launcher.launch("text/*")
+                                        }
+                                        CreatePageText(
+                                            when {
+                                                isLoading && fileContent == null -> "Загрузка..."
+                                                !isLoading && fileContent != null -> "Файл успешно загружен"
+                                                isLoading && fileContent != null -> "Отправка..."
+                                                errorMessage.isNotEmpty() -> errorMessage
+                                                else -> { "" }
+                                            }
+                                        )
+                                    }
                                     ObjectType.SUBJECT, ObjectType.GROUP -> {
                                         CreatePageText("Введите название")
                                         CreatePageInput(name) { newName -> name = newName }
                                     }
                                     ObjectType.NULL -> {}
                                 }
-                                CreatePageButton("Создать") {
+                                CreatePageButton(if (selectedOption != ObjectType.USERS) "Создать" else "Отправить") {
                                     postObjectScope.launch {
                                         when (selectedOption) {
                                             ObjectType.USER -> {
@@ -594,6 +633,17 @@ fun AdminPage(
                                                         role.name, userGroup?.id
                                                     )
                                                 )
+                                            }
+                                            ObjectType.USERS -> {
+                                                if (fileContent != null) {
+                                                    isLoading = true
+                                                    val response = api.createUsers(fileContent!!)
+                                                    response.fold(
+                                                        onSuccess = { onToast("Успешно") },
+                                                        onFailure = { onToast(it.message) }
+                                                    )
+                                                    isLoading = false
+                                                }
                                             }
                                             ObjectType.GROUP -> api.createGroup(CreateGroupRequest(name))
                                             ObjectType.SUBJECT -> api.createSubject(CreateSubjectRequest(name))

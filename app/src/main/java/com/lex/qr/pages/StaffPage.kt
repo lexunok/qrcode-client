@@ -106,187 +106,456 @@ fun StaffPage(
     var isLoading by remember { mutableStateOf(false) }
     var isListClicked by remember { mutableStateOf(false) }
 
-//    AnimatedContent(
-//        targetState = page,
-//        transitionSpec = {
-//            when (getTransitionDirection(initialState, targetState)) {
-//                PageTransitionDirection.LEFT -> {
-//                    (slideInHorizontally { width -> -width } + fadeIn())
-//                        .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
-//                }
-//                PageTransitionDirection.RIGHT -> {
-//                    (slideInHorizontally { width -> width } + fadeIn())
-//                        .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
-//                }
-//                PageTransitionDirection.UP -> {
-//                    (slideInVertically { height -> -height } + fadeIn())
-//                        .togetherWith(slideOutVertically { height -> height } + fadeOut())
-//                }
-//                PageTransitionDirection.DOWN -> {
-//                    (slideInVertically { height -> height } + fadeIn())
-//                        .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-//                }
-//            }
-//        },
-//        modifier = Modifier.fillMaxSize()
-//    ) { currentPage ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectVerticalDragGestures { _, dragAmount ->
-                    if (page == CurrentStaffPage.QRCODE || page == CurrentStaffPage.ACTIVITY) {
-                        if (dragAmount > 0 && createClassResponse!=null) {
-                            page = CurrentStaffPage.ACTIVITY
-                            changeTitle("Присутствующие")
-                            createClassResponse?.let {
-                                makeRequest.launch {
-                                    isLoading = true
-                                    val response = api.getStudents(it.publicId)
-                                    response.fold(
-                                        onSuccess = {
-                                            students = it
-                                        },
-                                        onFailure = {
-                                            onToast(it.message)
-                                        }
-                                    )
-                                    isLoading = false
-                                }
-                            }
-                            //Область видимости плохая
-                        } else if (dragAmount < 0) {
-                            page = CurrentStaffPage.QRCODE
-                            changeTitle("Главная")
-                        }
+    Box(modifier = Modifier.fillMaxSize()){
+        AnimatedContent(
+            targetState = page,
+            transitionSpec = {
+                when (getTransitionDirection(initialState, targetState)) {
+                    PageTransitionDirection.LEFT -> {
+                        (slideInHorizontally { width -> -width } + fadeIn())
+                            .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
+                    }
+                    PageTransitionDirection.RIGHT -> {
+                        (slideInHorizontally { width -> width } + fadeIn())
+                            .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
+                    }
+                    PageTransitionDirection.UP -> {
+                        (slideInVertically { height -> -height } + fadeIn())
+                            .togetherWith(slideOutVertically { height -> height } + fadeOut())
+                    }
+                    PageTransitionDirection.DOWN -> {
+                        (slideInVertically { height -> height } + fadeIn())
+                            .togetherWith(slideOutVertically { height -> -height } + fadeOut())
                     }
                 }
-            }){
-            if (isLoading) {
-                LoadingColumn(
-                    Modifier
-                        //.offset(x = listOffset)
-                        .fillMaxWidth()
-                        .align(Alignment.Center),
-                    contentPadding = PaddingValues(16.dp)
-                )
-            }
-            else {
-                when(page) {
-                    CurrentStaffPage.QRCODE -> {
-    //                    val qrOffset by animateDpAsState(
-    //                        targetValue = if ((students.isEmpty() && !isLoading) || page != CurrentPage.MAIN) 0.dp else (-400).dp,
-    //                        animationSpec = tween(durationMillis = 300)
-    //                    )
+            },
+            modifier = Modifier.fillMaxSize()
+        ) { currentPage ->
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures { _, dragAmount ->
+                        if (currentPage == CurrentStaffPage.QRCODE || currentPage == CurrentStaffPage.ACTIVITY) {
+                            if (dragAmount > 0 && createClassResponse != null) {
+                                page = CurrentStaffPage.ACTIVITY
+                                changeTitle("Присутствующие")
+                                createClassResponse?.let {
+                                    makeRequest.launch {
+                                        isLoading = true
+                                        val response = api.getStudents(it.publicId)
+                                        response.fold(
+                                            onSuccess = {
+                                                students = it
+                                            },
+                                            onFailure = {
+                                                onToast(it.message)
+                                            }
+                                        )
+                                        isLoading = false
+                                    }
+                                }
+                                //Область видимости плохая
+                            } else if (dragAmount < 0) {
+                                page = CurrentStaffPage.QRCODE
+                                changeTitle("Главная")
+                            }
+                        }
+                    }
+                }) {
+                if (isLoading) {
+                    LoadingColumn(
+                        Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.Center),
+                        contentPadding = PaddingValues(16.dp)
+                    )
+                } else {
+                    when (currentPage) {
+                        CurrentStaffPage.QRCODE -> {
 
-    //                    val listOffset by animateDpAsState(
-    //                        targetValue = if (students.isNotEmpty() || (isLoading && page == CurrentPage.MAIN)) 0.dp else 400.dp,
-    //                        animationSpec = tween(durationMillis = 300)
-    //                    )
-
-                        createClassResponse?.let {
+                            createClassResponse?.let {
                                 QrCodeView(
                                     data = it.publicId,
                                     modifier = Modifier
-                                        //.offset(x = qrOffset)
                                         .size(300.dp)
                                         .align(Alignment.Center)
                                 )
+                            }
                         }
-                    }
-                    CurrentStaffPage.ACTIVITY -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 64.dp)
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.9f),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(students) { item ->
-                                var color = Red
-                                var isActive by remember { mutableStateOf(item.isActive) }
-                                if (isActive) {
-                                    color = Green
-                                }
-                                var rating = 0
-                                if (item.rating != null) {
-                                    rating = item.rating
-                                }
-                                val painter = rememberAsyncImagePainter(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(item.avatarUrl)
-                                        .error(R.drawable.baseline_account_circle_24)
-                                        .placeholder(R.drawable.baseline_account_circle_24)
-                                        .build(),
-                                    contentScale = ContentScale.Crop
-                                )
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                        .border(
-                                            width = 4.dp,
-                                            color = color,
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .padding(vertical = 12.dp, horizontal = 8.dp)
-                                ) {
-                                    Image(
-                                        painter = painter,
-                                        contentDescription = "Аватарка",
-                                        modifier = Modifier
-                                            .padding(4.dp)
-                                            .align(Alignment.CenterHorizontally)
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .border(
-                                                width = 2.dp,
-                                                color = Blue,
-                                                shape = CircleShape
-                                            ),
+
+                        CurrentStaffPage.ACTIVITY -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 64.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(students) { item ->
+                                    var color = Red
+                                    var isActive by remember { mutableStateOf(item.isActive) }
+                                    if (isActive) {
+                                        color = Green
+                                    }
+                                    var rating = 0
+                                    if (item.rating != null) {
+                                        rating = item.rating
+                                    }
+                                    val painter = rememberAsyncImagePainter(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(item.avatarUrl)
+                                            .error(R.drawable.baseline_account_circle_24)
+                                            .placeholder(R.drawable.baseline_account_circle_24)
+                                            .build(),
                                         contentScale = ContentScale.Crop
                                     )
-                                    Row(Modifier.fillMaxWidth()) {
-                                        Text(
-                                            textAlign = TextAlign.Center,
-                                            color = color,
-                                            text = "${item.firstName} ${item.lastName}",
-                                            fontSize = 18.sp,
-                                            modifier = Modifier.fillMaxWidth(0.85f)
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = color,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(vertical = 12.dp, horizontal = 8.dp)
+                                    ) {
+                                        Image(
+                                            painter = painter,
+                                            contentDescription = "Аватарка",
+                                            modifier = Modifier
+                                                .padding(4.dp)
+                                                .align(Alignment.CenterHorizontally)
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .border(
+                                                    width = 2.dp,
+                                                    color = Blue,
+                                                    shape = CircleShape
+                                                ),
+                                            contentScale = ContentScale.Crop
                                         )
+                                        Row(Modifier.fillMaxWidth()) {
+                                            Text(
+                                                textAlign = TextAlign.Center,
+                                                color = color,
+                                                text = "${item.firstName} ${item.lastName}",
+                                                fontSize = 18.sp,
+                                                modifier = Modifier.fillMaxWidth(0.85f)
+                                            )
+                                            Text(
+                                                textAlign = TextAlign.Center,
+                                                color = Yellow,
+                                                text = rating.toString(),
+                                                fontSize = 18.sp,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                        if (isActive) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(8.dp)
+                                                    .align(Alignment.CenterHorizontally)
+                                                    .clickable {
+                                                        makeRequest.launch {
+                                                            isLoading = true
+                                                            val response =
+                                                                api.deactivateStudent(item.id)
+                                                            response.fold(
+                                                                onSuccess = {
+                                                                    isActive = it.isActive
+                                                                },
+                                                                onFailure = {
+                                                                    onToast(it.message)
+                                                                }
+                                                            )
+                                                            isLoading = false
+                                                        }
+                                                    }
+                                            ) {
+                                                Icon(
+                                                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_close_40),
+                                                    contentDescription = "Kick student from class",
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    tint = Red
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        CurrentStaffPage.SUBJECT -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 64.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(subjects) { item ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier
+                                            .clickable {
+                                                makeRequest.launch {
+                                                    page = CurrentStaffPage.GROUP
+                                                    changeTitle("Выберите группу")
+                                                    selectedSubject = item
+                                                    isLoading = true
+                                                    val response = api.getGroups()
+                                                    response.fold(
+                                                        onSuccess = {
+                                                            groups = it
+                                                        },
+                                                        onFailure = {
+                                                            onToast(it.message)
+                                                        }
+                                                    )
+                                                    isLoading = false
+                                                }
+                                            }
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = Blue,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 4.dp
+                                        ),
+                                    ) {
                                         Text(
                                             textAlign = TextAlign.Center,
-                                            color = Yellow,
-                                            text = rating.toString(),
+                                            color = Blue,
+                                            text = item.name,
                                             fontSize = 18.sp,
                                             modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 4.dp, vertical = 12.dp)
                                         )
                                     }
-                                    if (isActive) {
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(8.dp)
-                                                .align(Alignment.CenterHorizontally)
-                                                .clickable {
+                                }
+                            }
+                        }
+
+                        CurrentStaffPage.GROUP -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 64.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(groups) { item ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier
+                                            .clickable {
+                                                if (isListClicked) {
+                                                    makeRequest.launch {
+                                                        changeTitle("Проведенные пары")
+                                                        isLoading = true
+                                                        selectedSubject?.let { subject ->
+                                                            val request = GetClassRequest(
+                                                                staffId = user.id,
+                                                                subjectId = subject.id,
+                                                                groupId = item.id,
+                                                            )
+                                                            val response = api.getClasses(request)
+                                                            response.fold(
+                                                                onSuccess = {
+                                                                    classes = it
+                                                                },
+                                                                onFailure = {
+                                                                    onToast(it.message)
+                                                                }
+                                                            )
+                                                        }
+                                                        page = CurrentStaffPage.CLASSES
+                                                        isLoading = false
+                                                    }
+                                                } else if (geolocationClient.checkGps() && lastLocation != "") {
                                                     makeRequest.launch {
                                                         isLoading = true
-                                                        val response = api.deactivateStudent(item.id)
-                                                        response.fold(
-                                                            onSuccess = {
-                                                                isActive = it.isActive
-                                                            },
-                                                            onFailure = {
-                                                                onToast(it.message)
-                                                            }
-                                                        )
+                                                        selectedSubject?.let { subject ->
+                                                            val request = CreateClassRequest(
+                                                                subjectId = subject.id,
+                                                                groupId = item.id,
+                                                                geolocation = lastLocation
+                                                            )
+                                                            val response = api.createClass(request)
+                                                            response.fold(
+                                                                onSuccess = {
+                                                                    createClassResponse = it
+                                                                },
+                                                                onFailure = {
+                                                                    onToast(it.message)
+                                                                }
+                                                            )
+                                                        }
+                                                        page = CurrentStaffPage.QRCODE
+                                                        changeTitle("Главная")
                                                         isLoading = false
                                                     }
                                                 }
-                                        ) {
-                                            Icon(
-                                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_close_40),
-                                                contentDescription = "Kick student from class",
-                                                modifier = Modifier.fillMaxSize(),
-                                                tint = Red
+                                            }
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = Blue,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 4.dp
+                                        ),
+                                    ) {
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            color = Blue,
+                                            text = item.name,
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 4.dp, vertical = 12.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        CurrentStaffPage.CLASSES -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 64.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(classes) { item ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier
+                                            .clickable {
+                                                makeRequest.launch {
+                                                    page = CurrentStaffPage.VISITS
+                                                    changeTitle("Присутствующие")
+                                                    isLoading = true
+
+                                                    val response = api.getStudents(item.publicId)
+                                                    response.fold(
+                                                        onSuccess = {
+                                                            students = it
+                                                        },
+                                                        onFailure = {
+                                                            onToast(it.message)
+                                                        }
+                                                    )
+
+                                                    isLoading = false
+                                                }
+                                            }
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = Blue,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 4.dp
+                                        ),
+                                    ) {
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            color = Blue,
+                                            text = formatDateTime(item.createdAt),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 4.dp, vertical = 8.dp)
+                                        )
+                                        item.rating?.let {
+                                            Text(
+                                                textAlign = TextAlign.Center,
+                                                color = Yellow,
+                                                text = "Средний рейтинг: $it",
+                                                fontSize = 18.sp,
+                                                modifier = Modifier.fillMaxWidth()
+                                                    .padding(bottom = 8.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        CurrentStaffPage.VISITS -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 64.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(students) { item ->
+                                    var color = Red
+                                    if (item.isActive) {
+                                        color = Green
+                                    }
+                                    var rating = 0
+                                    if (item.rating != null) {
+                                        rating = item.rating
+                                    }
+
+                                    val painter = rememberAsyncImagePainter(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(item.avatarUrl)
+                                            .error(R.drawable.baseline_account_circle_24)
+                                            .placeholder(R.drawable.baseline_account_circle_24)
+                                            .build(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = color,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(vertical = 12.dp, horizontal = 8.dp)
+                                    ) {
+                                        Image(
+                                            painter = painter,
+                                            contentDescription = "Аватарка",
+                                            modifier = Modifier
+                                                .padding(4.dp)
+                                                .align(Alignment.CenterHorizontally)
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .border(
+                                                    width = 2.dp,
+                                                    color = Blue,
+                                                    shape = CircleShape
+                                                ),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        Row(Modifier.fillMaxWidth()) {
+                                            Text(
+                                                textAlign = TextAlign.Center,
+                                                color = color,
+                                                text = "${item.firstName} ${item.lastName}",
+                                                fontSize = 18.sp,
+                                                modifier = Modifier.fillMaxWidth(0.85f)
+                                            )
+                                            Text(
+                                                textAlign = TextAlign.Center,
+                                                color = Yellow,
+                                                text = rating.toString(),
+                                                fontSize = 18.sp,
+                                                modifier = Modifier.fillMaxWidth()
                                             )
                                         }
                                     }
@@ -294,280 +563,42 @@ fun StaffPage(
                             }
                         }
                     }
-                    CurrentStaffPage.SUBJECT -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 64.dp)
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.9f),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(subjects) { item ->
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    modifier = Modifier
-                                        .clickable {
-                                            makeRequest.launch {
-                                                page = CurrentStaffPage.GROUP
-                                                changeTitle("Выберите группу")
-                                                selectedSubject = item
-                                                isLoading = true
-                                                val response = api.getGroups()
-                                                response.fold(
-                                                    onSuccess = {
-                                                        groups = it
-                                                    },
-                                                    onFailure = {
-                                                        onToast(it.message)
-                                                    }
-                                                )
-                                                isLoading = false
-                                            }
-                                        }
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                        .border(
-                                            width = 4.dp,
-                                            color = Blue,
-                                            shape = RoundedCornerShape(8.dp)
-                                        ),
-                                    elevation = CardDefaults.cardElevation(
-                                        defaultElevation = 4.dp
-                                    ),
-                                ) {
-                                    Text(
-                                        textAlign = TextAlign.Center,
-                                        color = Blue,
-                                        text = item.name,
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    CurrentStaffPage.GROUP -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 64.dp)
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.9f),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(groups) { item ->
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    modifier = Modifier
-                                        .clickable {
-                                            if (isListClicked) {
-                                                makeRequest.launch {
-                                                    changeTitle("Проведенные пары")
-                                                    isLoading = true
-                                                    selectedSubject?.let { subject ->
-                                                        val request = GetClassRequest(
-                                                            staffId = user.id,
-                                                            subjectId = subject.id,
-                                                            groupId = item.id,
-                                                        )
-                                                        val response = api.getClasses(request)
-                                                        response.fold(
-                                                            onSuccess = {
-                                                                classes = it
-                                                            },
-                                                            onFailure = {
-                                                                onToast(it.message)
-                                                            }
-                                                        )
-                                                    }
-                                                    page = CurrentStaffPage.CLASSES
-                                                    isLoading = false
-                                                }
-                                            } else if (geolocationClient.checkGps() && lastLocation != "") {
-                                                makeRequest.launch {
-                                                    isLoading = true
-                                                    selectedSubject?.let { subject ->
-                                                        val request = CreateClassRequest(
-                                                            subjectId = subject.id,
-                                                            groupId = item.id,
-                                                            geolocation = lastLocation
-                                                        )
-                                                        val response = api.createClass(request)
-                                                        response.fold(
-                                                            onSuccess = {
-                                                                createClassResponse = it
-                                                            },
-                                                            onFailure = {
-                                                                onToast(it.message)
-                                                            }
-                                                        )
-                                                    }
-                                                    page = CurrentStaffPage.QRCODE
-                                                    changeTitle("Главная")
-                                                    isLoading = false
-                                                }
-                                            }
-                                        }
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                        .border(
-                                            width = 4.dp,
-                                            color = Blue,
-                                            shape = RoundedCornerShape(8.dp)
-                                        ),
-                                    elevation = CardDefaults.cardElevation(
-                                        defaultElevation = 4.dp
-                                    ),
-                                ) {
-                                    Text(
-                                        textAlign = TextAlign.Center,
-                                        color = Blue,
-                                        text = item.name,
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 12.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    CurrentStaffPage.CLASSES -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 64.dp)
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.9f),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(classes) { item ->
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    modifier = Modifier
-                                        .clickable {
-                                            makeRequest.launch {
-                                                page = CurrentStaffPage.VISITS
-                                                changeTitle("Присутствующие")
-                                                isLoading = true
-
-                                                val response = api.getStudents(item.publicId)
-                                                response.fold(
-                                                    onSuccess = {
-                                                        students = it
-                                                    },
-                                                    onFailure = {
-                                                        onToast(it.message)
-                                                    }
-                                                )
-
-                                                isLoading = false
-                                            }
-                                        }
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                        .border(
-                                            width = 4.dp,
-                                            color = Blue,
-                                            shape = RoundedCornerShape(8.dp)
-                                        ),
-                                    elevation = CardDefaults.cardElevation(
-                                        defaultElevation = 4.dp
-                                    ),
-                                ) {
-                                    Text(
-                                        textAlign = TextAlign.Center,
-                                        color = Blue,
-                                        text = formatDateTime(item.createdAt),
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp)
-                                    )
-                                    item.rating?.let {
-                                        Text(
-                                            textAlign = TextAlign.Center,
-                                            color = Yellow,
-                                            text = "Средний рейтинг: $it",
-                                            fontSize = 18.sp,
-                                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    CurrentStaffPage.VISITS -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 64.dp)
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.9f),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(students) { item ->
-                                var color = Red
-                                if (item.isActive) {
-                                    color = Green
-                                }
-                                var rating = 0
-                                if (item.rating != null) {
-                                    rating = item.rating
-                                }
-
-                                val painter = rememberAsyncImagePainter(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(item.avatarUrl)
-                                        .error(R.drawable.baseline_account_circle_24)
-                                        .placeholder(R.drawable.baseline_account_circle_24)
-                                        .build(),
-                                    contentScale = ContentScale.Crop
-                                )
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                        .border(
-                                            width = 4.dp,
-                                            color = color,
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .padding(vertical = 12.dp, horizontal = 8.dp)
-                                ) {
-                                    Image(
-                                        painter = painter,
-                                        contentDescription = "Аватарка",
-                                        modifier = Modifier
-                                            .padding(4.dp)
-                                            .align(Alignment.CenterHorizontally)
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .border(width = 2.dp, color = Blue, shape = CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                    Row(Modifier.fillMaxWidth()) {
-                                        Text(
-                                            textAlign = TextAlign.Center,
-                                            color = color,
-                                            text = "${item.firstName} ${item.lastName}",
-                                            fontSize = 18.sp,
-                                            modifier = Modifier.fillMaxWidth(0.85f)
-                                        )
-                                        Text(
-                                            textAlign = TextAlign.Center,
-                                            color = Yellow,
-                                            text = rating.toString(),
-                                            fontSize = 18.sp,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
-            NavButton(
-                Modifier.align(Alignment.BottomStart),
-                R.drawable.baseline_format_list_bulleted_24,
-                "List of Students"
-            ) {
-                makeRequest.launch {
-                    isListClicked = true
+        }
+        NavButton(
+            Modifier.align(Alignment.BottomStart),
+            R.drawable.baseline_format_list_bulleted_24,
+            "List of Students"
+        ) {
+            makeRequest.launch {
+                isListClicked = true
+                page = CurrentStaffPage.SUBJECT
+                changeTitle("Выберите предмет")
+                isLoading = true
+                val response = api.getSubjects()
+                response.fold(
+                    onSuccess = {
+                        subjects = it
+                    },
+                    onFailure = {
+                        onToast(it.message)
+                    }
+                )
+                isLoading = false
+            }
+        }
+        NavButton(
+            Modifier.align(Alignment.BottomCenter),
+            R.drawable.baseline_qr_code_24,
+            "QR Generator or Scan"
+        ) {
+            makeRequest.launch {
+                isListClicked = false
+                if (page != CurrentStaffPage.QRCODE) {
+                    page = CurrentStaffPage.QRCODE
+                    changeTitle("Главная")
+                } else {
                     page = CurrentStaffPage.SUBJECT
                     changeTitle("Выберите предмет")
                     isLoading = true
@@ -583,33 +614,6 @@ fun StaffPage(
                     isLoading = false
                 }
             }
-            NavButton(
-                Modifier.align(Alignment.BottomCenter),
-                R.drawable.baseline_qr_code_24,
-                "QR Generator or Scan"
-            ) {
-                makeRequest.launch {
-                    isListClicked = false
-                    if (page != CurrentStaffPage.QRCODE) {
-                        page = CurrentStaffPage.QRCODE
-                        changeTitle("Главная")
-                    }
-                    else {
-                        page = CurrentStaffPage.SUBJECT
-                        changeTitle("Выберите предмет")
-                        isLoading = true
-                        val response = api.getSubjects()
-                        response.fold(
-                            onSuccess = {
-                                subjects = it
-                            },
-                            onFailure = {
-                                onToast(it.message)
-                            }
-                        )
-                        isLoading = false
-                    }
-                }
-            }
         }
+    }
 }
