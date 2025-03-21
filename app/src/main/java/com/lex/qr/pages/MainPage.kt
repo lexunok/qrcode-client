@@ -69,7 +69,7 @@ fun MainPage(
                 StaffPage(api, user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
             }
             Role.STUDENT -> {
-                StudentPage(api, user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
+                StudentPage(user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
             }
         }
         MenuProfile(

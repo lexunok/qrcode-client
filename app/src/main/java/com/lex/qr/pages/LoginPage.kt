@@ -57,8 +57,8 @@ fun LoginPage(
     onToast: (String?) -> Unit,
     toUserAcc: (Claims) -> Unit
 ) {
-    var email by remember { mutableStateOf("spirin") }
-    var password by remember { mutableStateOf("spirin2505") }
+    var email by remember { mutableStateOf("chernenkoag@std.tyuiu.ru") }
+    var password by remember { mutableStateOf("lexunok2505") }
     var passwordVisual by remember { mutableStateOf<VisualTransformation>(PasswordVisualTransformation()) }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
