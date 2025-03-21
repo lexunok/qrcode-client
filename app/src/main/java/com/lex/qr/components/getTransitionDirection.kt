@@ -36,9 +36,12 @@ fun getTransitionDirection(from: Page, to: Page): PageTransitionDirection {
             when {
                 from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.ACTIVITY -> PageTransitionDirection.UP
                 from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
                 from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
                 from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.GROUP -> PageTransitionDirection.LEFT
                 from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRLIVE -> PageTransitionDirection.LEFT
                 from == CurrentStaffPage.GROUP && to == CurrentStaffPage.CLASSES -> PageTransitionDirection.LEFT
                 from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.VISITS -> PageTransitionDirection.LEFT
                 from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
