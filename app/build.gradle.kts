@@ -1,3 +1,4 @@
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,7 +9,7 @@ plugins {
 android {
     namespace = "com.lex.qr"
     compileSdk = 35
-
+    android.buildFeatures.buildConfig = true
     defaultConfig {
         applicationId = "com.lex.qr"
         minSdk = 26
@@ -17,6 +18,24 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) {
+                load(file.inputStream())
+            }
+        }
+        buildConfigField(
+            "String",
+            "BASE_URL",
+            "\"${localProperties.getProperty("BASE_URL") ?: "https://default.example.com/"}\""
+        )
+        buildConfigField(
+            "String",
+            "AVATAR_URL",
+            "\"${localProperties.getProperty("AVATAR_URL") ?: "https://default.example.com/"}\""
+        )
+
     }
 
     buildTypes {

@@ -23,9 +23,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import com.lex.qr.BuildConfig
 
-const val url: String = "https://qrcode-wva2.shuttle.app/api"
-const val avatarUrl: String = "https://api.imgbb.com/1/upload?key=48015623eba651182514366c617e96d7"
+const val url: String = BuildConfig.BASE_URL
+const val avatarUrl: String = BuildConfig.AVATAR_URL
 
 class API {
 
