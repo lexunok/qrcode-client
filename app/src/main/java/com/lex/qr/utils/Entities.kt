@@ -10,8 +10,8 @@ enum class Role {
 
 @Serializable
 data class LoginRequest(
+    var email: String,
     var password: String,
-    var email: String
 )
 @Serializable
 data class Error(

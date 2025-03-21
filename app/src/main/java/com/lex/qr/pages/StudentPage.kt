@@ -66,8 +66,8 @@ import com.lex.qr.utils.formatDateTime
 import com.lex.qr.viewmodels.StudentViewModel
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStudentPage
-import com.lex.qr.viewmodels.UiEvent
 
 @SuppressLint("HardwareIds")
 @Composable
@@ -111,6 +111,7 @@ fun StudentPage(
                 when (event) {
                     is UiEvent.ShowToast -> onToast(event.message)
                     is UiEvent.ChangeTitle -> changeTitle(event.title)
+                    else -> {}
                 }
             }
 
@@ -160,14 +161,8 @@ fun StudentPage(
                         contentPadding = PaddingValues(16.dp)
                     ) {
                         items(uiState.visits) { item ->
-                            var color = Red
-                            if (item.isActive) {
-                                color = Green
-                            }
-                            var rating = 0
-                            if (item.rating != null) {
-                                rating = item.rating
-                            }
+                            val color = if (item.isActive) Green else Red
+                            val rating = item.rating ?: 0
                             Text(
                                 textAlign = TextAlign.Center,
                                 color = Blue,
@@ -216,13 +211,6 @@ fun StudentPage(
             Modifier.align(Alignment.BottomCenter),
             R.drawable.baseline_qr_code_24,
             "QR Generator or Scan"
-        ) {
-            if (uiState.page == CurrentStudentPage.VISITS) {
-                viewModel.toMain()
-            }
-            else {
-                scanLauncher.launch(options)
-            }
-        }
+        ) {if (uiState.page == CurrentStudentPage.VISITS) viewModel.toMain() else scanLauncher.launch(options) }
     }
 }

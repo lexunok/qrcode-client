@@ -1,5 +1,6 @@
 package com.lex.qr.pages
 
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -20,6 +21,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lex.qr.R
 import com.lex.qr.utils.API
 import com.lex.qr.components.Title
@@ -45,24 +48,31 @@ import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.utils.Claims
 import com.lex.qr.utils.LoginRequest
+import com.lex.qr.utils.UiEvent
 import com.lex.qr.utils.User
 import com.lex.qr.utils.UserPreferences
+import com.lex.qr.viewmodels.LoginViewModel
+import com.lex.qr.viewmodels.StudentViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginPage(
-    api: API,
-    userPrefs: UserPreferences,
-    onLogin: (Boolean) -> Unit,
     onToast: (String?) -> Unit,
-    toUserAcc: (Claims) -> Unit
+    onUserAcc: (Claims) -> Unit
 ) {
-    var email by remember { mutableStateOf("chernenkoag@std.tyuiu.ru") }
-    var password by remember { mutableStateOf("lexunok2505") }
-    var passwordVisual by remember { mutableStateOf<VisualTransformation>(PasswordVisualTransformation()) }
-    var isPasswordVisible by remember { mutableStateOf(false) }
+    val viewModel: LoginViewModel = viewModel()
 
-    val makeRequest = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> onToast(event.message)
+                is UiEvent.Login -> onUserAcc(event.claims)
+                else -> {}
+            }
+        }
+    }
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -81,8 +91,8 @@ fun LoginPage(
                 fontSize = 20.sp
             )
             OutlinedTextField (
-                value = email,
-                onValueChange = { newText -> email = newText },
+                value = uiState.email,
+                onValueChange = { text -> viewModel.changeEmail(text) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Transparent),
@@ -106,8 +116,8 @@ fun LoginPage(
                 fontSize = 20.sp
             )
             OutlinedTextField (
-                value = password,
-                onValueChange = { newText -> password = newText },
+                value = uiState.password,
+                onValueChange = { text -> viewModel.changePassword(text) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Transparent),
@@ -122,39 +132,16 @@ fun LoginPage(
                     unfocusedTextColor = Blue,
                 ),
                 trailingIcon = {
-                    if (isPasswordVisible) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.baseline_visibility_off_24),
-                            contentDescription = "Глазик",
-                            modifier = Modifier.clickable {
-                                passwordVisual = if (isPasswordVisible) {
-                                    PasswordVisualTransformation()
-                                } else {
-                                    VisualTransformation.None
-                                }
-                                isPasswordVisible = ! isPasswordVisible
-                            },
-                            tint = Blue
-                        )
-                    }
-                    else {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.baseline_visibility_24),
-                            contentDescription = "Глазик",
-                            modifier = Modifier.clickable {
-                                passwordVisual = if (isPasswordVisible) {
-                                    PasswordVisualTransformation()
-                                } else {
-                                    VisualTransformation.None
-                                }
-                                isPasswordVisible = ! isPasswordVisible
-                            },
-                            tint = Blue
-                        )
-                    }
+                    val id = if (uiState.isPasswordVisible) R.drawable.baseline_visibility_24 else R.drawable.baseline_visibility_off_24
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id),
+                        contentDescription = "Глазик",
+                        tint = Blue,
+                        modifier = Modifier.clickable {viewModel.changeVisibility()}
+                    )
                 },
                 singleLine = true,
-                visualTransformation = passwordVisual
+                visualTransformation = uiState.passwordVisual
             )
 //            Text(
 //                modifier = Modifier.padding(end = 4.dp, bottom = 8.dp, top = 16.dp).fillMaxWidth(),
@@ -166,27 +153,7 @@ fun LoginPage(
 //            )
         }
         Button(
-            onClick = {
-                if (email.isNotEmpty() && password.isNotEmpty()) {
-                    makeRequest.launch {
-                        val response = api.login(LoginRequest(email = email, password = password))
-
-                        response.fold(
-                            onSuccess = {
-                                toUserAcc(it)
-                                userPrefs.saveUser(email, password)
-                                api.updateToken(it.token)
-                                onLogin(true)
-                            },
-                            onFailure = {
-                                api.updateToken(null)
-                                onLogin(false)
-                                onToast(it.message)
-                            }
-                        )
-                    }
-                }
-            },
+            onClick = {viewModel.login()},
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp),
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(

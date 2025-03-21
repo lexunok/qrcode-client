@@ -56,7 +56,7 @@ fun MenuProfile(modifier: Modifier,
                 showMenu:Boolean,
                 userPrefs: UserPreferences,
                 changeMenu: (Boolean) -> Unit,
-                onLogout: (Boolean) -> Unit,
+                onUserAcc: (Claims?) -> Unit,
                 onToast: (String?) -> Unit,
                 changeRole: (Role) -> Unit
                 ) {
@@ -177,7 +177,7 @@ fun MenuProfile(modifier: Modifier,
                         .clickable {
                             api.updateToken(null)
                             userPrefs.clearUser()
-                            onLogout(false)
+                            onUserAcc(null)
                         },
                     fontWeight = FontWeight.SemiBold,
                     text = "Выход",

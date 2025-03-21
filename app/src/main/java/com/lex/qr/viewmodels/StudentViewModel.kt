@@ -9,6 +9,7 @@ import com.lex.qr.pages.Page
 import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.Rating
+import com.lex.qr.utils.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -19,7 +20,7 @@ enum class CurrentStudentPage: Page {
     MAIN, VISITS
 }
 
-data class UiState(
+data class StudentState(
     val visits: List<ClassResponse> = emptyList(),
     val isLoading: Boolean = false,
     val page: CurrentStudentPage = CurrentStudentPage.MAIN,
@@ -27,15 +28,11 @@ data class UiState(
     val currentRating: Int = 0
 )
 
-sealed class UiEvent {
-    data class ShowToast(val message: String) : UiEvent()
-    data class ChangeTitle(val title: String) : UiEvent()
-}
 @HiltViewModel
 class StudentViewModel @Inject constructor(private val api: API) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState
+    private val _uiState = MutableStateFlow(StudentState())
+    val uiState: StateFlow<StudentState> = _uiState
 
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()

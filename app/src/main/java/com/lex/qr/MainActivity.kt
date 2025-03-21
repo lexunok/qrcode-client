@@ -44,7 +44,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject lateinit var api: API
     private lateinit var geolocationClient: GeolocationClient
-    private lateinit var userPrefs: UserPreferences
+    @Inject lateinit var userPrefs: UserPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +75,8 @@ class MainActivity : ComponentActivity() {
                     val context = LocalContext.current
                     var toastMessage by remember { mutableStateOf<String?>(null) }
 
-                    val onLogin = {value: Boolean -> isLoggedIn = value}
                     val onToast = {value: String? -> toastMessage = value}
-                    val toUserAcc = {value: Claims -> user = value}
+                    val onUserAcc = {value: Claims? -> user = value}
 
                     LaunchedEffect(toastMessage) {
                         toastMessage?.let {
@@ -95,9 +94,9 @@ class MainActivity : ComponentActivity() {
                             .padding(20.dp)
                         ) {
                             CircularProgressIndicator(
-                                color = Blue, modifier = Modifier.size(100.dp).align(
-                                    Alignment.Center
-                                ), strokeWidth = 12.dp
+                                color = Blue,
+                                modifier = Modifier.size(100.dp).align(Alignment.Center),
+                                strokeWidth = 12.dp
                             )
                         }
                     }
@@ -141,11 +140,11 @@ class MainActivity : ComponentActivity() {
                         isLoading = false
                     }
 
-                    if (isLoggedIn && user!=null) {
-                        MainPage(api, geolocationClient, userPrefs, user!!, lastLocation, onLogin, onToast)
+                    if (user!=null) {
+                        MainPage(api, geolocationClient, userPrefs, user!!, lastLocation, onUserAcc, onToast)
                     }
                     else if (!isLoading) {
-                        LoginPage(api, userPrefs, onLogin, onToast, toUserAcc)
+                        LoginPage(onToast, onUserAcc)
                     }
                 }
             }

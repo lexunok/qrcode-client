@@ -89,10 +89,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
-//    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0"
-//    implementation "androidx.activity:activity-compose:1.8.2"
-//    // Для работы с корутинами и Flow, если нужно
-//    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
 }
 kapt {
     correctErrorTypes = true

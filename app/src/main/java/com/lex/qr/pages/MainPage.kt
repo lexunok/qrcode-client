@@ -38,7 +38,7 @@ fun MainPage(
     userPrefs: UserPreferences,
     user: Claims,
     lastLocation: String,
-    onLogout: (Boolean) -> Unit,
+    onUserAcc: (Claims?) -> Unit,
     onToast: (String?) -> Unit,
     ) {
 
@@ -80,7 +80,7 @@ fun MainPage(
             showMenu = showMenu,
             userPrefs = userPrefs,
             changeMenu = {value: Boolean -> showMenu = value},
-            onLogout = onLogout,
+            onUserAcc = onUserAcc,
             onToast = onToast,
             changeRole = {value: Role -> role = value},
             )
