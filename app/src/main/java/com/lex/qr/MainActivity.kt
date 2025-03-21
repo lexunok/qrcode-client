@@ -37,17 +37,18 @@ import com.lex.qr.utils.Claims
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.UserPreferences
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var api: API
+    @Inject lateinit var api: API
     private lateinit var geolocationClient: GeolocationClient
     private lateinit var userPrefs: UserPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        api = API()
         geolocationClient = GeolocationClient(this)
         userPrefs = UserPreferences(this)
 

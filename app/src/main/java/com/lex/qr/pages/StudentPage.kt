@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,16 +63,15 @@ import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.Rating
 import com.lex.qr.utils.User
 import com.lex.qr.utils.formatDateTime
+import com.lex.qr.viewmodels.StudentViewModel
 import kotlinx.coroutines.launch
-
-private enum class CurrentStudentPage: Page {
-    MAIN, VISITS
-}
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lex.qr.viewmodels.CurrentStudentPage
+import com.lex.qr.viewmodels.UiEvent
 
 @SuppressLint("HardwareIds")
 @Composable
 fun StudentPage(
-    api: API,
     user: Claims,
     geolocationClient: GeolocationClient,
     lastLocation: String,
@@ -80,31 +80,12 @@ fun StudentPage(
     ) {
     Box (Modifier.fillMaxSize()) {
 
-        val scanScope  = rememberCoroutineScope()
-        val makeRequest = rememberCoroutineScope()
+        val viewModel: StudentViewModel = viewModel()
 
-        val context = LocalContext.current
+        val device = Settings.Secure.getString(LocalContext.current.contentResolver, Settings.Secure.ANDROID_ID)
 
-        var page by remember { mutableStateOf(CurrentStudentPage.MAIN) }
+        val uiState by viewModel.uiState.collectAsState()
 
-        var visits by remember { mutableStateOf<List<ClassResponse>>(emptyList()) }
-
-        var currentRating by remember { mutableIntStateOf(0) }
-        var currentClassId by remember { mutableStateOf<String?>(null) }
-        var isLoading by remember { mutableStateOf(false) }
-
-        LaunchedEffect(Unit) {
-            isLoading = true
-            val response = api.getCurrent()
-            response.fold(
-                onSuccess = {
-                    currentClassId = it.id
-                    currentRating = it.rating
-                },
-                onFailure = {}
-            )
-            isLoading = false
-        }
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
         options.setPrompt("")
@@ -114,42 +95,39 @@ fun StudentPage(
 
         val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
             if (result.contents != null && geolocationClient.checkGps() && lastLocation != "") {
-                scanScope.launch {
-                    isLoading = true
-                    val response = api.joinClass(
-                        JoinClassRequest(
-                            publicId = result.contents,
-                            studentGeolocation = lastLocation,
-                            device = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-                        )
+                viewModel.joinClass(
+                    JoinClassRequest(
+                        publicId = result.contents,
+                        studentGeolocation = lastLocation,
+                        device = device
                     )
-                    response.fold(
-                        onSuccess = {
-                            currentClassId = it.id
-                        },
-                        onFailure = {
-                            onToast(it.message)
-                        }
-                    )
-                    isLoading = false
-                }
+                )
             }
         }
 
-        if (isLoading) {
+        LaunchedEffect(Unit) {
+
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    is UiEvent.ShowToast -> onToast(event.message)
+                    is UiEvent.ChangeTitle -> changeTitle(event.title)
+                }
+            }
+
+            viewModel.getCurrent()
+        }
+
+        if (uiState.isLoading) {
             LoadingColumn(
-                Modifier
-                    //.offset(x = listOffset)
-                    .fillMaxWidth()
-                    .align(Alignment.Center),
+                Modifier.fillMaxWidth().align(Alignment.Center),
                 contentPadding = PaddingValues(16.dp)
             )
         }
         else {
-            when (page) {
+            when (uiState.page) {
                 CurrentStudentPage.MAIN -> {
-                    if (currentClassId != null) {
-                        if(currentRating == 0) {
+                    if (uiState.currentClassId != null) {
+                        if(uiState.currentRating == 0) {
                             Text(
                                 color = Blue,
                                 text = "Поставьте оценку",
@@ -161,27 +139,13 @@ fun StudentPage(
                         Row(modifier = Modifier.align(Alignment.Center)) {
                             (1..5).forEach { star ->
                                 Icon(
-                                    imageVector = if (star <= currentRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                    imageVector = if (star <= uiState.currentRating) Icons.Filled.Star else Icons.Outlined.Star,
                                     contentDescription = "Оценка $star",
-                                    tint = if (star <= currentRating) Yellow else LightGray,
+                                    tint = if (star <= uiState.currentRating) Yellow else LightGray,
                                     modifier = Modifier
                                         .size(64.dp)
-                                        .clickable {
-                                            makeRequest.launch {
-                                                currentClassId?.let { id ->
-                                                    val response = api.evaluate(Rating(id,star))
-                                                    response.fold(
-                                                        onSuccess = {
-                                                            currentRating = it.rating
-                                                        },
-                                                        onFailure = {
-                                                            onToast(it.message)
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                        }
                                         .padding(4.dp)
+                                        .clickable {viewModel.evaluate(star)}
                                 )
                             }
                         }
@@ -195,7 +159,7 @@ fun StudentPage(
                             .fillMaxHeight(0.9f),
                         contentPadding = PaddingValues(16.dp)
                     ) {
-                        items(visits) { item ->
+                        items(uiState.visits) { item ->
                             var color = Red
                             if (item.isActive) {
                                 color = Green
@@ -246,30 +210,15 @@ fun StudentPage(
             Modifier.align(Alignment.BottomStart),
             R.drawable.baseline_format_list_bulleted_24,
             "List of Students"
-        ) {
-            makeRequest.launch {
-                page = CurrentStudentPage.VISITS
-                changeTitle("Посещения")
-                isLoading = true
-                val response = api.getVisits(user.id)
-                response.fold(
-                    onSuccess = {
-                        visits = it
-                    },
-                    onFailure = {
-                        onToast(it.message)
-                    }
-                )
-                isLoading = false
-            }
-        }
+        ) { viewModel.getVisits(user.id) }
+
         NavButton(
             Modifier.align(Alignment.BottomCenter),
             R.drawable.baseline_qr_code_24,
             "QR Generator or Scan"
         ) {
-            if (page == CurrentStudentPage.VISITS) {
-                page = CurrentStudentPage.MAIN
+            if (uiState.page == CurrentStudentPage.VISITS) {
+                viewModel.toMain()
             }
             else {
                 scanLauncher.launch(options)
