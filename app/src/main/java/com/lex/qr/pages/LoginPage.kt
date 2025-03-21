@@ -97,12 +97,6 @@ fun LoginPage(
                     unfocusedTextColor = Blue,
                 ),
                 singleLine = true,
-                suffix = {
-                    Text(
-                        text = "@std.tyuiu.ru",
-                        color = Blue
-                    )
-                }
             )
             Text(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = 16.dp),
@@ -175,12 +169,12 @@ fun LoginPage(
             onClick = {
                 if (email.isNotEmpty() && password.isNotEmpty()) {
                     makeRequest.launch {
-                        val response = api.login(LoginRequest(email = "$email@std.tyuiu.ru", password = password))
+                        val response = api.login(LoginRequest(email = email, password = password))
 
                         response.fold(
                             onSuccess = {
                                 toUserAcc(it)
-                                userPrefs.saveUser("$email@std.tyuiu.ru", password)
+                                userPrefs.saveUser(email, password)
                                 api.updateToken(it.token)
                                 onLogin(true)
                             },

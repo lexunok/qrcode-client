@@ -84,7 +84,6 @@ private enum class ObjectType{
     SUBJECT, GROUP, USER, USERS, NULL
 }
 
-private const val tyuiuEmail = "@std.tyuiu.ru"
 
 @Composable
 private fun CreatePageText(text: String) {
@@ -255,7 +254,6 @@ fun AdminPage(
                                     CreatePageText("Почта")
                                     CreatePageInput(
                                         email,
-                                        suffix = { Text(text = tyuiuEmail, color = Blue) },
                                         onValueChange = { newEmail -> email = newEmail }
                                     )
                                     CreatePageText("Имя")
@@ -263,10 +261,6 @@ fun AdminPage(
                                     CreatePageText("Фамилия")
                                     CreatePageInput(lastName) { newLastName -> lastName = newLastName }
                                     CreatePageText("Роль")
-                                    RadioSelect(
-                                        role == Role.ADMIN,
-                                        "Админ"
-                                    ) { role = Role.ADMIN }
                                     RadioSelect(
                                         role == Role.STAFF,
                                         "Преподаватель"
@@ -285,7 +279,7 @@ fun AdminPage(
                                         putObjectScope.launch {
                                             val response = api.updateUser(
                                                 user.id,
-                                                UpdateUserRequest(email.substringBefore("@") + tyuiuEmail, password, firstName, lastName, role.name,
+                                                UpdateUserRequest(email, password, firstName, lastName, role.name,
                                                     userGroup?.id
                                                 )
                                             )
@@ -543,7 +537,6 @@ fun AdminPage(
                                         CreatePageText("Введите почту")
                                         CreatePageInput(
                                             email,
-                                            suffix = { Text(text = tyuiuEmail, color = Blue) },
                                             onValueChange = { newEmail -> email = newEmail }
                                         )
                                         CreatePageText("Введите пароль")
@@ -629,7 +622,7 @@ fun AdminPage(
                                         when (selectedOption) {
                                             ObjectType.USER -> {
                                                 api.createUser(
-                                                    CreateUserRequest(email.substringBefore("@") + tyuiuEmail, password, firstName, lastName,
+                                                    CreateUserRequest(email, password, firstName, lastName,
                                                         role.name, userGroup?.id
                                                     )
                                                 )

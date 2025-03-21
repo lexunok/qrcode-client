@@ -1,5 +1,7 @@
 package com.lex.qr.pages
 
+import android.annotation.SuppressLint
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.border
@@ -36,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -65,6 +68,7 @@ private enum class CurrentStudentPage: Page {
     MAIN, VISITS
 }
 
+@SuppressLint("HardwareIds")
 @Composable
 fun StudentPage(
     api: API,
@@ -78,6 +82,8 @@ fun StudentPage(
 
         val scanScope  = rememberCoroutineScope()
         val makeRequest = rememberCoroutineScope()
+
+        val context = LocalContext.current
 
         var page by remember { mutableStateOf(CurrentStudentPage.MAIN) }
 
@@ -113,7 +119,8 @@ fun StudentPage(
                     val response = api.joinClass(
                         JoinClassRequest(
                             publicId = result.contents,
-                            studentGeolocation = lastLocation
+                            studentGeolocation = lastLocation,
+                            device = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
                         )
                     )
                     response.fold(

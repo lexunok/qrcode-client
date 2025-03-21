@@ -49,6 +49,7 @@ data class CreateSubjectRequest(
 data class CreateClassRequest(
     @SerialName("subject_id")val subjectId: String,
     @SerialName("group_id") val groupId: String,
+    val lifetime: Int,
     val geolocation: String
 )
 
@@ -57,13 +58,15 @@ data class CreateClassRequest(
 data class CreateClassResponse(
     @SerialName("public_id") val publicId: String,
     @SerialName("subject_id") val subjectId: String,
+    val lifetime: Int,
     @SerialName("group_id") val groupId: String
 )
 
 @Serializable
 data class JoinClassRequest(
     @SerialName("public_id") val publicId: String,
-    @SerialName("student_geolocation") val studentGeolocation: String
+    @SerialName("student_geolocation") val studentGeolocation: String,
+    val device: String
 )
 
 @Serializable
