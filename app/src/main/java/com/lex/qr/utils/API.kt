@@ -24,11 +24,12 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import com.lex.qr.BuildConfig
+import javax.inject.Inject
 
 const val url: String = BuildConfig.BASE_URL
 const val avatarUrl: String = BuildConfig.AVATAR_URL
 
-class API {
+class API @Inject constructor() {
 
     private var jwtToken: String? = null
 
@@ -49,7 +50,6 @@ class API {
     fun updateToken(newToken: String?) {
         jwtToken = newToken
     }
-    fun getToken() = jwtToken
 
     suspend fun login(request: LoginRequest): Result<Claims> {
         return try {

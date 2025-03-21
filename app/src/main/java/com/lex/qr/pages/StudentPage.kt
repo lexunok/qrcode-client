@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +63,10 @@ import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.Rating
 import com.lex.qr.utils.User
 import com.lex.qr.utils.formatDateTime
+import com.lex.qr.viewmodels.StudentViewModel
 import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lex.qr.viewmodels.UiEvent
 
 private enum class CurrentStudentPage: Page {
     MAIN, VISITS
@@ -79,6 +83,7 @@ fun StudentPage(
     changeTitle: (String) -> Unit,
     ) {
     Box (Modifier.fillMaxSize()) {
+        val viewModel: StudentViewModel = viewModel()
 
         val scanScope  = rememberCoroutineScope()
         val makeRequest = rememberCoroutineScope()
@@ -87,13 +92,20 @@ fun StudentPage(
 
         var page by remember { mutableStateOf(CurrentStudentPage.MAIN) }
 
-        var visits by remember { mutableStateOf<List<ClassResponse>>(emptyList()) }
+        val uiState by viewModel.uiState.collectAsState()
 
         var currentRating by remember { mutableIntStateOf(0) }
         var currentClassId by remember { mutableStateOf<String?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
+
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    is UiEvent.ShowToast -> onToast(event.message)
+                }
+            }
+
             isLoading = true
             val response = api.getCurrent()
             response.fold(
@@ -139,7 +151,6 @@ fun StudentPage(
         if (isLoading) {
             LoadingColumn(
                 Modifier
-                    //.offset(x = listOffset)
                     .fillMaxWidth()
                     .align(Alignment.Center),
                 contentPadding = PaddingValues(16.dp)
@@ -195,7 +206,7 @@ fun StudentPage(
                             .fillMaxHeight(0.9f),
                         contentPadding = PaddingValues(16.dp)
                     ) {
-                        items(visits) { item ->
+                        items(uiState.visits) { item ->
                             var color = Red
                             if (item.isActive) {
                                 color = Green
@@ -247,21 +258,11 @@ fun StudentPage(
             R.drawable.baseline_format_list_bulleted_24,
             "List of Students"
         ) {
-            makeRequest.launch {
-                page = CurrentStudentPage.VISITS
-                changeTitle("Посещения")
-                isLoading = true
-                val response = api.getVisits(user.id)
-                response.fold(
-                    onSuccess = {
-                        visits = it
-                    },
-                    onFailure = {
-                        onToast(it.message)
-                    }
-                )
-                isLoading = false
-            }
+            page = CurrentStudentPage.VISITS
+            changeTitle("Посещения")
+            isLoading = true
+            viewModel.getVisits(user.id)
+            isLoading = false
         }
         NavButton(
             Modifier.align(Alignment.BottomCenter),

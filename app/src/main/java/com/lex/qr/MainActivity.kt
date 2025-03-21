@@ -37,8 +37,9 @@ import com.lex.qr.utils.Claims
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.UserPreferences
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private lateinit var api: API
     private lateinit var geolocationClient: GeolocationClient
