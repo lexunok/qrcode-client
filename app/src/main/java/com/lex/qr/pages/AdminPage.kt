@@ -1,8 +1,5 @@
 package com.lex.qr.pages
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -37,7 +34,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,10 +67,7 @@ import com.lex.qr.utils.Role
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UpdateUserRequest
 import com.lex.qr.utils.User
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.InputStream
 
 enum class CurrentAdminPage : Page {
     EDITOR, LIST, CATEGORY, MAIN, CREATE, SELECT_USER_GROUP

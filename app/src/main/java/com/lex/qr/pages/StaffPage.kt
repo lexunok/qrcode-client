@@ -1,6 +1,5 @@
 package com.lex.qr.pages
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,9 +11,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,15 +23,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -72,14 +70,12 @@ import com.lex.qr.utils.GetClassResponse
 import com.lex.qr.utils.Group
 import com.lex.qr.utils.Student
 import com.lex.qr.utils.Subject
-import com.lex.qr.utils.User
-import com.lex.qr.utils.avatarUrl
 import com.lex.qr.utils.formatDateTime
 import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
 enum class CurrentStaffPage: Page {
-    QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY
+    QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY, QRLIVE
 }
 
 @Composable
@@ -103,8 +99,48 @@ fun StaffPage(
     var createClassResponse by remember { mutableStateOf<CreateClassResponse?>(null) }
 
     var selectedSubject by remember { mutableStateOf<Subject?>(null) }
+    var selectedGroup by remember { mutableStateOf<Group?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var isListClicked by remember { mutableStateOf(false) }
+
+    // Состояние прокрутки LazyColumn
+    val lazyListState = rememberLazyListState()
+
+    // Переменная для отслеживания предыдущего смещения прокрутки
+    var previousScrollOffset by remember { mutableIntStateOf(0) }
+
+    // Отслеживаем изменения состояния прокрутки
+    LaunchedEffect(lazyListState.isScrollInProgress) {
+        if (lazyListState.isScrollInProgress) { // Прокрутка в процессе
+            val currentScrollOffset = lazyListState.firstVisibleItemScrollOffset
+
+            // Проверяем направление прокрутки (вверх)
+            if (currentScrollOffset < previousScrollOffset) {
+                // Проверяем, можно ли прокрутить список вперед
+                val canScrollForward = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index != lazyListState.layoutInfo.totalItemsCount - 1
+
+                // Если список прокручен до конца
+                if (!canScrollForward) {
+                    page = CurrentStaffPage.QRCODE
+                    changeTitle("Главная")
+                }
+            }
+
+            // Обновляем предыдущее смещение
+            previousScrollOffset = currentScrollOffset
+        } else { // Прокрутка не в процессе (список не прокручивается)
+            // Проверяем, можно ли прокрутить список вперед и назад
+            val canScrollForward = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index != lazyListState.layoutInfo.totalItemsCount - 1
+            val canScrollBackward = lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 0
+
+            // Если список не прокручивается (все элементы помещаются на экране)
+            if (!canScrollForward && !canScrollBackward) {
+                // Реагируем на любой свайп (в любом направлении)
+                page = CurrentStaffPage.QRCODE
+                changeTitle("Главная")
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()){
         AnimatedContent(
@@ -131,37 +167,7 @@ fun StaffPage(
             },
             modifier = Modifier.fillMaxSize()
         ) { currentPage ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures { _, dragAmount ->
-                        if (currentPage == CurrentStaffPage.QRCODE || currentPage == CurrentStaffPage.ACTIVITY) {
-                            if (dragAmount > 0 && createClassResponse != null) {
-                                page = CurrentStaffPage.ACTIVITY
-                                changeTitle("Присутствующие")
-                                createClassResponse?.let {
-                                    makeRequest.launch {
-                                        isLoading = true
-                                        val response = api.getStudents(it.publicId)
-                                        response.fold(
-                                            onSuccess = {
-                                                students = it
-                                            },
-                                            onFailure = {
-                                                onToast(it.message)
-                                            }
-                                        )
-                                        isLoading = false
-                                    }
-                                }
-                                //Область видимости плохая
-                            } else if (dragAmount < 0) {
-                                page = CurrentStaffPage.QRCODE
-                                changeTitle("Главная")
-                            }
-                        }
-                    }
-                }) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 if (isLoading) {
                     LoadingColumn(
                         Modifier
@@ -172,14 +178,107 @@ fun StaffPage(
                 } else {
                     when (currentPage) {
                         CurrentStaffPage.QRCODE -> {
+                            Box(modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(Unit) {
+                                    detectVerticalDragGestures { _, dragAmount ->
+                                        if (dragAmount > 0) {
+                                            page = CurrentStaffPage.ACTIVITY
+                                            changeTitle("Присутствующие")
+                                            createClassResponse?.let {
+                                                makeRequest.launch {
+                                                    isLoading = true
+                                                    val response = api.getStudents(it.publicId)
+                                                    response.fold(
+                                                        onSuccess = {
+                                                            students = it
+                                                        },
+                                                        onFailure = {
+                                                            onToast(it.message)
+                                                        }
+                                                    )
+                                                    isLoading = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ){
+                                createClassResponse?.let {
+                                    QrCodeView(
+                                        data = it.publicId,
+                                        modifier = Modifier
+                                            .size(300.dp)
+                                            .align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
 
-                            createClassResponse?.let {
-                                QrCodeView(
-                                    data = it.publicId,
-                                    modifier = Modifier
-                                        .size(300.dp)
-                                        .align(Alignment.Center)
-                                )
+                        CurrentStaffPage.QRLIVE -> {
+                            val timeList = listOf(5, 10, 15, 20, 25, 30)
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 64.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(timeList) { item ->
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier
+                                            .clickable {
+                                                if (geolocationClient.checkGps() && lastLocation != "") {
+                                                    makeRequest.launch {
+                                                        isLoading = true
+                                                        selectedSubject?.let { subject ->
+                                                            selectedGroup?.let { group ->
+                                                                val request = CreateClassRequest(
+                                                                    subjectId = subject.id,
+                                                                    groupId = group.id,
+                                                                    //geolocation = lastLocation,
+                                                                    geolocation = "57.145138|65.580331",
+                                                                    lifetime = item
+                                                                )
+                                                                val response = api.createClass(request)
+                                                                response.fold(
+                                                                    onSuccess = {
+                                                                        createClassResponse = it
+                                                                    },
+                                                                    onFailure = {
+                                                                        onToast(it.message)
+                                                                    }
+                                                                )
+                                                            }
+                                                        }
+                                                        page = CurrentStaffPage.QRCODE
+                                                        changeTitle("Главная")
+                                                        isLoading = false
+                                                    }
+                                                }
+                                            }
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = Blue,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 4.dp
+                                        ),
+                                    ) {
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            color = Blue,
+                                            text = "$item минут",
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 4.dp, vertical = 12.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -189,7 +288,8 @@ fun StaffPage(
                                     .padding(top = 64.dp)
                                     .fillMaxWidth()
                                     .fillMaxHeight(0.9f),
-                                contentPadding = PaddingValues(16.dp)
+                                contentPadding = PaddingValues(16.dp),
+                                state = lazyListState
                             ) {
                                 items(students) { item ->
                                     var color = Red
@@ -376,30 +476,10 @@ fun StaffPage(
                                                         page = CurrentStaffPage.CLASSES
                                                         isLoading = false
                                                     }
-                                                } else if (geolocationClient.checkGps() && lastLocation != "") {
-                                                    makeRequest.launch {
-                                                        isLoading = true
-                                                        selectedSubject?.let { subject ->
-                                                            val request = CreateClassRequest(
-                                                                subjectId = subject.id,
-                                                                groupId = item.id,
-                                                                geolocation = lastLocation,
-                                                                lifetime = 15
-                                                            )
-                                                            val response = api.createClass(request)
-                                                            response.fold(
-                                                                onSuccess = {
-                                                                    createClassResponse = it
-                                                                },
-                                                                onFailure = {
-                                                                    onToast(it.message)
-                                                                }
-                                                            )
-                                                        }
-                                                        page = CurrentStaffPage.QRCODE
-                                                        changeTitle("Главная")
-                                                        isLoading = false
-                                                    }
+                                                } else {
+                                                    selectedGroup = item
+                                                    page = CurrentStaffPage.QRLIVE
+                                                    changeTitle("Время")
                                                 }
                                             }
                                             .fillMaxWidth()
