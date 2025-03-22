@@ -1,5 +1,6 @@
 package com.lex.qr.viewmodels
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,12 +25,21 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class CurrentLoginPage: Page {
+    LOGIN, PASSWORD_RECOVERY, PASSWORD_NEW
+}
 
 data class LoginState(
     val email: String = "chernenkoag@std.tyuiu.ru",
     val password: String = "lexunok2505",
     val passwordVisual: VisualTransformation = PasswordVisualTransformation(),
-    val isPasswordVisible: Boolean = false
+    val isPasswordVisible: Boolean = false,
+    val page: CurrentLoginPage = CurrentLoginPage.LOGIN,
+    val recoveryEmail: String = "",
+    val recoveryCode: String = "",
+    val recoveryPassword: String = "",
+    val title: String = "Вход",
+    val buttonInteraction: MutableInteractionSource = MutableInteractionSource()
 )
 
 @HiltViewModel
@@ -46,6 +56,15 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
     }
     fun changeEmail(text: String) {
         _uiState.value = _uiState.value.copy(email = text)
+    }
+    fun changeRecoveryEmail(text: String) {
+        _uiState.value = _uiState.value.copy(recoveryEmail = text)
+    }
+    fun changeRecoveryCode(text: String) {
+        _uiState.value = _uiState.value.copy(recoveryCode = text)
+    }
+    fun changeRecoveryPassword(text: String) {
+        _uiState.value = _uiState.value.copy(recoveryPassword = text)
     }
     fun login() {
         viewModelScope.launch {
@@ -78,5 +97,37 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
             _uiState.value = _uiState.value.copy(passwordVisual = VisualTransformation.None)
         }
         _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
+    }
+
+    fun toRecoveryPassword() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                page = CurrentLoginPage.PASSWORD_RECOVERY,
+                title = "Восстановление пароля"
+            )
+        }
+    }
+    fun toNewPassword() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                page = CurrentLoginPage.PASSWORD_NEW,
+                title = "Восстановление пароля"
+            )
+            _uiEvent.send(UiEvent.ShowToast("На указанную почту был отправлен код"))
+        }
+    }
+    fun toLogin() {
+        viewModelScope.launch {
+            if (_uiState.value.isPasswordVisible) {
+                _uiState.value = _uiState.value.copy(
+                    isPasswordVisible = false,
+                    passwordVisual = PasswordVisualTransformation()
+                )
+            }
+            _uiState.value = _uiState.value.copy(
+                page = CurrentLoginPage.LOGIN,
+                title = "Вход"
+            )
+        }
     }
 }
