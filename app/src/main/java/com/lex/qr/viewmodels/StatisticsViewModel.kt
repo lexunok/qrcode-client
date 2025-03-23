@@ -1,18 +1,13 @@
 package com.lex.qr.viewmodels
 
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lex.qr.pages.CurrentStaffPage
 import com.lex.qr.pages.Page
 import com.lex.qr.utils.API
-import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.Group
-import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UiEvent
-import com.lex.qr.utils.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,15 +15,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 enum class CurrentStatisticsPage: Page {
-    GroupList, StudentList, UserStatistics, GroupStatistics
+    GroupList, StudentList, UserStatistics, GroupStatistics, SubjectList
 }
 
 data class StatisticsState(
     val groups: List<Group> = emptyList(),
     val students: List<StudentStats> = emptyList(),
+    val subjects: List<Subject> = emptyList(),
     val subjectsHist: List<SubjectHist> = emptyList(),
     val groupBars: List<GroupBar> = emptyList(),
 
@@ -38,6 +35,10 @@ data class StatisticsState(
     val selectedSubject: Subject? = null,
     val page: CurrentStatisticsPage = CurrentStatisticsPage.GroupList,
     val isLoading: Boolean = false,
+    val dateFromString: String? = null,
+    val dateToString: String? = null,
+    val dateFrom: LocalDate? = null,
+    val dateTo: LocalDate? = null
     )
 data class StudentStats(val id: String, val avatarUrl: String, val firstName: String, val lastName: String)
 data class SubjectHist(val id: String,  val name: String, val total: Int, val count: Int)
@@ -53,6 +54,28 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
 
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()
+
+    fun changeDateFrom(text: String?){
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                dateFromString = text,
+                dateFrom =
+                if (text?.length == 10) LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                else null
+            )
+        }
+    }
+
+    fun changeDateTo(text: String?){
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                dateToString = text,
+                dateTo =
+                if (text?.length == 10) LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                else null
+            )
+        }
+    }
 
     fun getGroups() {
         viewModelScope.launch {
@@ -207,6 +230,38 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
             _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
+    fun getSubjectList(){
+        viewModelScope.launch {
+            _uiEvent.send(UiEvent.ChangeTitle("Выберите предмет"))
+            _uiState.value = _uiState.value.copy(
+                page = CurrentStatisticsPage.SubjectList,
+                isLoading = true
+            )
+
+            val response = api.getSubjects()
+            response.fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(subjects = it)
+                },
+                onFailure = {
+                    it.message?.let { msg ->
+                        _uiEvent.send(UiEvent.ShowToast(msg))
+                    }
+                }
+            )
+            _uiState.value = _uiState.value.copy(isLoading = false)
+        }
+    }
+    fun setSelectedSubject(subject: Subject?){
+        viewModelScope.launch {
+            _uiEvent.send(UiEvent.ChangeTitle("Статистика"))
+            _uiState.value = _uiState.value.copy(
+                page = if (_uiState.value.selectedStudent != null) CurrentStatisticsPage.UserStatistics
+                    else CurrentStatisticsPage.GroupStatistics,
+                selectedSubject = subject
+            )
+        }
+    }
     fun onBackPressed() {
         viewModelScope.launch {
             when(_uiState.value.page) {
@@ -229,6 +284,13 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 CurrentStatisticsPage.GroupList -> {
                     _uiEvent.send(UiEvent.ChangeTitle("Главная"))
                     _uiEvent.send(UiEvent.ChangePage(CurrentStaffPage.QRCODE))
+                }
+                CurrentStatisticsPage.SubjectList -> {
+                    _uiEvent.send(UiEvent.ChangeTitle("Статистика"))
+                    _uiState.value = _uiState.value.copy(
+                        page = if (_uiState.value.selectedStudent != null) CurrentStatisticsPage.UserStatistics
+                            else CurrentStatisticsPage.GroupStatistics
+                    )
                 }
             }
         }

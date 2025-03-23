@@ -1,16 +1,12 @@
 package com.lex.qr.pages.staff
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -29,7 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,9 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -50,24 +42,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.lex.qr.R
+import com.lex.qr.components.FunctionalButton
 import com.lex.qr.components.GroupBarChart
 import com.lex.qr.components.GroupStatistics
 import com.lex.qr.components.LineChart
+import com.lex.qr.components.SelectDates
 import com.lex.qr.components.SubjectHistChart
 import com.lex.qr.components.UserStatistics
-import com.lex.qr.pages.CurrentStaffPage
 import com.lex.qr.pages.Page
 import com.lex.qr.ui.theme.Blue
-import com.lex.qr.ui.theme.LightGray
-import com.lex.qr.utils.GetClassRequest
+import com.lex.qr.ui.theme.Green
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStatisticsPage
-import com.lex.qr.viewmodels.LoginViewModel
 import com.lex.qr.viewmodels.StatisticsViewModel
-import com.lex.qr.viewmodels.SubjectHist
-import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun Statistics(
@@ -131,7 +118,6 @@ fun Statistics(
                     }
                 }
             }
-
             CurrentStatisticsPage.StudentList -> {
                 LazyColumn(
                     modifier = Modifier
@@ -216,10 +202,18 @@ fun Statistics(
                         uiState.attendance?.let {
                             UserStatistics(student, it)
                             Spacer(Modifier.height(40.dp))
+                            FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
+                                viewModel.getSubjectList()
+                            }
+                            SelectDates(
+                                uiState.dateFromString,
+                                uiState.dateToString,
+                                { text -> viewModel.changeDateFrom(text) },
+                                { text -> viewModel.changeDateTo(text) }
+                            )
                             LineChart(it.visits)
                             Spacer(Modifier.height(40.dp))
                         }
-
                         if (uiState.selectedSubject == null) {
                             SubjectHistChart(uiState.subjectsHist)
                             Spacer(Modifier.height(40.dp))
@@ -240,6 +234,15 @@ fun Statistics(
                         uiState.attendance?.let {
                             GroupStatistics(group, it)
                             Spacer(Modifier.height(40.dp))
+                            FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
+                                viewModel.getSubjectList()
+                            }
+                            SelectDates(
+                                uiState.dateFromString,
+                                uiState.dateToString,
+                                { text -> viewModel.changeDateFrom(text) },
+                                { text -> viewModel.changeDateTo(text) }
+                            )
                             GroupBarChart(uiState.groupBars)
                             Spacer(Modifier.height(40.dp))
                             LineChart(it.visits)
@@ -249,6 +252,66 @@ fun Statistics(
                         if (uiState.selectedSubject == null) {
                             SubjectHistChart(uiState.subjectsHist)
                             Spacer(Modifier.height(40.dp))
+                        }
+                    }
+                }
+            }
+            CurrentStatisticsPage.SubjectList -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(top = 64.dp)
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.9f),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .border(
+                                    width = 4.dp,
+                                    color = Blue,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable { viewModel.setSelectedSubject(null) },
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        ) {
+                            Text(
+                                textAlign = TextAlign.Center,
+                                color = Blue,
+                                text = "Отменить выбор",
+                                fontSize = 18.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp, vertical = 12.dp)
+                            )
+                        }
+                    }
+                    items(uiState.subjects) { item ->
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .border(
+                                    width = 4.dp,
+                                    color = if (uiState.selectedSubject?.id == item.id) Green else Blue,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable { viewModel.setSelectedSubject(item) },
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        ) {
+                            Text(
+                                textAlign = TextAlign.Center,
+                                color = if (uiState.selectedSubject?.id == item.id) Green else Blue,
+                                text = item.name,
+                                fontSize = 18.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp, vertical = 12.dp)
+                            )
                         }
                     }
                 }

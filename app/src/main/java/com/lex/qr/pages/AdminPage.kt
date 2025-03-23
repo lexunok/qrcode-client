@@ -95,7 +95,6 @@ private fun CreatePageText(text: String) {
 @Composable
 private fun CreatePageInput(
     value: String,
-    suffix: @Composable (() -> Unit)? = null,
     onValueChange: (String) -> Unit
 ){
     OutlinedTextField(
@@ -115,8 +114,7 @@ private fun CreatePageInput(
             focusedTextColor = Blue,
             unfocusedTextColor = Blue,
         ),
-        singleLine = true,
-        suffix = { suffix?.invoke() }
+        singleLine = true
     )
 }
 
