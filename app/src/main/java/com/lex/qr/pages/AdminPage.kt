@@ -19,6 +19,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -383,7 +384,8 @@ fun AdminPage(
                                     },
                                     Modifier
                                         .padding(top = 64.dp)
-                                        .fillMaxWidth(),
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(0.9f),
                                     PaddingValues(16.dp),
                                     onItemClick = { item ->
                                         when (item) {
@@ -656,7 +658,8 @@ fun AdminPage(
                                 LazyColumn(
                                     modifier = Modifier
                                         .padding(top = 64.dp)
-                                        .fillMaxWidth(),
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(0.9f),
                                     contentPadding = PaddingValues(16.dp)
                                 ) {
                                     items(groups) { item ->

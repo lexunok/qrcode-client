@@ -104,39 +104,15 @@ fun StaffPage(
     var isLoading by remember { mutableStateOf(false) }
     var isListClicked by remember { mutableStateOf(false) }
 
-    // Состояние прокрутки LazyColumn
     val lazyListState = rememberLazyListState()
-
-    // Переменная для отслеживания предыдущего смещения прокрутки
-    var previousScrollOffset by remember { mutableIntStateOf(0) }
-
-    // Отслеживаем изменения состояния прокрутки
     LaunchedEffect(lazyListState.isScrollInProgress) {
-        if (lazyListState.isScrollInProgress) { // Прокрутка в процессе
-            val currentScrollOffset = lazyListState.firstVisibleItemScrollOffset
-
-            // Проверяем направление прокрутки (вверх)
-            if (currentScrollOffset < previousScrollOffset) {
-                // Проверяем, можно ли прокрутить список вперед
-                val canScrollForward = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index != lazyListState.layoutInfo.totalItemsCount - 1
-
-                // Если список прокручен до конца
-                if (!canScrollForward) {
-                    page = CurrentStaffPage.QRCODE
-                    changeTitle("Главная")
-                }
+        if (lazyListState.isScrollInProgress) {
+            if (!lazyListState.canScrollForward) {
+                page = CurrentStaffPage.QRCODE
+                changeTitle("Главная")
             }
-
-            // Обновляем предыдущее смещение
-            previousScrollOffset = currentScrollOffset
-        } else { // Прокрутка не в процессе (список не прокручивается)
-            // Проверяем, можно ли прокрутить список вперед и назад
-            val canScrollForward = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index != lazyListState.layoutInfo.totalItemsCount - 1
-            val canScrollBackward = lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 0
-
-            // Если список не прокручивается (все элементы помещаются на экране)
-            if (!canScrollForward && !canScrollBackward) {
-                // Реагируем на любой свайп (в любом направлении)
+        } else {
+            if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
                 page = CurrentStaffPage.QRCODE
                 changeTitle("Главная")
             }
@@ -241,8 +217,7 @@ fun StaffPage(
                                                                 val request = CreateClassRequest(
                                                                     subjectId = subject.id,
                                                                     groupId = group.id,
-                                                                    //geolocation = lastLocation,
-                                                                    geolocation = "57.145138|65.580331",
+                                                                    geolocation = lastLocation,
                                                                     lifetime = item
                                                                 )
                                                                 val response = api.createClass(request)
