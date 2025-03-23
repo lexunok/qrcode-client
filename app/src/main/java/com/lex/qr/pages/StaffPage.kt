@@ -56,6 +56,7 @@ import com.lex.qr.R
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
 import com.lex.qr.components.getTransitionDirection
+import com.lex.qr.pages.staff.Statistics
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
@@ -75,7 +76,7 @@ import com.lightspark.composeqr.QrCodeView
 import kotlinx.coroutines.launch
 
 enum class CurrentStaffPage: Page {
-    QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY, QRLIVE
+    QRCODE, SUBJECT, GROUP, CLASSES, VISITS, ACTIVITY, QRLIVE, STATS
 }
 
 @Composable
@@ -177,6 +178,9 @@ fun StaffPage(
                     )
                 } else {
                     when (currentPage) {
+                        CurrentStaffPage.STATS -> {
+                            Statistics(onToast, changeTitle, {newPage: Page -> page = newPage as CurrentStaffPage})
+                        }
                         CurrentStaffPage.QRCODE -> {
                             Box(modifier = Modifier
                                 .fillMaxSize()
@@ -696,5 +700,10 @@ fun StaffPage(
                 }
             }
         }
+        NavButton(
+            Modifier.align(Alignment.BottomEnd),
+            R.drawable.baseline_show_chart_24,
+            "Statistics"
+        ) { page = CurrentStaffPage.STATS }
     }
 }

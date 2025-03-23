@@ -50,7 +50,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         geolocationClient = GeolocationClient(this)
-        userPrefs = UserPreferences(this)
 
         val lightTransparentStyle = SystemBarStyle.light(
             scrim = TRANSPARENT,

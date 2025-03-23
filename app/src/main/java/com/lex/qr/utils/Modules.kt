@@ -1,6 +1,7 @@
 package com.lex.qr.utils
 
 import android.content.Context
+import com.lex.qr.pages.Page
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,5 +24,6 @@ object AppModule {
 sealed class UiEvent {
     data class ShowToast(val message: String) : UiEvent()
     data class ChangeTitle(val title: String) : UiEvent()
+    data class ChangePage(val page: Page) : UiEvent()
     data class Login(val claims: Claims) : UiEvent()
 }
