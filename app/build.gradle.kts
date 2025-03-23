@@ -39,16 +39,25 @@ android {
         )
 
     }
-
+    signingConfigs {
+        create("release") {
+            storeFile = file("./apk_key.jks")
+            storePassword = "lexunok2505"
+            keyAlias = "main_key"
+            keyPassword = "lexunok2505"
+        }
+    }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

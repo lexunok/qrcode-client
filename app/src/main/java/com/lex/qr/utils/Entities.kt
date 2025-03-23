@@ -8,11 +8,26 @@ enum class Role {
     ADMIN, STAFF, STUDENT
 }
 
+
+
 @Serializable
 data class LoginRequest(
     var email: String,
     var password: String,
 )
+@Serializable
+data class RecoveryPassword(
+    val id: String
+)
+@Serializable
+data class NewPasswordRequest(
+    val id: String,
+    val code: String,
+    val password: String
+)
+
+
+
 @Serializable
 data class Error(
     var status: Int,

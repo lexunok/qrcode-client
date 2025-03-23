@@ -528,28 +528,6 @@ class API @Inject constructor() {
             Result.failure(e)
         }
     }
-    suspend fun createUsersByFile(file: ByteArray): Result<Boolean> {
-        return try {
-            val response = client.post("$url/admin/user/file") {
-                headers {
-                    append(HttpHeaders.ContentType, "application/json")
-                }
-                setBody(MultiPartFormDataContent(
-                    formData {
-                        append("file", file)
-                    }
-                ))
-            }
-            if (response.status.isSuccess()) {
-                Result.success(true)
-            } else {
-                val error = response.body<Error>()
-                Result.failure(Exception(error.message))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
     suspend fun getCurrent(): Result<Rating> {
         return try {
             val response = client.get("$url/class/current") {
@@ -559,6 +537,45 @@ class API @Inject constructor() {
             }
             if (response.status.isSuccess()) {
                 val data = response.body<Rating>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun sendCode(email: String): Result<RecoveryPassword> {
+        return try {
+            val response = client.post("$url/auth/send/$email") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<RecoveryPassword>()
+                Result.success(data)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun updatePassword(request: NewPasswordRequest): Result<String> {
+        return try {
+            val response = client.post("$url/auth/password") {
+                headers {
+                    append(HttpHeaders.ContentType, "application/json")
+                }
+                setBody(request)
+            }
+            if (response.status.isSuccess()) {
+                val data = response.body<String>()
                 Result.success(data)
             }
             else {

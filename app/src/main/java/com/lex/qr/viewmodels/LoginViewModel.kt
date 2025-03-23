@@ -16,7 +16,9 @@ import com.lex.qr.pages.Page
 import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.LoginRequest
+import com.lex.qr.utils.NewPasswordRequest
 import com.lex.qr.utils.Rating
+import com.lex.qr.utils.RecoveryPassword
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.utils.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,14 +32,15 @@ enum class CurrentLoginPage: Page {
 }
 
 data class LoginState(
-    val email: String = "chernenkoag@std.tyuiu.ru",
-    val password: String = "lexunok2505",
+    val email: String = "",
+    val password: String = "",
     val passwordVisual: VisualTransformation = PasswordVisualTransformation(),
     val isPasswordVisible: Boolean = false,
     val page: CurrentLoginPage = CurrentLoginPage.LOGIN,
     val recoveryEmail: String = "",
     val recoveryCode: String = "",
     val recoveryPassword: String = "",
+    val recoveryPasswordResponse: RecoveryPassword? = null,
     val title: String = "Вход",
     val buttonInteraction: MutableInteractionSource = MutableInteractionSource()
 )
@@ -98,7 +101,14 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
         }
         _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
     }
-
+    fun toLogin() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                page = CurrentLoginPage.LOGIN,
+                title = "Вход"
+            )
+        }
+    }
     fun toRecoveryPassword() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
@@ -109,25 +119,63 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
     }
     fun toNewPassword() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                page = CurrentLoginPage.PASSWORD_NEW,
-                title = "Восстановление пароля"
-            )
-            _uiEvent.send(UiEvent.ShowToast("На указанную почту был отправлен код"))
-        }
-    }
-    fun toLogin() {
-        viewModelScope.launch {
-            if (_uiState.value.isPasswordVisible) {
-                _uiState.value = _uiState.value.copy(
-                    isPasswordVisible = false,
-                    passwordVisual = PasswordVisualTransformation()
+            if (_uiState.value.recoveryEmail.isNotEmpty()) {
+
+                val response = api.sendCode(_uiState.value.recoveryEmail)
+
+                response.fold(
+                    onSuccess = {
+                        _uiState.value = _uiState.value.copy(
+                            page = CurrentLoginPage.PASSWORD_NEW,
+                            recoveryPasswordResponse = it
+                        )
+                        _uiEvent.send(UiEvent.ShowToast("На указанную почту был отправлен код"))
+                    },
+                    onFailure = {
+                        api.updateToken(null)
+                        it.message?.let { msg ->
+                            _uiEvent.send(UiEvent.ShowToast(msg))
+                        }
+                    }
                 )
             }
-            _uiState.value = _uiState.value.copy(
-                page = CurrentLoginPage.LOGIN,
-                title = "Вход"
-            )
+        }
+    }
+    fun updatePassword() {
+        viewModelScope.launch {
+            _uiState.value.recoveryPasswordResponse?.let {
+                if (_uiState.value.recoveryPassword.isNotEmpty() && _uiState.value.recoveryCode.isNotEmpty()) {
+
+                    val response = api.updatePassword(
+                        NewPasswordRequest(
+                            id = it.id,
+                            code = _uiState.value.recoveryCode,
+                            password = _uiState.value.recoveryPassword
+                        )
+                    )
+
+                    response.fold(
+                        onSuccess = { res ->
+                            if (_uiState.value.isPasswordVisible) {
+                                _uiState.value = _uiState.value.copy(
+                                    isPasswordVisible = false,
+                                    passwordVisual = PasswordVisualTransformation()
+                                )
+                            }
+                            _uiState.value = _uiState.value.copy(
+                                page = CurrentLoginPage.LOGIN,
+                                title = "Вход"
+                            )
+                            _uiEvent.send(UiEvent.ShowToast(res))
+                        },
+                        onFailure = { res ->
+                            res.message?.let { msg ->
+                                _uiEvent.send(UiEvent.ShowToast(msg))
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }

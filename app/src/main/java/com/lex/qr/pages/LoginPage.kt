@@ -152,7 +152,7 @@ fun LoginPage(
                             )
                         )
                     }
-                    LoginButton("Сохранить", Modifier.align(Alignment.BottomCenter)){ viewModel.toLogin() }
+                    LoginButton("Сохранить", Modifier.align(Alignment.BottomCenter)){ viewModel.updatePassword() }
                 }
             }
         }
