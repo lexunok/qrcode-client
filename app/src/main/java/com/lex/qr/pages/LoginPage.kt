@@ -101,7 +101,11 @@ fun LoginPage(
                                 )
                             )
                         }
-                        LoginButton("Войти", Modifier.align(Alignment.BottomCenter)){ viewModel.login() }
+                        LoginButton(
+                            "Войти",
+                            Modifier.align(Alignment.BottomCenter),
+                            uiState.isLoading
+                        ){ viewModel.login() }
                     }
                     CurrentLoginPage.PASSWORD_RECOVERY -> {
                         Column {
@@ -119,7 +123,11 @@ fun LoginPage(
                                 )
                             )
                         }
-                        LoginButton("Далее", Modifier.align(Alignment.BottomCenter)){ viewModel.toNewPassword() }
+                        LoginButton(
+                            "Далее",
+                            Modifier.align(Alignment.BottomCenter),
+                            uiState.isLoading
+                        ){ viewModel.toNewPassword() }
                     }
                     CurrentLoginPage.PASSWORD_NEW -> {
                         Column {
@@ -152,7 +160,11 @@ fun LoginPage(
                                 )
                             )
                         }
-                        LoginButton("Сохранить", Modifier.align(Alignment.BottomCenter)){ viewModel.updatePassword() }
+                        LoginButton(
+                            "Сохранить",
+                            Modifier.align(Alignment.BottomCenter),
+                            uiState.isLoading
+                        ){ viewModel.updatePassword() }
                     }
                 }
             }

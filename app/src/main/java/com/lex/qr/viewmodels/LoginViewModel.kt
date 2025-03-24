@@ -1,10 +1,6 @@
 package com.lex.qr.viewmodels
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.ViewModel
@@ -13,11 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
 import com.lex.qr.pages.Page
-import com.lex.qr.utils.ClassResponse
-import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.NewPasswordRequest
-import com.lex.qr.utils.Rating
 import com.lex.qr.utils.RecoveryPassword
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.utils.UserPreferences
@@ -42,7 +35,8 @@ data class LoginState(
     val recoveryPassword: String = "",
     val recoveryPasswordResponse: RecoveryPassword? = null,
     val title: String = "Вход",
-    val buttonInteraction: MutableInteractionSource = MutableInteractionSource()
+    val buttonInteraction: MutableInteractionSource = MutableInteractionSource(),
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -71,6 +65,7 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
     }
     fun login() {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
             if (_uiState.value.email.isNotEmpty() && _uiState.value.password.isNotEmpty()) {
 
                 val response = api.login(LoginRequest(_uiState.value.email, _uiState.value.password))
@@ -88,8 +83,8 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
                         }
                     }
                 )
-
             }
+            _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
     fun changeVisibility() {
@@ -119,6 +114,7 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
     }
     fun toNewPassword() {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
             if (_uiState.value.recoveryEmail.isNotEmpty()) {
 
                 val response = api.sendCode(_uiState.value.recoveryEmail)
@@ -139,10 +135,12 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
                     }
                 )
             }
+            _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
     fun updatePassword() {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
             _uiState.value.recoveryPasswordResponse?.let {
                 if (_uiState.value.recoveryPassword.isNotEmpty() && _uiState.value.recoveryCode.isNotEmpty()) {
 
@@ -176,6 +174,7 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
                     )
                 }
             }
+            _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
 }
