@@ -14,10 +14,10 @@ import com.lex.qr.ui.theme.Blue
 
 @Composable
 fun SelectDates(
-    value1: String?,
-    value2: String?,
-    onValueChange1: (String?) -> Unit,
-    onValueChange2: (String?) -> Unit,
+    value1: String,
+    value2: String,
+    onValueChange1: (String) -> Unit,
+    onValueChange2: (String) -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth(0.5f)) {
@@ -28,7 +28,7 @@ fun SelectDates(
                 color = Blue,
                 modifier = Modifier.fillMaxWidth().padding(4.dp),
             )
-            DateInput(value1) { onValueChange1(value1) }
+            DateInput(value1) { newValue -> onValueChange1(newValue) }
         }
         Column(modifier = Modifier.fillMaxWidth(1f)) {
             Text(
@@ -38,7 +38,7 @@ fun SelectDates(
                 color = Blue,
                 modifier = Modifier.fillMaxWidth().padding(4.dp),
             )
-            DateInput(value2) { onValueChange2(value2) }
+            DateInput(value2) { newValue -> onValueChange2(newValue) }
         }
     }
 }

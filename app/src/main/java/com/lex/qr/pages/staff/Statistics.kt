@@ -42,16 +42,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.lex.qr.R
-import com.lex.qr.components.FunctionalButton
 import com.lex.qr.components.GroupBarChart
 import com.lex.qr.components.GroupStatistics
 import com.lex.qr.components.LineChart
 import com.lex.qr.components.SelectDates
+import com.lex.qr.components.ShowSubjectList
 import com.lex.qr.components.SubjectHistChart
 import com.lex.qr.components.UserStatistics
 import com.lex.qr.pages.Page
 import com.lex.qr.ui.theme.Blue
-import com.lex.qr.ui.theme.Green
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStatisticsPage
 import com.lex.qr.viewmodels.StatisticsViewModel
@@ -202,9 +201,7 @@ fun Statistics(
                         uiState.attendance?.let {
                             UserStatistics(student, it)
                             Spacer(Modifier.height(40.dp))
-                            FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
-                                viewModel.getSubjectList()
-                            }
+                            ShowSubjectList(viewModel)
                             SelectDates(
                                 uiState.dateFromString,
                                 uiState.dateToString,
@@ -234,9 +231,7 @@ fun Statistics(
                         uiState.attendance?.let {
                             GroupStatistics(group, it)
                             Spacer(Modifier.height(40.dp))
-                            FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
-                                viewModel.getSubjectList()
-                            }
+                            ShowSubjectList(viewModel)
                             SelectDates(
                                 uiState.dateFromString,
                                 uiState.dateToString,
@@ -252,66 +247,6 @@ fun Statistics(
                         if (uiState.selectedSubject == null) {
                             SubjectHistChart(uiState.subjectsHist)
                             Spacer(Modifier.height(40.dp))
-                        }
-                    }
-                }
-            }
-            CurrentStatisticsPage.SubjectList -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(top = 64.dp)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.9f),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    item {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .border(
-                                    width = 4.dp,
-                                    color = Blue,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable { viewModel.setSelectedSubject(null) },
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Center,
-                                color = Blue,
-                                text = "Отменить выбор",
-                                fontSize = 18.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp, vertical = 12.dp)
-                            )
-                        }
-                    }
-                    items(uiState.subjects) { item ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .border(
-                                    width = 4.dp,
-                                    color = if (uiState.selectedSubject?.id == item.id) Green else Blue,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable { viewModel.setSelectedSubject(item) },
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Center,
-                                color = if (uiState.selectedSubject?.id == item.id) Green else Blue,
-                                text = item.name,
-                                fontSize = 18.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp, vertical = 12.dp)
-                            )
                         }
                     }
                 }

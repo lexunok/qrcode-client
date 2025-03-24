@@ -15,14 +15,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 enum class CurrentStatisticsPage: Page {
-    GroupList, StudentList, UserStatistics, GroupStatistics, SubjectList
+    GroupList, StudentList, UserStatistics, GroupStatistics
 }
 
 data class StatisticsState(
@@ -38,8 +36,8 @@ data class StatisticsState(
     val selectedSubject: Subject? = null,
     val page: CurrentStatisticsPage = CurrentStatisticsPage.GroupList,
     val isLoading: Boolean = false,
-    val dateFromString: String? = null,
-    val dateToString: String? = null,
+    val dateFromString: String = "",
+    val dateToString: String = "",
     val dateFrom: LocalDate? = null,
     val dateTo: LocalDate? = null
     )
@@ -57,23 +55,23 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    fun changeDateFrom(text: String?){
+    fun changeDateFrom(text: String){
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 dateFromString = text,
                 dateFrom =
-                if (text?.length == 10) LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                if (text.length == 10) LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
                 else null
             )
         }
     }
 
-    fun changeDateTo(text: String?){
+    fun changeDateTo(text: String){
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 dateToString = text,
                 dateTo =
-                if (text?.length == 10) LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                if (text.length == 10) LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
                 else null
             )
         }
@@ -228,12 +226,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
     }
     fun getSubjectList(){
         viewModelScope.launch {
-            _uiEvent.send(UiEvent.ChangeTitle("Выберите предмет"))
-            _uiState.value = _uiState.value.copy(
-                page = CurrentStatisticsPage.SubjectList,
-                isLoading = true
-            )
-
+            _uiState.value = _uiState.value.copy(isLoading = true)
             val response = api.getSubjects()
             response.fold(
                 onSuccess = {
@@ -280,13 +273,6 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 CurrentStatisticsPage.GroupList -> {
                     _uiEvent.send(UiEvent.ChangeTitle("Главная"))
                     _uiEvent.send(UiEvent.ChangePage(CurrentStaffPage.QRCODE))
-                }
-                CurrentStatisticsPage.SubjectList -> {
-                    _uiEvent.send(UiEvent.ChangeTitle("Статистика"))
-                    _uiState.value = _uiState.value.copy(
-                        page = if (_uiState.value.selectedStudent != null) CurrentStatisticsPage.UserStatistics
-                            else CurrentStatisticsPage.GroupStatistics
-                    )
                 }
             }
         }

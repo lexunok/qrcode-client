@@ -26,11 +26,11 @@ import java.time.Year
 
 @Composable
 fun DateInput(
-    value: String?,
+    value: String,
     onValueChange: (String) -> Unit
 ){
     var textFieldValue by remember(value) {
-        mutableStateOf(TextFieldValue(text = value ?: "", selection = TextRange(value?.length ?: 0)))
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
     }
 
     OutlinedTextField(
