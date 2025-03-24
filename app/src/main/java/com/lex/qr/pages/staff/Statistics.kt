@@ -1,6 +1,7 @@
 package com.lex.qr.pages.staff
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,6 +51,7 @@ import com.lex.qr.components.ShowSubjectList
 import com.lex.qr.components.SubjectHistChart
 import com.lex.qr.components.UserStatistics
 import com.lex.qr.pages.Page
+import com.lex.qr.pages.getPageTransitionSpec
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStatisticsPage
@@ -80,173 +82,181 @@ fun Statistics(
             }
         }
     }
-    Box (Modifier.fillMaxSize()) {
-        when (uiState.page) {
-            CurrentStatisticsPage.GroupList -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(top = 64.dp)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.9f),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(uiState.groups) { item ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .border(
-                                    width = 4.dp,
-                                    color = Blue,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable { viewModel.getStudents(item) },
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Center,
-                                color = Blue,
-                                text = item.name,
-                                fontSize = 18.sp,
+    AnimatedContent(
+        targetState = uiState.page,
+        transitionSpec = {
+            getPageTransitionSpec(initialState, targetState)
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { currentPage ->
+        Box (Modifier.fillMaxSize()) {
+            when (currentPage) {
+                CurrentStatisticsPage.GroupList -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(top = 64.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.9f),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(uiState.groups) { item ->
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 4.dp, vertical = 12.dp)
-                            )
+                                    .padding(8.dp)
+                                    .border(
+                                        width = 4.dp,
+                                        color = Blue,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { viewModel.getStudents(item) },
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            ) {
+                                Text(
+                                    textAlign = TextAlign.Center,
+                                    color = Blue,
+                                    text = item.name,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp, vertical = 12.dp)
+                                )
+                            }
                         }
                     }
                 }
-            }
-            CurrentStatisticsPage.StudentList -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(top = 64.dp)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.75f),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(uiState.students) { item ->
-                        val painter = rememberAsyncImagePainter(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.avatarUrl)
-                                .error(R.drawable.baseline_account_circle_24)
-                                .placeholder(R.drawable.baseline_account_circle_24)
-                                .build(),
-                            contentScale = ContentScale.Crop
-                        )
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .border(
-                                    width = 4.dp,
-                                    color = Blue,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable {
-                                    viewModel.getUserStatistics(item)
-                                },
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        ) {
-                            Image(
-                                painter = painter,
-                                contentDescription = "Аватарка",
-                                modifier = Modifier
-                                    .padding(top = 12.dp)
-                                    .align(Alignment.CenterHorizontally)
-                                    .size(56.dp)
-                                    .clip(CircleShape)
-                                    .border(
-                                        width = 2.dp,
-                                        color = Blue,
-                                        shape = CircleShape
-                                    ),
+                CurrentStatisticsPage.StudentList -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(top = 64.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.75f),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(uiState.students) { item ->
+                            val painter = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(item.avatarUrl)
+                                    .error(R.drawable.baseline_account_circle_24)
+                                    .placeholder(R.drawable.baseline_account_circle_24)
+                                    .build(),
                                 contentScale = ContentScale.Crop
                             )
-                            Text(
-                                textAlign = TextAlign.Center,
-                                color = Blue,
-                                text = "${item.firstName} ${item.lastName}",
-                                fontSize = 18.sp,
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 12.dp)
-                            )
+                                    .padding(8.dp)
+                                    .border(
+                                        width = 4.dp,
+                                        color = Blue,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable {
+                                        viewModel.getUserStatistics(item)
+                                    },
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            ) {
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "Аватарка",
+                                    modifier = Modifier
+                                        .padding(top = 12.dp)
+                                        .align(Alignment.CenterHorizontally)
+                                        .size(56.dp)
+                                        .clip(CircleShape)
+                                        .border(
+                                            width = 2.dp,
+                                            color = Blue,
+                                            shape = CircleShape
+                                        ),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Text(
+                                    textAlign = TextAlign.Center,
+                                    color = Blue,
+                                    text = "${item.firstName} ${item.lastName}",
+                                    fontSize = 18.sp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 12.dp)
+                                )
+                            }
+                        }
+                    }
+                    Button(
+                        onClick = {viewModel.getGroupStatistics()},
+                        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.7f).padding(bottom = 80.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White,
+                            containerColor = Blue
+                        )
+                    ) {
+                        Text("Общая статистика", textAlign = TextAlign.Center, fontSize = 18.sp)
+                    }
+                }
+                CurrentStatisticsPage.UserStatistics -> {
+                    val scrollState = rememberScrollState()
+                    uiState.selectedStudent?.let { student ->
+                        Column(
+                            modifier = Modifier
+                                .padding(top = 64.dp)
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f)
+                                .verticalScroll(scrollState)
+                        ) {
+                            uiState.attendance?.let {
+                                UserStatistics(student, it)
+                                Spacer(Modifier.height(40.dp))
+                                ShowSubjectList(viewModel)
+                                SelectDates(
+                                    uiState.dateFromString,
+                                    uiState.dateToString,
+                                    { text -> viewModel.changeDateFrom(text) },
+                                    { text -> viewModel.changeDateTo(text) }
+                                )
+                                LineChart(it.visits)
+                                Spacer(Modifier.height(40.dp))
+                            }
+                            if (uiState.selectedSubject == null) {
+                                SubjectHistChart(uiState.subjectsHist)
+                                Spacer(Modifier.height(40.dp))
+                            }
                         }
                     }
                 }
-                Button(
-                    onClick = {viewModel.getGroupStatistics()},
-                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.7f).padding(bottom = 80.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = Color.White,
-                        containerColor = Blue
-                    )
-                ) {
-                    Text("Общая статистика", textAlign = TextAlign.Center, fontSize = 18.sp)
-                }
-            }
-            CurrentStatisticsPage.UserStatistics -> {
-                val scrollState = rememberScrollState()
-                uiState.selectedStudent?.let { student ->
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 64.dp)
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.9f)
-                            .verticalScroll(scrollState)
-                    ) {
-                        uiState.attendance?.let {
-                            UserStatistics(student, it)
-                            Spacer(Modifier.height(40.dp))
-                            ShowSubjectList(viewModel)
-                            SelectDates(
-                                uiState.dateFromString,
-                                uiState.dateToString,
-                                { text -> viewModel.changeDateFrom(text) },
-                                { text -> viewModel.changeDateTo(text) }
-                            )
-                            LineChart(it.visits)
-                            Spacer(Modifier.height(40.dp))
-                        }
-                        if (uiState.selectedSubject == null) {
-                            SubjectHistChart(uiState.subjectsHist)
-                            Spacer(Modifier.height(40.dp))
-                        }
-                    }
-                }
-            }
-            CurrentStatisticsPage.GroupStatistics -> {
-                val scrollState = rememberScrollState()
-                uiState.selectedGroup?.let { group ->
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 64.dp)
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.9f)
-                            .verticalScroll(scrollState)
-                    ) {
-                        uiState.attendance?.let {
-                            GroupStatistics(group, it)
-                            Spacer(Modifier.height(40.dp))
-                            ShowSubjectList(viewModel)
-                            SelectDates(
-                                uiState.dateFromString,
-                                uiState.dateToString,
-                                { text -> viewModel.changeDateFrom(text) },
-                                { text -> viewModel.changeDateTo(text) }
-                            )
-                            GroupBarChart(uiState.groupBars)
-                            Spacer(Modifier.height(40.dp))
-                            LineChart(it.visits)
-                            Spacer(Modifier.height(40.dp))
-                        }
+                CurrentStatisticsPage.GroupStatistics -> {
+                    val scrollState = rememberScrollState()
+                    uiState.selectedGroup?.let { group ->
+                        Column(
+                            modifier = Modifier
+                                .padding(top = 64.dp)
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.9f)
+                                .verticalScroll(scrollState)
+                        ) {
+                            uiState.attendance?.let {
+                                GroupStatistics(group, it)
+                                Spacer(Modifier.height(40.dp))
+                                ShowSubjectList(viewModel)
+                                SelectDates(
+                                    uiState.dateFromString,
+                                    uiState.dateToString,
+                                    { text -> viewModel.changeDateFrom(text) },
+                                    { text -> viewModel.changeDateTo(text) }
+                                )
+                                GroupBarChart(uiState.groupBars)
+                                Spacer(Modifier.height(40.dp))
+                                LineChart(it.visits)
+                                Spacer(Modifier.height(40.dp))
+                            }
 
-                        if (uiState.selectedSubject == null) {
-                            SubjectHistChart(uiState.subjectsHist)
-                            Spacer(Modifier.height(40.dp))
+                            if (uiState.selectedSubject == null) {
+                                SubjectHistChart(uiState.subjectsHist)
+                                Spacer(Modifier.height(40.dp))
+                            }
                         }
                     }
                 }

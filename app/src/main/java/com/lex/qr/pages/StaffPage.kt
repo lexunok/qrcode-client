@@ -1,13 +1,6 @@
 package com.lex.qr.pages
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,7 +47,6 @@ import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
-import com.lex.qr.components.getTransitionDirection
 import com.lex.qr.pages.staff.Statistics
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
@@ -123,24 +114,7 @@ fun StaffPage(
         AnimatedContent(
             targetState = page,
             transitionSpec = {
-                when (getTransitionDirection(initialState, targetState)) {
-                    PageTransitionDirection.LEFT -> {
-                        (slideInHorizontally { width -> -width } + fadeIn())
-                            .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
-                    }
-                    PageTransitionDirection.RIGHT -> {
-                        (slideInHorizontally { width -> width } + fadeIn())
-                            .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
-                    }
-                    PageTransitionDirection.UP -> {
-                        (slideInVertically { height -> -height } + fadeIn())
-                            .togetherWith(slideOutVertically { height -> height } + fadeOut())
-                    }
-                    PageTransitionDirection.DOWN -> {
-                        (slideInVertically { height -> height } + fadeIn())
-                            .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-                    }
-                }
+                getPageTransitionSpec(initialState, targetState)
             },
             modifier = Modifier.fillMaxSize()
         ) { currentPage ->
@@ -155,7 +129,9 @@ fun StaffPage(
                 } else {
                     when (currentPage) {
                         CurrentStaffPage.STATS -> {
-                            Statistics(onToast, changeTitle, {newPage: Page -> page = newPage as CurrentStaffPage})
+                            Statistics(onToast, changeTitle) { newPage: Page ->
+                                page = newPage as CurrentStaffPage
+                            }
                         }
                         CurrentStaffPage.QRCODE -> {
                             Box(modifier = Modifier

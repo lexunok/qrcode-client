@@ -28,9 +28,6 @@ import com.lex.qr.utils.UserPreferences
 
 interface Page
 
-enum class PageTransitionDirection {
-    LEFT, RIGHT, UP, DOWN
-}
 @Composable
 fun MainPage(
     api: API,

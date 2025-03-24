@@ -5,13 +5,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,7 +48,6 @@ import com.lex.qr.components.LazyListContent
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
 import com.lex.qr.components.RadioSelect
-import com.lex.qr.components.getTransitionDirection
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.LightGray
@@ -202,24 +194,7 @@ fun AdminPage(
         AnimatedContent(
             targetState = page,
             transitionSpec = {
-                when (getTransitionDirection(initialState, targetState)) {
-                    PageTransitionDirection.LEFT -> {
-                        (slideInHorizontally { width -> -width } + fadeIn())
-                            .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
-                    }
-                    PageTransitionDirection.RIGHT -> {
-                        (slideInHorizontally { width -> width } + fadeIn())
-                            .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
-                    }
-                    PageTransitionDirection.UP -> {
-                        (slideInVertically { height -> -height } + fadeIn())
-                            .togetherWith(slideOutVertically { height -> height } + fadeOut())
-                    }
-                    PageTransitionDirection.DOWN -> {
-                        (slideInVertically { height -> height } + fadeIn())
-                            .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-                    }
-                }
+                getPageTransitionSpec(initialState, targetState)
             },
             modifier = Modifier.fillMaxSize()
         ) { currentPage ->
