@@ -98,7 +98,7 @@ data class AvatarResponse(
 data class AvatarData(
     @SerialName("url") val url: String,
 )
-
+/////////////
 
 @Serializable
 data class GetClassResponse(
@@ -184,4 +184,15 @@ data class Subject(
     val name: String,
     @SerialName("created_at") val createdAt: String,
     @SerialName("is_deleted") val isDeleted: Boolean
+)
+
+
+
+//STATS
+@Serializable
+data class StudentStats(
+    val id: String,
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String,
+    @SerialName("avatar_url") val avatarUrl: String?
 )

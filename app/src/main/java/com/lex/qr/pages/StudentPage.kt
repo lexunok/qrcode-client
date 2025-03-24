@@ -103,6 +103,12 @@ fun StudentPage(
                     )
                 )
             }
+            else if (!geolocationClient.checkGps() && lastLocation == "") {
+                onToast("Ошибка в геолокации")
+            }
+            else if (result.contents==null) {
+                onToast("Код не прочитан")
+            }
         }
 
         LaunchedEffect(Unit) {

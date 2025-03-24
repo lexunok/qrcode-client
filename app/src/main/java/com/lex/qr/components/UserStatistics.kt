@@ -28,8 +28,8 @@ import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
+import com.lex.qr.utils.StudentStats
 import com.lex.qr.viewmodels.Attendance
-import com.lex.qr.viewmodels.StudentStats
 
 @Composable
 fun UserStatistics(student: StudentStats, attendance: Attendance) {

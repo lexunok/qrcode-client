@@ -24,6 +24,11 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import com.lex.qr.BuildConfig
+import com.lex.qr.viewmodels.StudentStats
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.request
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpMethod
 import javax.inject.Inject
 
 const val url: String = BuildConfig.BASE_URL
@@ -45,8 +50,31 @@ class API @Inject constructor() {
             jwtToken?.let {
                 header("Authorization", "Bearer $it")
             }
+            headers {
+                append(HttpHeaders.ContentType, "application/json")
+            }
         }
     }
+
+    private suspend inline fun <reified T> handleApiCall(
+        crossinline call: suspend () -> HttpResponse
+    ): Result<T> {
+        return try {
+            val response = call()
+            if (response.status.isSuccess()) {
+                val data = response.body<T>()
+                Result.success(data)
+            } else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+
     fun updateToken(newToken: String?) {
         jwtToken = newToken
     }
@@ -584,6 +612,11 @@ class API @Inject constructor() {
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+    suspend fun getStudentsByGroup(id: String): Result<List<StudentStats>> {
+        return handleApiCall {
+            client.post("$url/stats/students/$id")
         }
     }
 }

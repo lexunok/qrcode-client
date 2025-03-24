@@ -30,7 +30,7 @@ import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.utils.Group
 import com.lex.qr.viewmodels.Attendance
-import com.lex.qr.viewmodels.StudentStats
+
 
 @Composable
 fun GroupStatistics(group: Group, attendance: Attendance) {
