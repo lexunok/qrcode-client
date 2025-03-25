@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
-import com.lex.qr.viewmodels.SubjectHist
+import com.lex.qr.utils.SubjectHist
+
 
 @Composable
 fun SubjectHistChart(subjectsHist: List<SubjectHist>) {

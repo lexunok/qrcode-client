@@ -2,6 +2,7 @@ package com.lex.qr.utils
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 enum class Role {
@@ -196,3 +197,34 @@ data class StudentStats(
     @SerialName("last_name") val lastName: String,
     @SerialName("avatar_url") val avatarUrl: String?
 )
+@Serializable
+data class SubjectHist(val id: String,  val name: String, val total: Int, val count: Int)
+
+@Serializable
+data class Attendance(
+    @SerialName("total_classes")
+    val totalClasses: Int,
+    @SerialName("active_classes")
+    val activeClasses: Int,
+    @SerialName("visit_count")
+    val visitCount: Int,
+    @SerialName("week_date")
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val weekDate: LocalDateTime,
+)
+
+@Serializable
+data class AttendanceRequest(
+    val id: String,
+    @SerialName("subject_id")
+    val subjectId: String?,
+    @SerialName("end_date")
+    @Serializable(with = LocalDateSerializer::class)
+    val endDate: LocalDate?,
+    @SerialName("start_date")
+    @Serializable(with = LocalDateSerializer::class)
+    val startDate: LocalDate?,
+)
+
+@Serializable
+data class GroupBar(val title: String, val count: Int)

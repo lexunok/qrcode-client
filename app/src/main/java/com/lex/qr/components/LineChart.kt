@@ -25,14 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
-import com.lex.qr.viewmodels.Attendance
-import com.lex.qr.viewmodels.SubjectHist
-import com.lex.qr.viewmodels.VisitsPerDate
+import com.lex.qr.utils.Attendance
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun LineChart(visits: List<VisitsPerDate>) {
-    val maxVisits = visits.maxOfOrNull { it.count }?.toFloat() ?: 1f // Максимальное значение по Y
+fun LineChart(visits: List<Attendance>) {
+    val maxVisits = visits.maxOfOrNull { it.visitCount }?.toFloat() ?: 1f // Максимальное значение по Y
     val weeksCount = visits.size // Количество точек (недель)
 
     Text(
@@ -135,10 +133,10 @@ fun LineChart(visits: List<VisitsPerDate>) {
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                visits.forEach { (date, _) ->
+                visits.forEach { visit ->
                     Text(
                         color = Blue,
-                        text = date.format(DateTimeFormatter.ofPattern("dd.MM")),
+                        text = visit.weekDate.format(DateTimeFormatter.ofPattern("dd.MM")),
                         fontSize = 6.sp
                     )
                 }

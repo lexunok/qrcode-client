@@ -24,7 +24,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import com.lex.qr.BuildConfig
-import com.lex.qr.viewmodels.StudentStats
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.request
 import io.ktor.client.statement.HttpResponse
@@ -617,6 +616,35 @@ class API @Inject constructor() {
     suspend fun getStudentsByGroup(id: String): Result<List<StudentStats>> {
         return handleApiCall {
             client.post("$url/stats/students/$id")
+        }
+    }
+    suspend fun getGroupBars(id: String): Result<List<GroupBar>> {
+        return handleApiCall {
+            client.get("$url/stats/bar/group/$id")
+        }
+    }
+    suspend fun getGroupSubjectHist(id: String): Result<List<SubjectHist>> {
+        return handleApiCall {
+            client.get("$url/stats/hist/group/$id")
+        }
+    }
+    suspend fun getStudentSubjectHist(id: String): Result<List<SubjectHist>> {
+        return handleApiCall {
+            client.get("$url/stats/hist/student/$id")
+        }
+    }
+    suspend fun getStudentAttendance(request: AttendanceRequest): Result<List<Attendance>> {
+        return handleApiCall {
+            client.post("$url/stats/attendance/student") {
+                setBody(request)
+            }
+        }
+    }
+    suspend fun getGroupAttendance(request: AttendanceRequest): Result<List<Attendance>> {
+        return handleApiCall {
+            client.post("$url/stats/attendance/group") {
+                setBody(request)
+            }
         }
     }
 }

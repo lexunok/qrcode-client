@@ -28,13 +28,14 @@ import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
+import com.lex.qr.utils.Attendance
 import com.lex.qr.utils.Group
-import com.lex.qr.viewmodels.Attendance
 
 
 @Composable
-fun GroupStatistics(group: Group, attendance: Attendance) {
-    val commonValue = attendance.count.toFloat() / attendance.total.toFloat()
+fun GroupStatistics(group: Group, attendance: List<Attendance>) {
+
+    val commonValue = attendance[0].activeClasses.toFloat() / attendance[0].totalClasses.toFloat()
 
     Text(
         text = group.name,
@@ -45,7 +46,7 @@ fun GroupStatistics(group: Group, attendance: Attendance) {
     )
 
     Text(
-        text = "Посещаемость: ${attendance.count}/${attendance.total}",
+        text = "Посещаемость: ${attendance[0].activeClasses}/${attendance[0].totalClasses}",
         textAlign = TextAlign.Start,
         fontSize = 20.sp,
         color = Blue,

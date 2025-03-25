@@ -249,17 +249,17 @@ fun Statistics(
                                     .fillMaxHeight(0.9f)
                                     .verticalScroll(scrollState)
                             ) {
-                                uiState.attendance?.let {
-                                    UserStatistics(student, it)
+                                if (uiState.attendance.isNotEmpty()) {
+                                    UserStatistics(student, uiState.attendance)
                                     Spacer(Modifier.height(40.dp))
                                     ShowSubjectList(viewModel)
                                     SelectDates(
-                                        uiState.dateFromString,
-                                        uiState.dateToString,
+                                        uiState.dateFrom,
+                                        uiState.dateTo,
                                         { text -> viewModel.changeDateFrom(text) },
                                         { text -> viewModel.changeDateTo(text) }
                                     )
-                                    LineChart(it.visits)
+                                    LineChart(uiState.attendance)
                                     Spacer(Modifier.height(40.dp))
                                 }
                                 if (uiState.selectedSubject == null) {
@@ -289,19 +289,19 @@ fun Statistics(
                                     .fillMaxHeight(0.9f)
                                     .verticalScroll(scrollState)
                             ) {
-                                uiState.attendance?.let {
-                                    GroupStatistics(group, it)
+                                if (uiState.attendance.isNotEmpty()) {
+                                    GroupStatistics(group, uiState.attendance)
                                     Spacer(Modifier.height(40.dp))
                                     ShowSubjectList(viewModel)
                                     SelectDates(
-                                        uiState.dateFromString,
-                                        uiState.dateToString,
+                                        uiState.dateTo,
+                                        uiState.dateFrom,
                                         { text -> viewModel.changeDateFrom(text) },
                                         { text -> viewModel.changeDateTo(text) }
                                     )
                                     GroupBarChart(uiState.groupBars)
                                     Spacer(Modifier.height(40.dp))
-                                    LineChart(it.visits)
+                                    LineChart(uiState.attendance)
                                     Spacer(Modifier.height(40.dp))
                                 }
 
