@@ -283,7 +283,7 @@ fun Statistics(
                 }
                 CurrentStatisticsPage.GroupStatistics -> {
                     val scrollState = rememberScrollState()
-                    if (uiState.isLoading) {
+                    if (uiState.isLoading && !uiState.showDialog) {
                         Box (modifier = Modifier.fillMaxSize()) {
                             CircularProgressIndicator(
                                 color = Blue,
