@@ -214,8 +214,8 @@ data class Attendance(
 )
 
 @Serializable
-data class AttendanceRequest(
-    val id: String,
+data class StatisticRequest(
+    var id: String,
     @SerialName("subject_id")
     val subjectId: String?,
     @SerialName("end_date")

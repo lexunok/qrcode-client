@@ -1,8 +1,5 @@
 package com.lex.qr.utils
 
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -24,10 +21,7 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import com.lex.qr.BuildConfig
-import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.request
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.HttpMethod
 import javax.inject.Inject
 
 const val url: String = BuildConfig.BASE_URL
@@ -613,34 +607,43 @@ class API @Inject constructor() {
             Result.failure(e)
         }
     }
+    ////////////
+    //STATISTICS
+    ////////////
     suspend fun getStudentsByGroup(id: String): Result<List<StudentStats>> {
         return handleApiCall {
-            client.post("$url/stats/students/$id")
+            client.get("$url/stats/students/$id")
         }
     }
-    suspend fun getGroupBars(id: String): Result<List<GroupBar>> {
+    suspend fun getGroupBars(request: StatisticRequest): Result<List<GroupBar>> {
         return handleApiCall {
-            client.get("$url/stats/bar/group/$id")
+            client.post("$url/stats/bar/group") {
+                setBody(request)
+            }
         }
     }
-    suspend fun getGroupSubjectHist(id: String): Result<List<SubjectHist>> {
+    suspend fun getGroupSubjectHist(request: StatisticRequest): Result<List<SubjectHist>> {
         return handleApiCall {
-            client.get("$url/stats/hist/group/$id")
+            client.post("$url/stats/hist/group") {
+                setBody(request)
+            }
         }
     }
-    suspend fun getStudentSubjectHist(id: String): Result<List<SubjectHist>> {
+    suspend fun getStudentSubjectHist(request: StatisticRequest): Result<List<SubjectHist>> {
         return handleApiCall {
-            client.get("$url/stats/hist/student/$id")
+            client.post("$url/stats/hist/student") {
+                setBody(request)
+            }
         }
     }
-    suspend fun getStudentAttendance(request: AttendanceRequest): Result<List<Attendance>> {
+    suspend fun getStudentAttendance(request: StatisticRequest): Result<List<Attendance>> {
         return handleApiCall {
             client.post("$url/stats/attendance/student") {
                 setBody(request)
             }
         }
     }
-    suspend fun getGroupAttendance(request: AttendanceRequest): Result<List<Attendance>> {
+    suspend fun getGroupAttendance(request: StatisticRequest): Result<List<Attendance>> {
         return handleApiCall {
             client.post("$url/stats/attendance/group") {
                 setBody(request)

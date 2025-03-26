@@ -6,7 +6,7 @@ import com.lex.qr.pages.CurrentStaffPage
 import com.lex.qr.pages.Page
 import com.lex.qr.utils.API
 import com.lex.qr.utils.Attendance
-import com.lex.qr.utils.AttendanceRequest
+import com.lex.qr.utils.StatisticRequest
 import com.lex.qr.utils.Group
 import com.lex.qr.utils.GroupBar
 import com.lex.qr.utils.StudentStats
@@ -59,19 +59,23 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
         val endDate = if (_uiState.value.dateTo.length == 10)
             LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
 
+        val request = StatisticRequest(
+            id = "",
+            subjectId = _uiState.value.selectedSubject?.id,
+            startDate = startDate,
+            endDate = endDate,
+        )
+
         val response = if (uiState.value.page == CurrentStatisticsPage.UserStatistics) {
             _uiState.value.selectedStudent?.let {
-                val request = AttendanceRequest(
-                    id = it.id,
-                    subjectId = _uiState.value.selectedSubject?.id,
-                    startDate = startDate,
-                    endDate = endDate,
-                )
+                request.id = it.id
                 api.getStudentAttendance(request)
             }
         } else {
             _uiState.value.selectedGroup?.let {
-                val response = api.getGroupBars(it.id)
+                request.id = it.id
+
+                val response = api.getGroupBars(request)
                 response.fold(
                     onSuccess = {result->
                         _uiState.value = _uiState.value.copy(groupBars = result)
@@ -83,12 +87,6 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                     }
                 )
 
-                val request = AttendanceRequest(
-                    id = it.id,
-                    subjectId = _uiState.value.selectedSubject?.id,
-                    startDate = startDate,
-                    endDate = endDate,
-                )
                 api.getGroupAttendance(request)
             }
         }
@@ -179,7 +177,19 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 isLoading = true
             )
 
-            val response = api.getStudentSubjectHist(user.id)
+            val startDate = if (_uiState.value.dateFrom.length == 10)
+                LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
+
+            val endDate = if (_uiState.value.dateTo.length == 10)
+                LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
+
+            val response = api.getStudentSubjectHist(
+                StatisticRequest(
+                    id = user.id,
+                    subjectId = _uiState.value.selectedSubject?.id,
+                    endDate = endDate,
+                    startDate = startDate,
+                    ))
             response.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(subjectsHist = it)
@@ -204,7 +214,20 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 isLoading = true
             )
             _uiState.value.selectedGroup?.let {
-                val responseHist = api.getGroupSubjectHist(it.id)
+
+                val startDate = if (_uiState.value.dateFrom.length == 10)
+                    LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
+
+                val endDate = if (_uiState.value.dateTo.length == 10)
+                    LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
+
+                val responseHist = api.getGroupSubjectHist(
+                    StatisticRequest(
+                        id = it.id,
+                        subjectId = _uiState.value.selectedSubject?.id,
+                        endDate = endDate,
+                        startDate = startDate,
+                    ))
                 responseHist.fold(
                     onSuccess = {result ->
                         _uiState.value = _uiState.value.copy(subjectsHist = result)
