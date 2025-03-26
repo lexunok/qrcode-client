@@ -15,11 +15,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -28,22 +23,19 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
-import com.lex.qr.viewmodels.StatisticsViewModel
+import com.lex.qr.utils.Subject
 
 @Composable
 fun ShowSubjectList(
-    viewModel: StatisticsViewModel,
+    showDialog: Boolean,
+    onLoading: Boolean,
+    subjects: List<Subject>,
+    selectedSubject: Subject?,
+    onClick: (Subject?) -> Unit,
+    closeDialog: () -> Unit,
 ) {
-    var showDialog by remember { mutableStateOf(false) }
-    val uiState by viewModel.uiState.collectAsState()
-
-    FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
-        showDialog = true
-        viewModel.getSubjectList()
-    }
-
     if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
+        Dialog(onDismissRequest = { closeDialog() }) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
@@ -56,7 +48,7 @@ fun ShowSubjectList(
                     ),
                 color = Color.White
             ) {
-                if(uiState.isLoading){
+                if(onLoading){
                     LoadingColumn(
                         Modifier
                             .padding(16.dp)
@@ -82,8 +74,7 @@ fun ShowSubjectList(
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                     .clickable {
-                                        viewModel.setSelectedSubject(null)
-                                        showDialog = false
+                                        onClick(null)
                                     },
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             ) {
@@ -98,7 +89,7 @@ fun ShowSubjectList(
                                 )
                             }
                         }
-                        items(uiState.subjects) { item ->
+                        items(subjects) { item ->
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
                                 modifier = Modifier
@@ -106,18 +97,17 @@ fun ShowSubjectList(
                                     .padding(vertical = 8.dp)
                                     .border(
                                         width = 4.dp,
-                                        color = if (uiState.selectedSubject?.id == item.id) Green else Blue,
+                                        color = if (selectedSubject?.id == item.id) Green else Blue,
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                     .clickable {
-                                        viewModel.setSelectedSubject(item)
-                                        showDialog = false
+                                        onClick(item)
                                     },
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             ) {
                                 Text(
                                     textAlign = TextAlign.Center,
-                                    color = if (uiState.selectedSubject?.id == item.id) Green else Blue,
+                                    color = if (selectedSubject?.id == item.id) Green else Blue,
                                     text = item.name,
                                     fontSize = 18.sp,
                                     modifier = Modifier

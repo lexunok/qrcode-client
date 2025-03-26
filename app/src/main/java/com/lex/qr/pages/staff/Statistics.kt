@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.lex.qr.R
+import com.lex.qr.components.FunctionalButton
 import com.lex.qr.components.GroupBarChart
 import com.lex.qr.components.GroupStatistics
 import com.lex.qr.components.LineChart
@@ -232,7 +233,7 @@ fun Statistics(
                 }
                 CurrentStatisticsPage.UserStatistics -> {
                     val scrollState = rememberScrollState()
-                    if (uiState.isLoading) {
+                    if (uiState.isLoading && !uiState.showDialog) {
                         Box (modifier = Modifier.fillMaxSize()) {
                             CircularProgressIndicator(
                                 color = Blue,
@@ -252,7 +253,17 @@ fun Statistics(
                                 if (uiState.attendance.isNotEmpty()) {
                                     UserStatistics(student, uiState.attendance)
                                     Spacer(Modifier.height(40.dp))
-                                    ShowSubjectList(viewModel)
+                                    FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
+                                        viewModel.getSubjectList()
+                                    }
+                                    ShowSubjectList(
+                                        uiState.showDialog,
+                                        uiState.isLoading,
+                                        uiState.subjects,
+                                        uiState.selectedSubject,
+                                        {subject -> viewModel.setSelectedSubject(subject)},
+                                        {viewModel.onBackPressed()}
+                                    )
                                     SelectDates(
                                         uiState.dateFrom,
                                         uiState.dateTo,
@@ -292,7 +303,17 @@ fun Statistics(
                                 if (uiState.attendance.isNotEmpty()) {
                                     GroupStatistics(group, uiState.attendance)
                                     Spacer(Modifier.height(40.dp))
-                                    ShowSubjectList(viewModel)
+                                    FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
+                                        viewModel.getSubjectList()
+                                    }
+                                    ShowSubjectList(
+                                        uiState.showDialog,
+                                        uiState.isLoading,
+                                        uiState.subjects,
+                                        uiState.selectedSubject,
+                                        {subject -> viewModel.setSelectedSubject(subject)},
+                                        {viewModel.onBackPressed()}
+                                    )
                                     SelectDates(
                                         uiState.dateTo,
                                         uiState.dateFrom,

@@ -41,7 +41,8 @@ data class StatisticsState(
     val page: CurrentStatisticsPage = CurrentStatisticsPage.GroupList,
     val isLoading: Boolean = false,
     val dateFrom: String = "",
-    val dateTo: String = ""
+    val dateTo: String = "",
+    val showDialog: Boolean = false
     )
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel() {
@@ -245,7 +246,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
     }
     fun getSubjectList(){
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.value = _uiState.value.copy(showDialog = true, isLoading = true)
             val response = api.getSubjects()
             response.fold(
                 onSuccess = {
@@ -262,8 +263,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
     }
     fun setSelectedSubject(subject: Subject?){
         viewModelScope.launch {
-            _uiEvent.send(UiEvent.ChangeTitle("Статистика"))
-            _uiState.value = _uiState.value.copy(selectedSubject = subject)
+            _uiState.value = _uiState.value.copy(selectedSubject = subject, showDialog = false)
             getAttendance()
         }
     }
@@ -281,10 +281,14 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                     _uiState.value = _uiState.value.copy(page = CurrentStatisticsPage.GroupList)
                 }
                 CurrentStatisticsPage.UserStatistics -> {
-                    _uiState.value.selectedGroup?.let {
-                        _uiEvent.send(UiEvent.ChangeTitle(it.name))
+                    if (_uiState.value.showDialog) {
+                        _uiState.value = _uiState.value.copy(showDialog = false)
+                    } else {
+                        _uiState.value.selectedGroup?.let {
+                            _uiEvent.send(UiEvent.ChangeTitle(it.name))
+                        }
+                        _uiState.value = _uiState.value.copy(page = CurrentStatisticsPage.StudentList)
                     }
-                    _uiState.value = _uiState.value.copy(page = CurrentStatisticsPage.StudentList)
                 }
                 CurrentStatisticsPage.GroupList -> {
                     _uiEvent.send(UiEvent.ChangeTitle("Главная"))
