@@ -271,10 +271,14 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
         viewModelScope.launch {
             when(_uiState.value.page) {
                 CurrentStatisticsPage.GroupStatistics -> {
-                    _uiState.value.selectedGroup?.let {
-                        _uiEvent.send(UiEvent.ChangeTitle(it.name))
+                    if (_uiState.value.showDialog) {
+                        _uiState.value = _uiState.value.copy(showDialog = false)
+                    } else {
+                        _uiState.value.selectedGroup?.let {
+                            _uiEvent.send(UiEvent.ChangeTitle(it.name))
+                        }
+                        _uiState.value = _uiState.value.copy(page = CurrentStatisticsPage.StudentList)
                     }
-                    _uiState.value = _uiState.value.copy(page = CurrentStatisticsPage.StudentList)
                 }
                 CurrentStatisticsPage.StudentList -> {
                     _uiEvent.send(UiEvent.ChangeTitle("Группы"))
