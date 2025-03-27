@@ -39,12 +39,16 @@ fun DateInput(
             var input = newValue.text.filter { it.isDigit() }.take(8)
             if (input.length == 2 && input.toInt() > 31)
                 input = "31"
+            else if (input.length == 2 && input.toInt() < 1)
+                input = "01"
             else if (input.length in 3..4) {
                 var day = input.take(2)
                 input = input.drop(2)
                 if (input.length == 2){
                     if (input.toInt() > 12)
                         input = "12"
+                    else if (input.toInt() < 1)
+                        input = "01"
                     val date = LocalDate.of(LocalDate.now().year, input.toInt(), 1)
                     if (day.toInt() > date.lengthOfMonth())
                         day = if (input.toInt() == 2) "29" else date.lengthOfMonth().toString()
@@ -58,6 +62,8 @@ fun DateInput(
                 if (input.length == 4){
                     if (input.toInt() > LocalDate.now().year)
                         input = LocalDate.now().year.toString()
+                    else if (input.toInt() < 2025)
+                        input = "2025"
                     if (!Year.of(input.toInt()).isLeap && month.toInt() == 2 && day.toInt() > 28)
                         day = "28"
                 }

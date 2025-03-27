@@ -1,4 +1,4 @@
-package com.lex.qr.components
+package com.lex.qr.components.admin
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable

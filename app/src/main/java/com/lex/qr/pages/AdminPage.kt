@@ -3,12 +3,8 @@ package com.lex.qr.pages
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,22 +29,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lex.qr.R
-import com.lex.qr.components.AdminCardCategory
+import com.lex.qr.components.admin.AdminCardCategory
 import com.lex.qr.components.LazyListContent
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
 import com.lex.qr.components.RadioSelect
+import com.lex.qr.components.admin.CreatePageButton
+import com.lex.qr.components.admin.CreatePageInput
+import com.lex.qr.components.admin.CreatePageText
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
-import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.utils.API
 import com.lex.qr.utils.CreateGroupRequest
 import com.lex.qr.utils.CreateSubjectRequest
@@ -68,87 +61,6 @@ enum class CurrentAdminPage : Page {
 
 private enum class ObjectType{
     SUBJECT, GROUP, USER, USERS, NULL
-}
-
-
-@Composable
-private fun CreatePageText(text: String) {
-    Text(
-        text = text,
-        color = Blue,
-        textAlign = TextAlign.Center,
-        fontSize = 18.sp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-    )
-}
-
-@Composable
-private fun CreatePageInput(
-    value: String,
-    onValueChange: (String) -> Unit
-){
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .background(Color.Transparent),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Blue,
-            unfocusedBorderColor = LightGray,
-            focusedLabelColor = Blue,
-            unfocusedLabelColor = Color.Transparent,
-            cursorColor = Blue,
-            focusedTextColor = Blue,
-            unfocusedTextColor = Blue,
-        ),
-        singleLine = true
-    )
-}
-
-@Composable
-private fun CreatePageButton(
-    text: String,
-    onClick: () -> Unit
-){
-    var isPressed by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 1.1f else 1f,
-        animationSpec = tween(durationMillis = 50)
-    )
-
-    Box(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .scale(scale)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
-                        onClick()
-                    }
-                )
-            }
-            .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-    ) {
-        Text(
-            text = text,
-            color = Blue,
-            textAlign = TextAlign.Center,
-            fontSize = 18.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-        )
-    }
 }
 
 @Composable
