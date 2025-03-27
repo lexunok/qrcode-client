@@ -60,7 +60,7 @@ fun MainPage(
 
         when (role) {
             Role.ADMIN -> {
-                AdminPage(api, onToast) { value: String -> title = value }
+                AdminPage(onToast) { value: String -> title = value }
             }
             Role.STAFF -> {
                 StaffPage(api, user, geolocationClient, lastLocation, onToast) { value: String -> title = value }

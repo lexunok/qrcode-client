@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import com.lex.qr.viewmodels.CurrentAdminPage
 import com.lex.qr.viewmodels.CurrentLoginPage
 import com.lex.qr.viewmodels.CurrentStatisticsPage
 
@@ -55,7 +56,6 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
                 from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.RIGHT
                 from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.MAIN -> PageTransitionDirection.RIGHT
                 from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.SELECT_USER_GROUP -> PageTransitionDirection.LEFT
 
                 from == CurrentAdminPage.LIST && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
                 from == CurrentAdminPage.LIST && to == CurrentAdminPage.MAIN -> PageTransitionDirection.RIGHT
@@ -71,12 +71,6 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
 
                 from == CurrentAdminPage.CREATE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
                 from == CurrentAdminPage.CREATE && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.CREATE && to == CurrentAdminPage.SELECT_USER_GROUP -> PageTransitionDirection.RIGHT
-
-                from == CurrentAdminPage.SELECT_USER_GROUP && to == CurrentAdminPage.CREATE -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.SELECT_USER_GROUP && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.SELECT_USER_GROUP && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.SELECT_USER_GROUP && to == CurrentAdminPage.EDITOR -> PageTransitionDirection.RIGHT
                 else -> PageTransitionDirection.RIGHT
             }
         }
