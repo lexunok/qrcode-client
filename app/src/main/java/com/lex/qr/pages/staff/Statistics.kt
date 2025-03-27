@@ -56,6 +56,7 @@ import com.lex.qr.components.UserStatistics
 import com.lex.qr.pages.Page
 import com.lex.qr.pages.getPageTransitionSpec
 import com.lex.qr.ui.theme.Blue
+import com.lex.qr.utils.Attendance
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStatisticsPage
 import com.lex.qr.viewmodels.StatisticsViewModel
@@ -250,30 +251,33 @@ fun Statistics(
                                     .fillMaxHeight(0.9f)
                                     .verticalScroll(scrollState)
                             ) {
-                                if (uiState.attendance.isNotEmpty()) {
-                                    UserStatistics(student, uiState.attendance)
-                                    Spacer(Modifier.height(40.dp))
-                                    FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
-                                        viewModel.getSubjectList()
-                                    }
-                                    ShowSubjectList(
-                                        uiState.showDialog,
-                                        uiState.isLoading,
-                                        uiState.subjects,
-                                        uiState.selectedSubject,
-                                        {subject -> viewModel.setSelectedSubject(subject)},
-                                        {viewModel.onBackPressed()}
-                                    )
-                                    SelectDates(
-                                        uiState.dateFrom,
-                                        uiState.dateTo,
-                                        { text -> viewModel.changeDateFrom(text) },
-                                        { text -> viewModel.changeDateTo(text) }
-                                    )
-                                    LineChart(uiState.attendance)
+                                UserStatistics(student, uiState.attendance?: Attendance(0,0))
+                                Spacer(Modifier.height(40.dp))
+                                FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
+                                    viewModel.getSubjectList()
+                                }
+                                ShowSubjectList(
+                                    uiState.showDialog,
+                                    uiState.isLoading,
+                                    uiState.subjects,
+                                    uiState.selectedSubject,
+                                    {subject -> viewModel.setSelectedSubject(subject)},
+                                    {viewModel.onBackPressed()}
+                                )
+                                SelectDates(
+                                    uiState.dateFrom,
+                                    uiState.dateTo,
+                                    { text -> viewModel.changeDateFrom(text) },
+                                    { text -> viewModel.changeDateTo(text) }
+                                )
+                                Spacer(Modifier.height(40.dp))
+
+                                if (uiState.lineCharts.size > 1) {
+                                    LineChart(uiState.lineCharts)
                                     Spacer(Modifier.height(40.dp))
                                 }
-                                if (uiState.selectedSubject == null) {
+
+                                if (uiState.selectedSubject == null && uiState.subjectsHist.isNotEmpty()) {
                                     SubjectHistChart(uiState.subjectsHist)
                                     Spacer(Modifier.height(40.dp))
                                 }
@@ -300,33 +304,36 @@ fun Statistics(
                                     .fillMaxHeight(0.9f)
                                     .verticalScroll(scrollState)
                             ) {
-                                if (uiState.attendance.isNotEmpty()) {
-                                    GroupStatistics(group, uiState.attendance)
-                                    Spacer(Modifier.height(40.dp))
-                                    FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
-                                        viewModel.getSubjectList()
-                                    }
-                                    ShowSubjectList(
-                                        uiState.showDialog,
-                                        uiState.isLoading,
-                                        uiState.subjects,
-                                        uiState.selectedSubject,
-                                        {subject -> viewModel.setSelectedSubject(subject)},
-                                        {viewModel.onBackPressed()}
-                                    )
-                                    SelectDates(
-                                        uiState.dateTo,
-                                        uiState.dateFrom,
-                                        { text -> viewModel.changeDateFrom(text) },
-                                        { text -> viewModel.changeDateTo(text) }
-                                    )
-                                    GroupBarChart(uiState.groupBars)
-                                    Spacer(Modifier.height(40.dp))
-                                    LineChart(uiState.attendance)
+                                GroupStatistics(group, uiState.attendance?: Attendance(0,0))
+                                Spacer(Modifier.height(40.dp))
+                                FunctionalButton(uiState.selectedSubject?.name ?: "Выберите предмет"){
+                                    viewModel.getSubjectList()
+                                }
+                                ShowSubjectList(
+                                    uiState.showDialog,
+                                    uiState.isLoading,
+                                    uiState.subjects,
+                                    uiState.selectedSubject,
+                                    {subject -> viewModel.setSelectedSubject(subject)},
+                                    {viewModel.onBackPressed()}
+                                )
+                                SelectDates(
+                                    uiState.dateFrom,
+                                    uiState.dateTo,
+                                    { text -> viewModel.changeDateFrom(text) },
+                                    { text -> viewModel.changeDateTo(text) }
+                                )
+
+                                Spacer(Modifier.height(40.dp))
+                                GroupBarChart(uiState.groupBars)
+                                Spacer(Modifier.height(40.dp))
+
+                                if (uiState.lineCharts.size > 1) {
+                                    LineChart(uiState.lineCharts)
                                     Spacer(Modifier.height(40.dp))
                                 }
 
-                                if (uiState.selectedSubject == null) {
+                                if (uiState.selectedSubject == null && uiState.subjectsHist.isNotEmpty()) {
                                     SubjectHistChart(uiState.subjectsHist)
                                     Spacer(Modifier.height(40.dp))
                                 }

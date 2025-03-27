@@ -636,16 +636,30 @@ class API @Inject constructor() {
             }
         }
     }
-    suspend fun getStudentAttendance(request: StatisticRequest): Result<List<Attendance>> {
+    suspend fun getStudentAttendance(request: StatisticRequest): Result<Attendance> {
         return handleApiCall {
             client.post("$url/stats/attendance/student") {
                 setBody(request)
             }
         }
     }
-    suspend fun getGroupAttendance(request: StatisticRequest): Result<List<Attendance>> {
+    suspend fun getGroupAttendance(request: StatisticRequest): Result<Attendance> {
         return handleApiCall {
             client.post("$url/stats/attendance/group") {
+                setBody(request)
+            }
+        }
+    }
+    suspend fun getStudentLineChart(request: StatisticRequest): Result<List<LineChart>> {
+        return handleApiCall {
+            client.post("$url/stats/line/student") {
+                setBody(request)
+            }
+        }
+    }
+    suspend fun getGroupLineChart(request: StatisticRequest): Result<List<LineChart>> {
+        return handleApiCall {
+            client.post("$url/stats/line/group") {
                 setBody(request)
             }
         }

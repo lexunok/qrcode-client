@@ -32,8 +32,9 @@ import com.lex.qr.utils.Attendance
 import com.lex.qr.utils.StudentStats
 
 @Composable
-fun UserStatistics(student: StudentStats, attendance: List<Attendance>) {
-    val commonValue = attendance[0].activeClasses.toFloat() / attendance[0].totalClasses.toFloat()
+fun UserStatistics(student: StudentStats, attendance: Attendance) {
+
+    val commonValue = if (attendance.totalClasses == 0) 0f else attendance.activeClasses.toFloat() / attendance.totalClasses.toFloat()
 
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
@@ -68,7 +69,7 @@ fun UserStatistics(student: StudentStats, attendance: List<Attendance>) {
     )
 
     Text(
-        text = "Посещаемость: ${attendance[0].activeClasses}/${attendance[0].totalClasses}",
+        text = "Посещаемость: ${attendance.activeClasses}/${attendance.totalClasses}",
         textAlign = TextAlign.Start,
         fontSize = 20.sp,
         color = Blue,

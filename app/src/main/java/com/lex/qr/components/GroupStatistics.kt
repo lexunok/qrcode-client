@@ -33,9 +33,9 @@ import com.lex.qr.utils.Group
 
 
 @Composable
-fun GroupStatistics(group: Group, attendance: List<Attendance>) {
+fun GroupStatistics(group: Group, attendance: Attendance) {
 
-    val commonValue = attendance[0].activeClasses.toFloat() / attendance[0].totalClasses.toFloat()
+    val commonValue = if (attendance.totalClasses == 0) 0f else attendance.activeClasses.toFloat() / attendance.totalClasses.toFloat()
 
     Text(
         text = group.name,
@@ -46,7 +46,7 @@ fun GroupStatistics(group: Group, attendance: List<Attendance>) {
     )
 
     Text(
-        text = "Посещаемость: ${attendance[0].activeClasses}/${attendance[0].totalClasses}",
+        text = "Посещаемость: ${attendance.activeClasses}/${attendance.totalClasses}",
         textAlign = TextAlign.Start,
         fontSize = 20.sp,
         color = Blue,

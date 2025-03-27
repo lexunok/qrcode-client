@@ -193,7 +193,7 @@ fun StaffPage(
                                                                 val request = CreateClassRequest(
                                                                     subjectId = subject.id,
                                                                     groupId = group.id,
-                                                                    geolocation = lastLocation,
+                                                                    geolocation = "57.14527|65.58022",
                                                                     lifetime = item
                                                                 )
                                                                 val response = api.createClass(request)

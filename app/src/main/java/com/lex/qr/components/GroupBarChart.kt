@@ -26,7 +26,7 @@ import com.lex.qr.utils.GroupBar
 
 @Composable
 fun GroupBarChart(visits: List<GroupBar>) {
-    val maxHeight = visits.maxOfOrNull { it.count } ?: 0
+    val maxHeight = visits.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
     Text(
         text = "Средняя посещаемость(%):",
         textAlign = TextAlign.Start,

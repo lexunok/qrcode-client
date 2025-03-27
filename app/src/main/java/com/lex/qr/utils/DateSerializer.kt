@@ -1,5 +1,8 @@
 package com.lex.qr.utils
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -25,18 +28,18 @@ object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     }
 }
 
-object LocalDateSerializer : KSerializer<LocalDate> {
-    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+object LocalDateTimeKotlinSerializer : KSerializer<kotlinx.datetime.LocalDateTime> {
+    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-    override val descriptor: SerialDescriptor
-        get() = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: LocalDate) {
-        encoder.encodeString(value.format(formatter))
+    override fun serialize(encoder: Encoder, value: kotlinx.datetime.LocalDateTime) {
+        encoder.encodeString(value.toJavaLocalDateTime().format(formatter))
     }
 
-    override fun deserialize(decoder: Decoder): LocalDate {
-        return LocalDate.parse(decoder.decodeString(), formatter)
+    override fun deserialize(decoder: Decoder): kotlinx.datetime.LocalDateTime {
+        return LocalDateTime.parse(decoder.decodeString(), formatter).toKotlinLocalDateTime()
     }
 }
 fun formatDateTime(dateTime: LocalDateTime): String {
@@ -44,3 +47,8 @@ fun formatDateTime(dateTime: LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
     return dateTimeTZ.format(formatter)
 }
+fun LocalDateTime.toKotlinLocalDateTime(): kotlinx.datetime.LocalDateTime =
+    this.toInstant(java.time.ZoneOffset.UTC).toKotlinInstant().toLocalDateTime(TimeZone.UTC)
+
+fun kotlinx.datetime.LocalDateTime.toJavaLocalDateTime(): LocalDateTime =
+    LocalDateTime.of(this.date.year, this.date.monthNumber, this.date.dayOfMonth, this.hour, this.minute, this.second, this.nanosecond)

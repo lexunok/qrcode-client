@@ -26,10 +26,11 @@ import androidx.compose.ui.unit.sp
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.utils.Attendance
+import com.lex.qr.utils.LineChart
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun LineChart(visits: List<Attendance>) {
+fun LineChart(visits: List<LineChart>) {
     val maxVisits = visits.maxOfOrNull { it.visitCount }?.toFloat() ?: 1f // Максимальное значение по Y
     val weeksCount = visits.size // Количество точек (недель)
 
@@ -102,7 +103,7 @@ fun LineChart(visits: List<Attendance>) {
                     )
                 }
 
-                visits.forEachIndexed { index, (_, visits) ->
+                visits.forEachIndexed { index, (visits, _) ->
                     val x = index * stepX
                     val y = height - (visits * stepY) // Инверсия Y (0 внизу)
 

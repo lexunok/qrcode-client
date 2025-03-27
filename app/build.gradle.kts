@@ -98,6 +98,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
 }
 kapt {
     correctErrorTypes = true

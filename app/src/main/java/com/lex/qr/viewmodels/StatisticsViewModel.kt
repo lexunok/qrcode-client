@@ -9,6 +9,7 @@ import com.lex.qr.utils.Attendance
 import com.lex.qr.utils.StatisticRequest
 import com.lex.qr.utils.Group
 import com.lex.qr.utils.GroupBar
+import com.lex.qr.utils.LineChart
 import com.lex.qr.utils.StudentStats
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.SubjectHist
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlinx.datetime.*
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -33,8 +36,9 @@ data class StatisticsState(
     val subjects: List<Subject> = emptyList(),
     val subjectsHist: List<SubjectHist> = emptyList(),
     val groupBars: List<GroupBar> = emptyList(),
-    val attendance: List<Attendance> = emptyList(),
+    val lineCharts: List<LineChart> = emptyList(),
 
+    val attendance: Attendance? = null,
     val selectedGroup: Group? = null,
     val selectedStudent: StudentStats? = null,
     val selectedSubject: Subject? = null,
@@ -55,10 +59,10 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
 
     private suspend fun getAttendance() {
         val startDate = if (_uiState.value.dateFrom.length == 10)
-            LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
+            LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")).atStartOfDay().toKotlinLocalDateTime()  else null
 
         val endDate = if (_uiState.value.dateTo.length == 10)
-            LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
+            LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")).atStartOfDay().toKotlinLocalDateTime() else null
 
         val request = StatisticRequest(
             id = "",
@@ -67,17 +71,48 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
             endDate = endDate,
         )
 
-        val response = if (uiState.value.page == CurrentStatisticsPage.UserStatistics) {
+        if (uiState.value.page == CurrentStatisticsPage.UserStatistics) {
             _uiState.value.selectedStudent?.let {
                 request.id = it.id
-                api.getStudentAttendance(request)
+
+                val attendance = api.getStudentAttendance(request)
+                attendance.fold(
+                    onSuccess = {result->
+                        _uiState.value = _uiState.value.copy(attendance = result)
+                    },
+                    onFailure = {
+                        _uiState.value = _uiState.value.copy(attendance = null)
+                    }
+                )
+
+                val subjectHist = api.getStudentSubjectHist(request)
+                subjectHist.fold(
+                    onSuccess = {result->
+                        _uiState.value = _uiState.value.copy(subjectsHist = result)
+                    },
+                    onFailure = {
+                        _uiState.value = _uiState.value.copy(subjectsHist = emptyList())
+                    }
+                )
+
+                val lineChart = api.getStudentLineChart(request)
+                lineChart.fold(
+                    onSuccess = {result->
+                        _uiState.value = _uiState.value.copy(lineCharts = result)
+                    },
+                    onFailure = {result->
+                        result.message?.let { msg ->
+                            _uiEvent.send(UiEvent.ShowToast(msg))
+                        }
+                    }
+                )
             }
         } else {
             _uiState.value.selectedGroup?.let {
                 request.id = it.id
 
-                val response = api.getGroupBars(request)
-                response.fold(
+                val bars = api.getGroupBars(request)
+                bars.fold(
                     onSuccess = {result->
                         _uiState.value = _uiState.value.copy(groupBars = result)
                     },
@@ -88,27 +123,46 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                     }
                 )
 
-                api.getGroupAttendance(request)
+                val attendance = api.getGroupAttendance(request)
+                attendance.fold(
+                    onSuccess = {result->
+                        _uiState.value = _uiState.value.copy(attendance = result)
+                    },
+                    onFailure = {
+                        _uiState.value = _uiState.value.copy(attendance = null)
+                    }
+                )
+
+                val subjectHist = api.getGroupSubjectHist(request)
+                subjectHist.fold(
+                    onSuccess = {result->
+                        _uiState.value = _uiState.value.copy(subjectsHist = result)
+                    },
+                    onFailure = {
+                        _uiState.value = _uiState.value.copy(subjectsHist = emptyList())
+                    }
+                )
+
+                val lineChart = api.getGroupLineChart(request)
+                lineChart.fold(
+                    onSuccess = {result->
+                        _uiState.value = _uiState.value.copy(lineCharts = result)
+                    },
+                    onFailure = {result->
+                        result.message?.let { msg ->
+                            _uiEvent.send(UiEvent.ShowToast(msg))
+                        }
+                    }
+                )
             }
         }
-
-        response?.fold(
-            onSuccess = {
-                _uiState.value = _uiState.value.copy(attendance = it)
-            },
-            onFailure = {
-                it.message?.let { msg ->
-                    _uiEvent.send(UiEvent.ShowToast(msg))
-                }
-            }
-        )
     }
     fun changeDateFrom(text: String){
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 dateFrom = text
             )
-            if (text.length == 10) {
+            if (text.length == 10 || text.isEmpty()) {
                 getAttendance()
             }
         }
@@ -119,7 +173,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
             _uiState.value = _uiState.value.copy(
                 dateTo = text
             )
-            if (text.length == 10) {
+            if (text.length == 10 || text.isEmpty()) {
                 getAttendance()
             }
         }
@@ -178,30 +232,6 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 isLoading = true
             )
 
-            val startDate = if (_uiState.value.dateFrom.length == 10)
-                LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
-
-            val endDate = if (_uiState.value.dateTo.length == 10)
-                LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
-
-            val response = api.getStudentSubjectHist(
-                StatisticRequest(
-                    id = user.id,
-                    subjectId = _uiState.value.selectedSubject?.id,
-                    endDate = endDate,
-                    startDate = startDate,
-                    ))
-            response.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(subjectsHist = it)
-                },
-                onFailure = {
-                    it.message?.let { msg ->
-                        _uiEvent.send(UiEvent.ShowToast(msg))
-                    }
-                }
-            )
-
             getAttendance()
 
             _uiState.value = _uiState.value.copy(isLoading = false)
@@ -214,39 +244,14 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 page = CurrentStatisticsPage.GroupStatistics,
                 isLoading = true
             )
-            _uiState.value.selectedGroup?.let {
-
-                val startDate = if (_uiState.value.dateFrom.length == 10)
-                    LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
-
-                val endDate = if (_uiState.value.dateTo.length == 10)
-                    LocalDate.parse(uiState.value.dateTo, DateTimeFormatter.ofPattern("dd.MM.yyyy")) else null
-
-                val responseHist = api.getGroupSubjectHist(
-                    StatisticRequest(
-                        id = it.id,
-                        subjectId = _uiState.value.selectedSubject?.id,
-                        endDate = endDate,
-                        startDate = startDate,
-                    ))
-                responseHist.fold(
-                    onSuccess = {result ->
-                        _uiState.value = _uiState.value.copy(subjectsHist = result)
-                    },
-                    onFailure = {result ->
-                        result.message?.let { msg ->
-                            _uiEvent.send(UiEvent.ShowToast(msg))
-                        }
-                    }
-                )
-                getAttendance()
-            }
+            getAttendance()
             _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
     fun getSubjectList(){
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(showDialog = true, isLoading = true)
+            //ТОЛЬКО ТЕ ПРЕДМЕТЫ КОТОРЫЕ БЫЛИ У ЭТОГО ПОЛЬЗОВАТЕЛЯ/ГРУППЫ
             val response = api.getSubjects()
             response.fold(
                 onSuccess = {
