@@ -22,12 +22,11 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import com.lex.qr.BuildConfig
 import io.ktor.client.statement.HttpResponse
-import javax.inject.Inject
 
 const val url: String = BuildConfig.BASE_URL
 const val avatarUrl: String = BuildConfig.AVATAR_URL
 
-class API @Inject constructor() {
+class API {
 
     private var jwtToken: String? = null
 
@@ -93,7 +92,7 @@ class API @Inject constructor() {
         }
     }
 
-    suspend fun createClass(request: CreateClassRequest): Result<CreateClassResponse> {
+    suspend fun createClass(request: CodeRequest): Result<CodeResponse> {
         return try {
             val response = client.post("$url/class/create") {
                 headers {
@@ -102,7 +101,7 @@ class API @Inject constructor() {
                 setBody(request)
             }
             if (response.status.isSuccess()) {
-                val data = response.body<CreateClassResponse>()
+                val data = response.body<CodeResponse>()
                 Result.success(data)
             }
             else {

@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import com.lex.qr.viewmodels.CurrentAdminPage
 import com.lex.qr.viewmodels.CurrentLoginPage
+import com.lex.qr.viewmodels.CurrentStaffPage
 import com.lex.qr.viewmodels.CurrentStatisticsPage
 
 private enum class PageTransitionDirection {
@@ -76,39 +77,39 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
         }
         from is CurrentStaffPage && to is CurrentStaffPage -> {
             when {
-                from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.ACTIVITY -> PageTransitionDirection.UP
-                from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.QRCODE && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.GROUP -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRLIVE -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.CLASSES -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.VISITS -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.DOWN
-                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-
-                from == CurrentStaffPage.STATS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.LEFT
-                from == CurrentStaffPage.STATS && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.Main && to == CurrentStaffPage.Activity -> PageTransitionDirection.UP
+                from == CurrentStaffPage.Main && to == CurrentStaffPage.ClassList -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.Main && to == CurrentStaffPage.Statistics -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.GROUP -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRLIVE -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.CLASSES -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.VISITS -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
+//                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.DOWN
+//                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
+//
+//                from == CurrentStaffPage.STATS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.LEFT
+//                from == CurrentStaffPage.STATS && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
                 else -> PageTransitionDirection.RIGHT
             }
         }

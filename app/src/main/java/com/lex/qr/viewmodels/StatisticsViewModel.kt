@@ -2,7 +2,6 @@ package com.lex.qr.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lex.qr.pages.CurrentStaffPage
 import com.lex.qr.pages.Page
 import com.lex.qr.utils.API
 import com.lex.qr.utils.Attendance
@@ -301,7 +300,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 }
                 CurrentStatisticsPage.GroupList -> {
                     _uiEvent.send(UiEvent.ChangeTitle("Главная"))
-                    _uiEvent.send(UiEvent.ChangePage(CurrentStaffPage.QRCODE))
+                    _uiEvent.send(UiEvent.ChangePage(CurrentStaffPage.Main))
                 }
             }
         }

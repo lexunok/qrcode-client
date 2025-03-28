@@ -1,6 +1,7 @@
 package com.lex.qr.utils
 
 import android.content.Context
+import androidx.core.content.edit
 
 class UserPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
@@ -32,6 +33,6 @@ class UserPreferences(context: Context) {
     }
 
     fun clearUser() {
-        prefs.edit().clear().apply()
+        prefs.edit { clear() }
     }
 }

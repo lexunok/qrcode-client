@@ -43,13 +43,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var api: API
-    private lateinit var geolocationClient: GeolocationClient
+    @Inject lateinit var geolocationClient: GeolocationClient
     @Inject lateinit var userPrefs: UserPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        geolocationClient = GeolocationClient(this)
 
         val lightTransparentStyle = SystemBarStyle.light(
             scrim = TRANSPARENT,
@@ -140,7 +138,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (user!=null) {
-                        MainPage(api, geolocationClient, userPrefs, user!!, lastLocation, onUserAcc, onToast)
+                        MainPage(api, userPrefs, user!!, lastLocation, onUserAcc, onToast)
                     }
                     else if (!isLoading) {
                         LoginPage(onToast, onUserAcc)

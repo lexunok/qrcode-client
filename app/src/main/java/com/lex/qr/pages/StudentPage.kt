@@ -73,7 +73,6 @@ import com.lex.qr.viewmodels.CurrentStudentPage
 @Composable
 fun StudentPage(
     user: Claims,
-    geolocationClient: GeolocationClient,
     lastLocation: String,
     onToast: (String?) -> Unit,
     changeTitle: (String) -> Unit,
@@ -94,25 +93,10 @@ fun StudentPage(
         options.setBarcodeImageEnabled(true)
 
         val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-            if (result.contents != null && geolocationClient.checkGps() && lastLocation != "") {
-                viewModel.joinClass(
-                    JoinClassRequest(
-                        publicId = result.contents,
-                        studentGeolocation = lastLocation,
-                        device = device
-                    )
-                )
-            }
-            else if (!geolocationClient.checkGps() && lastLocation == "") {
-                onToast("Ошибка в геолокации")
-            }
-            else if (result.contents==null) {
-                onToast("Код не прочитан")
-            }
+            viewModel.joinClass(result.contents, lastLocation, device)
         }
 
         LaunchedEffect(Unit) {
-
             viewModel.uiEvent.collect { event ->
                 when (event) {
                     is UiEvent.ShowToast -> onToast(event.message)
@@ -120,7 +104,6 @@ fun StudentPage(
                     else -> {}
                 }
             }
-
             viewModel.getCurrent()
         }
 

@@ -31,7 +31,6 @@ interface Page
 @Composable
 fun MainPage(
     api: API,
-    geolocationClient: GeolocationClient,
     userPrefs: UserPreferences,
     user: Claims,
     lastLocation: String,
@@ -42,6 +41,7 @@ fun MainPage(
     var showMenu by remember { mutableStateOf(false) }
     var role by remember { mutableStateOf(user.role) }
     var title by remember { mutableStateOf("Главная") }
+    val changeTitle = { value: String -> title = value }
 
     Box (modifier = Modifier
         .fillMaxSize()
@@ -60,13 +60,13 @@ fun MainPage(
 
         when (role) {
             Role.ADMIN -> {
-                AdminPage(onToast) { value: String -> title = value }
+                AdminPage(onToast, changeTitle)
             }
             Role.STAFF -> {
-                StaffPage(api, user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
+                StaffPage(lastLocation, onToast, changeTitle)
             }
             Role.STUDENT -> {
-                StudentPage(user, geolocationClient, lastLocation, onToast) { value: String -> title = value }
+                StudentPage(user, lastLocation, onToast, changeTitle)
             }
         }
         MenuProfile(

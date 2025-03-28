@@ -20,10 +20,14 @@ object AppModule {
     @Singleton
     fun provideUserPreferences(@ApplicationContext context: Context) = UserPreferences(context)
 
+    @Provides
+    @Singleton
+    fun provideGeolocationClient(@ApplicationContext context: Context) = GeolocationClient(context)
 }
 sealed class UiEvent {
     data class ShowToast(val message: String) : UiEvent()
     data class ChangeTitle(val title: String) : UiEvent()
     data class ChangePage(val page: Page) : UiEvent()
     data class Login(val claims: Claims) : UiEvent()
+    data class CodeCreated(val code: CodeResponse) : UiEvent()
 }

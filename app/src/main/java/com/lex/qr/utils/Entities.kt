@@ -60,22 +60,22 @@ data class CreateSubjectRequest(
     val name: String
 )
 
+
 @Serializable
-data class CreateClassRequest(
+data class CodeRequest(
     @SerialName("subject_id")val subjectId: String,
     @SerialName("group_id") val groupId: String,
     val lifetime: Int,
     val geolocation: String
 )
-
-
 @Serializable
-data class CreateClassResponse(
+data class CodeResponse(
     @SerialName("public_id") val publicId: String,
     @SerialName("subject_id") val subjectId: String,
     val lifetime: Int,
     @SerialName("group_id") val groupId: String
 )
+
 
 @Serializable
 data class JoinClassRequest(
@@ -110,7 +110,6 @@ data class GetClassResponse(
 )
 @Serializable
 data class GetClassRequest(
-    @SerialName("staff_id") val staffId: String,
     @SerialName("subject_id") val subjectId: String,
     @SerialName("group_id") val groupId: String
 )
@@ -171,20 +170,26 @@ data class Claims(
     @SerialName("fcm_token") val fcmToken: String?,
     @SerialName("created_at") val createdAt: String
 )
+
+interface BaseItem {
+    val id: String
+    val name: String
+}
 @Serializable
 data class Group(
-    val id: String,
-    val name: String,
+    override val id: String,
+    override val name: String,
     @SerialName("created_at") val createdAt: String,
     @SerialName("is_deleted") val isDeleted: Boolean
-)
+): BaseItem
+
 @Serializable
 data class Subject(
-    val id: String,
-    val name: String,
+    override val id: String,
+    override val name: String,
     @SerialName("created_at") val createdAt: String,
     @SerialName("is_deleted") val isDeleted: Boolean
-)
+): BaseItem
 
 
 

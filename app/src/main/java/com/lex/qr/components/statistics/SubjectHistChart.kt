@@ -1,4 +1,4 @@
-package com.lex.qr.components
+package com.lex.qr.components.statistics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

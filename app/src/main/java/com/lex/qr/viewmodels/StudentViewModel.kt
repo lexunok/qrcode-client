@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
 import com.lex.qr.pages.Page
 import com.lex.qr.utils.ClassResponse
+import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.Rating
 import com.lex.qr.utils.UiEvent
@@ -29,7 +30,7 @@ data class StudentState(
 )
 
 @HiltViewModel
-class StudentViewModel @Inject constructor(private val api: API) : ViewModel() {
+class StudentViewModel @Inject constructor(private val api: API, private val geolocationClient: GeolocationClient) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentState())
     val uiState: StateFlow<StudentState> = _uiState
@@ -73,22 +74,36 @@ class StudentViewModel @Inject constructor(private val api: API) : ViewModel() {
             _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
-    fun joinClass(request: JoinClassRequest) {
+    fun joinClass(text:String, lastLocation: String, device: String) {
         viewModelScope.launch {
-
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            val response = api.joinClass(request)
-            response.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(currentClassId = it.id)
-                },
-                onFailure = {
-                    it.message?.let { msg ->
-                        _uiEvent.send(UiEvent.ShowToast(msg))
+            val isGpsEnabled = geolocationClient.checkGps()
+            if (text.isNotEmpty() && isGpsEnabled && lastLocation.isNotEmpty()) {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                val response = api.joinClass(
+                    JoinClassRequest(
+                        publicId = text,
+                        studentGeolocation = lastLocation,
+                        device = device
+                    )
+                )
+                response.fold(
+                    onSuccess = {
+                        _uiState.value = _uiState.value.copy(currentClassId = it.id)
+                    },
+                    onFailure = {
+                        it.message?.let { msg ->
+                            _uiEvent.send(UiEvent.ShowToast(msg))
+                        }
                     }
-                }
-            )
-            _uiState.value = _uiState.value.copy(isLoading = false)
+                )
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
+            else if (!isGpsEnabled && lastLocation.isEmpty()) {
+                _uiEvent.send(UiEvent.ShowToast("Ошибка в геолокации"))
+            }
+            else if (text.isEmpty()) {
+                _uiEvent.send(UiEvent.ShowToast("Код не прочитан"))
+            }
         }
     }
     fun evaluate(star: Int) {
