@@ -73,11 +73,11 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
                 response.fold(
                     onSuccess = {
                         userPrefs.saveUser(_uiState.value.email, _uiState.value.password)
-                        api.updateToken(it.token)
-                        _uiEvent.send(UiEvent.Login(it))
+                        api.jwtToken = it.token
+                        _uiEvent.send(UiEvent.ChangeUser(it))
                     },
                     onFailure = {
-                        api.updateToken(null)
+                        _uiEvent.send(UiEvent.ChangeUser(null))
                         it.message?.let { msg ->
                             _uiEvent.send(UiEvent.ShowToast(msg))
                         }
@@ -128,7 +128,6 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
                         _uiEvent.send(UiEvent.ShowToast("На указанную почту был отправлен код"))
                     },
                     onFailure = {
-                        api.updateToken(null)
                         it.message?.let { msg ->
                             _uiEvent.send(UiEvent.ShowToast(msg))
                         }

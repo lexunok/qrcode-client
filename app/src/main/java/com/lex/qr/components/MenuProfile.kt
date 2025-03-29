@@ -18,11 +18,9 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,40 +31,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Red
-import com.lex.qr.utils.API
 import com.lex.qr.utils.Claims
 import com.lex.qr.utils.Role
-import com.lex.qr.utils.User
-import com.lex.qr.utils.UserPreferences
-import com.lex.qr.utils.avatarUrl
-import com.lex.qr.utils.url
-import kotlinx.coroutines.launch
+import com.lex.qr.utils.UiEvent
+import com.lex.qr.viewmodels.MenuProfileViewModel
 
 @Composable
-fun MenuProfile(modifier: Modifier,
-                api: API,
-                user: Claims,
-                role: Role,
-                showMenu:Boolean,
-                userPrefs: UserPreferences,
-                changeMenu: (Boolean) -> Unit,
-                onUserAcc: (Claims?) -> Unit,
-                onToast: (String?) -> Unit,
-                changeRole: (Role) -> Unit
+fun MenuProfile(
+    modifier: Modifier,
+    user: Claims,
+    showMenu:Boolean,
+    changeMenu: (Boolean) -> Unit,
+    onToast: (String) -> Unit,
+    changeUser: (Claims?) -> Unit
                 ) {
+    val viewModel: MenuProfileViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> onToast(event.message)
+                is UiEvent.ChangeUser -> changeUser(event.user)
+                else -> {}
+            }
+        }
+    }
+
     val context = LocalContext.current
-    val makeRequest = rememberCoroutineScope()
-    var avatarUrl by remember { mutableStateOf(user.avatarUrl) }
 
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
-            .data(avatarUrl)
+            .data(user.avatarUrl)
             .error(R.drawable.baseline_account_circle_24)
             .placeholder(R.drawable.baseline_account_circle_24)
             .build(),
@@ -79,18 +80,7 @@ fun MenuProfile(modifier: Modifier,
             val imageBytes = inputStream?.readBytes()
             inputStream?.close()
             imageBytes?.let { bytes ->
-                makeRequest.launch {
-                    val response = api.uploadAvatar(bytes)
-                    response.fold(
-                        onSuccess = {
-                            onToast("Успешно")
-                            avatarUrl = it
-                        },
-                        onFailure = {
-                            onToast(it.message)
-                        }
-                    )
-                }
+                viewModel.uploadAvatar(user, bytes)
             }
         }
     }
@@ -142,12 +132,12 @@ fun MenuProfile(modifier: Modifier,
                     textAlign = TextAlign.Center,
                     color = Blue
                 )
-                if (role == Role.STAFF) {
+                if (user.role == Role.STAFF) {
                     Text(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                changeRole(Role.ADMIN)
+                                changeUser(user.copy(role = Role.ADMIN))
                             },
                         fontWeight = FontWeight.SemiBold,
                         text = "В админ панель",
@@ -156,12 +146,12 @@ fun MenuProfile(modifier: Modifier,
                         textAlign = TextAlign.Center,
                         color = Red
                     )
-                } else if (role == Role.ADMIN) {
+                } else if (user.role == Role.ADMIN) {
                     Text(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                changeRole(Role.STAFF)
+                                changeUser(user.copy(role = Role.STAFF))
                             },
                         fontWeight = FontWeight.SemiBold,
                         text = "Закрыть админку",
@@ -174,11 +164,7 @@ fun MenuProfile(modifier: Modifier,
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            api.updateToken(null)
-                            userPrefs.clearUser()
-                            onUserAcc(null)
-                        },
+                        .clickable { viewModel.logout() },
                     fontWeight = FontWeight.SemiBold,
                     text = "Выход",
                     fontSize = 16.sp,

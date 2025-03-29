@@ -63,7 +63,7 @@ import com.lex.qr.viewmodels.StatisticsViewModel
 
 @Composable
 fun Statistics(
-    onToast: (String?) -> Unit,
+    onToast: (String) -> Unit,
     changeTitle: (String) -> Unit,
     changePage: (Page) -> Unit
 ) {
@@ -76,7 +76,6 @@ fun Statistics(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.getGroups()
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> onToast(event.message)

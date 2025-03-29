@@ -55,7 +55,9 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
 
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()
-
+    init {
+        getGroups()
+    }
     private suspend fun getAttendance() {
         val startDate = if (_uiState.value.dateFrom.length == 10)
             LocalDate.parse(uiState.value.dateFrom, DateTimeFormatter.ofPattern("dd.MM.yyyy")).atStartOfDay().toKotlinLocalDateTime()  else null

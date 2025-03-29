@@ -44,19 +44,16 @@ import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.ui.theme.Yellow
 import com.lex.qr.utils.BaseItem
-import com.lex.qr.utils.GetClassRequest
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.utils.formatDateTime
 import com.lex.qr.viewmodels.ClassesViewModel
 import com.lex.qr.viewmodels.CurrentClassesPage
-import com.lex.qr.viewmodels.StatisticsViewModel
-import kotlinx.coroutines.launch
 
 
 @Composable
 fun Classes(
-    onToast: (String?) -> Unit,
+    onToast: (String) -> Unit,
     changeTitle: (String) -> Unit,
     changePage: (Page) -> Unit
 ) {
@@ -69,7 +66,6 @@ fun Classes(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.getSubjectList()
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> onToast(event.message)

@@ -51,7 +51,7 @@ import com.lex.qr.viewmodels.ObjectType
 
 @Composable
 fun AdminPage(
-    onToast: (String?) -> Unit,
+    onToast: (String) -> Unit,
     changeTitle: (String) -> Unit
 ) {
     val viewModel: AdminViewModel = viewModel()

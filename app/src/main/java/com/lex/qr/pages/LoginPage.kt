@@ -36,8 +36,8 @@ import com.lex.qr.viewmodels.LoginViewModel
 
 @Composable
 fun LoginPage(
-    onToast: (String?) -> Unit,
-    onUserAcc: (Claims) -> Unit
+    changeUser: (Claims?) -> Unit,
+    onToast: (String) -> Unit,
 ) {
     val viewModel: LoginViewModel = viewModel()
 
@@ -47,7 +47,7 @@ fun LoginPage(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> onToast(event.message)
-                is UiEvent.Login -> onUserAcc(event.claims)
+                is UiEvent.ChangeUser -> changeUser(event.user)
                 else -> {}
             }
         }

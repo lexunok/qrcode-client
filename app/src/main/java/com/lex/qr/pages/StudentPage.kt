@@ -2,7 +2,6 @@ package com.lex.qr.pages
 
 import android.annotation.SuppressLint
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,26 +20,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Gray
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,34 +42,33 @@ import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.LightGray
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.ui.theme.Yellow
-import com.lex.qr.utils.API
 import com.lex.qr.utils.Claims
-import com.lex.qr.utils.ClassResponse
-import com.lex.qr.utils.GeolocationClient
-import com.lex.qr.utils.GetClassResponse
-import com.lex.qr.utils.JoinClassRequest
-import com.lex.qr.utils.Rating
-import com.lex.qr.utils.User
 import com.lex.qr.utils.formatDateTime
 import com.lex.qr.viewmodels.StudentViewModel
-import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.lex.qr.utils.GeolocationClient
+import com.lex.qr.utils.TimerWorker
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStudentPage
+import java.util.concurrent.TimeUnit
 
 @SuppressLint("HardwareIds")
 @Composable
 fun StudentPage(
+    geolocationClient: GeolocationClient,
     user: Claims,
-    lastLocation: String,
-    onToast: (String?) -> Unit,
+    onToast: (String) -> Unit,
     changeTitle: (String) -> Unit,
     ) {
     Box (Modifier.fillMaxSize()) {
 
         val viewModel: StudentViewModel = viewModel()
 
-        val device = Settings.Secure.getString(LocalContext.current.contentResolver, Settings.Secure.ANDROID_ID)
+        val context = LocalContext.current
+
+        val device = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
         val uiState by viewModel.uiState.collectAsState()
 
@@ -93,7 +80,14 @@ fun StudentPage(
         options.setBarcodeImageEnabled(true)
 
         val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-            viewModel.joinClass(result.contents, lastLocation, device)
+            if (result.contents!=null) {
+                val isGpsEnabled = geolocationClient.checkGps(context)
+                val lastLocation = geolocationClient.lastLocation
+
+                viewModel.joinClass(isGpsEnabled, lastLocation, result.contents, device)
+            } else {
+                onToast("Код не отсканирован")
+            }
         }
 
         LaunchedEffect(Unit) {
@@ -104,7 +98,6 @@ fun StudentPage(
                     else -> {}
                 }
             }
-            viewModel.getCurrent()
         }
 
         if (uiState.isLoading) {
@@ -117,26 +110,38 @@ fun StudentPage(
             when (uiState.page) {
                 CurrentStudentPage.MAIN -> {
                     if (uiState.currentClassId != null) {
-                        if(uiState.currentRating == 0) {
+                        if (uiState.isTimer) {
                             Text(
                                 color = Blue,
-                                text = "Поставьте оценку",
+                                text = "Успешно!\nЗайдите позже чтобы поставить рейтинг",
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(16.dp).align(Alignment.Center).offset(y =48.dp)
                             )
                         }
-                        Row(modifier = Modifier.align(Alignment.Center)) {
-                            (1..5).forEach { star ->
-                                Icon(
-                                    imageVector = if (star <= uiState.currentRating) Icons.Filled.Star else Icons.Outlined.Star,
-                                    contentDescription = "Оценка $star",
-                                    tint = if (star <= uiState.currentRating) Yellow else LightGray,
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .padding(4.dp)
-                                        .clickable {viewModel.evaluate(star)}
-                                )
+                        else if (uiState.currentRating == 0) {
+                            Text(
+                                color = Blue,
+                                text = "Поставьте оценку",
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp).align(Alignment.Center)
+                                    .offset(y = 48.dp)
+                            )
+                        }
+                        if (!uiState.isTimer) {
+                            Row(modifier = Modifier.align(Alignment.Center)) {
+                                (1..5).forEach { star ->
+                                    Icon(
+                                        imageVector = if (star <= uiState.currentRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                        contentDescription = "Оценка $star",
+                                        tint = if (star <= uiState.currentRating) Yellow else LightGray,
+                                        modifier = Modifier
+                                            .size(64.dp)
+                                            .padding(4.dp)
+                                            .clickable { viewModel.evaluate(star) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -194,7 +199,7 @@ fun StudentPage(
             Modifier.align(Alignment.BottomStart),
             R.drawable.baseline_format_list_bulleted_24,
             "List of Students"
-        ) { viewModel.getVisits(user.id) }
+        ) { viewModel.getVisits(user) }
 
         NavButton(
             Modifier.align(Alignment.BottomCenter),

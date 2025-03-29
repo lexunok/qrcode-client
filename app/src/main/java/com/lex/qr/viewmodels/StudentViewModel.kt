@@ -1,20 +1,28 @@
 package com.lex.qr.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.lex.qr.utils.API
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.lex.qr.pages.Page
+import com.lex.qr.utils.Claims
 import com.lex.qr.utils.ClassResponse
 import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.JoinClassRequest
 import com.lex.qr.utils.Rating
+import com.lex.qr.utils.TimerWorker
 import com.lex.qr.utils.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 enum class CurrentStudentPage: Page {
@@ -26,11 +34,12 @@ data class StudentState(
     val isLoading: Boolean = false,
     val page: CurrentStudentPage = CurrentStudentPage.MAIN,
     val currentClassId: String? = null,
-    val currentRating: Int = 0
+    val currentRating: Int = 0,
+    val isTimer: Boolean = false,
 )
 
 @HiltViewModel
-class StudentViewModel @Inject constructor(private val api: API, private val geolocationClient: GeolocationClient) : ViewModel() {
+class StudentViewModel @Inject constructor(private val api: API, private val workManager: WorkManager) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentState())
     val uiState: StateFlow<StudentState> = _uiState
@@ -38,14 +47,17 @@ class StudentViewModel @Inject constructor(private val api: API, private val geo
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    fun getVisits(id: String) {
+    init {
+        getCurrent()
+    }
+
+    fun getVisits(user: Claims) {
         viewModelScope.launch {
 
             _uiEvent.send(UiEvent.ChangeTitle("Посещения"))
-            _uiState.value = _uiState.value.copy(page = CurrentStudentPage.VISITS)
+            _uiState.value = _uiState.value.copy(page = CurrentStudentPage.VISITS, isLoading = true)
 
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            val response = api.getVisits(id)
+            val response = api.getVisits(user.id)
             response.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(visits = it)
@@ -56,6 +68,7 @@ class StudentViewModel @Inject constructor(private val api: API, private val geo
                     }
                 }
             )
+
             _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
@@ -66,18 +79,19 @@ class StudentViewModel @Inject constructor(private val api: API, private val geo
             val response = api.getCurrent()
             response.fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(currentClassId = it.id)
-                    _uiState.value = _uiState.value.copy(currentRating = it.rating)
+                    _uiState.value = _uiState.value.copy(
+                        isTimer = it.isTimer,
+                        currentClassId = it.id,
+                        currentRating = it.rating)
                 },
                 onFailure = {}
             )
             _uiState.value = _uiState.value.copy(isLoading = false)
         }
     }
-    fun joinClass(text:String, lastLocation: String, device: String) {
+    fun joinClass(isGpsEnabled: Boolean, lastLocation: String?, text:String, device: String) {
         viewModelScope.launch {
-            val isGpsEnabled = geolocationClient.checkGps()
-            if (text.isNotEmpty() && isGpsEnabled && lastLocation.isNotEmpty()) {
+            if (text.isNotEmpty() && isGpsEnabled && lastLocation!=null) {
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 val response = api.joinClass(
                     JoinClassRequest(
@@ -88,21 +102,35 @@ class StudentViewModel @Inject constructor(private val api: API, private val geo
                 )
                 response.fold(
                     onSuccess = {
-                        _uiState.value = _uiState.value.copy(currentClassId = it.id)
+                        _uiState.value = _uiState.value.copy(isTimer = true, isLoading = false)
+
+                        val workRequest = OneTimeWorkRequestBuilder<TimerWorker>()
+                            .setInitialDelay(30, TimeUnit.MINUTES)
+                            .build()
+
+                        workManager.enqueue(workRequest)
+
+                        workManager.getWorkInfoByIdFlow(workRequest.id)
+                            .filter { it.state == WorkInfo.State.SUCCEEDED }
+                            .collect {
+                                getCurrent()
+                                _uiState.value = _uiState.value.copy(isTimer = false)
+                            }
                     },
                     onFailure = {
+                        _uiState.value = _uiState.value.copy(isLoading = false)
+
                         it.message?.let { msg ->
                             _uiEvent.send(UiEvent.ShowToast(msg))
                         }
                     }
                 )
-                _uiState.value = _uiState.value.copy(isLoading = false)
             }
-            else if (!isGpsEnabled && lastLocation.isEmpty()) {
-                _uiEvent.send(UiEvent.ShowToast("Ошибка в геолокации"))
+            else if (!isGpsEnabled) {
+                _uiEvent.send(UiEvent.ShowToast("Геолокация выключена"))
             }
-            else if (text.isEmpty()) {
-                _uiEvent.send(UiEvent.ShowToast("Код не прочитан"))
+            else if (lastLocation==null) {
+                _uiEvent.send(UiEvent.ShowToast("Геолокация не найдена"))
             }
         }
     }

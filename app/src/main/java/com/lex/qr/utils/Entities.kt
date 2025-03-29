@@ -39,6 +39,12 @@ data class Rating(
     var id: String,
     var rating: Int
 )
+@Serializable
+data class CurrentClass(
+    var id: String,
+    var rating: Int,
+    @SerialName("is_timer") val isTimer: Boolean
+)
 
 @Serializable
 data class CreateUserRequest(
@@ -215,9 +221,8 @@ data class Attendance(
 data class LineChart(
     @SerialName("visit_count")
     val visitCount: Int,
-    @SerialName("week_date")
     @Serializable(with = LocalDateTimeSerializer::class)
-    val weekDate: LocalDateTime,
+    val date: LocalDateTime,
 )
 
 @Serializable

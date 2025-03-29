@@ -57,92 +57,12 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = lightTransparentStyle,
             navigationBarStyle = lightTransparentStyle
         )
-
         setContent {
             QRTheme {
                 Box (modifier = Modifier
                     .fillMaxSize()
                     .background(color = Blue)) {
-
-                    var isLoading by remember { mutableStateOf(true) }
-                    var isLoggedIn by remember { mutableStateOf(userPrefs.isLoggedIn()) }
-                    var lastLocation by remember { mutableStateOf("") }
-                    var user by remember { mutableStateOf<Claims?>(null) }
-
-                    val context = LocalContext.current
-                    var toastMessage by remember { mutableStateOf<String?>(null) }
-
-                    val onToast = {value: String? -> toastMessage = value}
-                    val onUserAcc = {value: Claims? -> user = value}
-
-                    LaunchedEffect(toastMessage) {
-                        toastMessage?.let {
-                            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-                            toastMessage = null
-                        }
-                    }
-
-                    if (isLoading) {
-                        Box (modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 28.dp, vertical = 64.dp)
-                            .shadow(12.dp)
-                            .background(color = Color.White, shape = RoundedCornerShape(12.dp))
-                            .padding(20.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                color = Blue,
-                                modifier = Modifier.size(100.dp).align(Alignment.Center),
-                                strokeWidth = 12.dp
-                            )
-                        }
-                    }
-
-                    val requestPermissionsLauncher =
-                        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-                            if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true &&
-                                permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-                                geolocationClient.startLocationUpdates{value: String -> lastLocation = value}
-                            }
-                        }
-
-                    LaunchedEffect(Unit) {
-                        requestPermissionsLauncher.launch(
-                            arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                        )
-                        geolocationClient.checkGps()
-
-                        if (isLoggedIn) {
-                            val (savedEmail, savedPassword) = userPrefs.getUser()
-
-                            val loginRequest = LoginRequest(
-                                email = savedEmail ?: "",
-                                password = savedPassword ?: ""
-                            )
-
-                            val response = api.login(loginRequest)
-
-                            response.fold(
-                                onSuccess = {
-                                    user = it
-                                    api.updateToken(it.token)
-                                    isLoggedIn = true
-                                },
-                                onFailure = {
-                                    isLoggedIn = false
-                                    toastMessage = it.message
-                                }
-                            )
-                        }
-                        isLoading = false
-                    }
-
-                    if (user!=null) {
-                        MainPage(api, userPrefs, user!!, lastLocation, onUserAcc, onToast)
-                    }
-                    else if (!isLoading) {
-                        LoginPage(onToast, onUserAcc)
-                    }
+                    MainPage(geolocationClient)
                 }
             }
         }

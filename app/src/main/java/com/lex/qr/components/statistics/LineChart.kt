@@ -132,7 +132,7 @@ fun LineChart(visits: List<LineChart>) {
                 visits.forEach { visit ->
                     Text(
                         color = Blue,
-                        text = visit.weekDate.format(DateTimeFormatter.ofPattern("dd.MM")),
+                        text = visit.date.format(DateTimeFormatter.ofPattern("dd.MM")),
                         fontSize = 6.sp
                     )
                 }

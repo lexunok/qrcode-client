@@ -1,5 +1,7 @@
 package com.lex.qr.viewmodels
 
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lex.qr.pages.Page
@@ -35,7 +37,7 @@ data class CodeFormState(
     val isLoading: Boolean = false,
     )
 @HiltViewModel
-class CodeFormViewModel @Inject constructor(private val api: API, private val geolocationClient: GeolocationClient) : ViewModel() {
+class CodeFormViewModel @Inject constructor(private val api: API) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CodeFormState())
     val uiState: StateFlow<CodeFormState> = _uiState
@@ -43,7 +45,9 @@ class CodeFormViewModel @Inject constructor(private val api: API, private val ge
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()
 
-
+    init {
+        getSubjectList()
+    }
     fun getSubjectList() {
         viewModelScope.launch {
 
@@ -98,9 +102,9 @@ class CodeFormViewModel @Inject constructor(private val api: API, private val ge
             )
         }
     }
-    fun createCode(lifetime: Int, lastLocation: String) {
+    fun createCode(isGpsEnabled: Boolean, lastLocation: String?, lifetime: Int) {
         viewModelScope.launch {
-            if(geolocationClient.checkGps() && lastLocation.isNotEmpty()) {
+            if(isGpsEnabled && lastLocation!=null) {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
                 _uiState.value.selectedSubject?.let { subject ->

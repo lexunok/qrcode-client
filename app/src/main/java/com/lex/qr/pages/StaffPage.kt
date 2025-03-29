@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -25,10 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,25 +48,18 @@ import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
 import com.lex.qr.ui.theme.Yellow
-import com.lex.qr.utils.API
 import com.lex.qr.utils.CodeResponse
 import com.lex.qr.utils.GeolocationClient
-import com.lex.qr.utils.GetClassResponse
-import com.lex.qr.utils.Group
-import com.lex.qr.utils.Student
-import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStaffPage
 import com.lex.qr.viewmodels.StaffViewModel
-import com.lex.qr.viewmodels.StatisticsViewModel
 import com.lightspark.composeqr.QrCodeView
-import kotlinx.coroutines.launch
 
 
 @Composable
 fun StaffPage(
-    lastLocation: String,
-    onToast: (String?) -> Unit,
+    geolocationClient: GeolocationClient,
+    onToast: (String) -> Unit,
     changeTitle: (String) -> Unit
 ) {
     val viewModel: StaffViewModel = viewModel()
@@ -116,7 +104,7 @@ fun StaffPage(
                             Statistics(onToast, changeTitle, changeStaffPage)
                         }
                         CurrentStaffPage.CodeForm -> {
-                            CodeForm(lastLocation, onToast, changeTitle, changeStaffPage, setCode)
+                            CodeForm(geolocationClient, onToast, changeTitle, changeStaffPage, setCode)
                         }
                         CurrentStaffPage.Main -> {
                             Box(modifier = Modifier

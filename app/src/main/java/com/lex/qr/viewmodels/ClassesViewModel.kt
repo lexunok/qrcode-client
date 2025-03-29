@@ -51,7 +51,9 @@ class ClassesViewModel @Inject constructor(private val api: API) : ViewModel() {
     private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
     val uiEvent = _uiEvent.receiveAsFlow()
 
-
+    init {
+        getSubjectList()
+    }
     fun getSubjectList() {
         viewModelScope.launch {
 

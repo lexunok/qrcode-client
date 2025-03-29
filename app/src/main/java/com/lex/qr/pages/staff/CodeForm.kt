@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +31,7 @@ import com.lex.qr.pages.Page
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.utils.BaseItem
 import com.lex.qr.utils.CodeResponse
+import com.lex.qr.utils.GeolocationClient
 import com.lex.qr.utils.Group
 import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UiEvent
@@ -39,8 +41,8 @@ import com.lex.qr.viewmodels.CurrentCodeFormPage
 
 @Composable
 fun CodeForm(
-    lastLocation: String,
-    onToast: (String?) -> Unit,
+    geolocationClient: GeolocationClient,
+    onToast: (String) -> Unit,
     changeTitle: (String) -> Unit,
     changePage: (Page) -> Unit,
     setCode: (CodeResponse) -> Unit
@@ -49,12 +51,13 @@ fun CodeForm(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    val context = LocalContext.current
+
     BackHandler(enabled = true) {
         viewModel.onBackPressed()
     }
 
     LaunchedEffect(Unit) {
-        viewModel.getSubjectList()
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> onToast(event.message)
@@ -91,8 +94,9 @@ fun CodeForm(
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             modifier = Modifier
                                 .clickable {
-                                    val lastLocation = "57.14527|65.58022"
-                                    viewModel.createCode(item, lastLocation)
+                                    val isGpsEnabled = geolocationClient.checkGps(context)
+                                    val lastLocation = geolocationClient.lastLocation
+                                    viewModel.createCode(isGpsEnabled, lastLocation, item)
                                 }
                                 .fillMaxWidth()
                                 .padding(8.dp)
