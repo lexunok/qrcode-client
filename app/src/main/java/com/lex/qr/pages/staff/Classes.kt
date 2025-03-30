@@ -153,9 +153,10 @@ fun Classes(
                                 .build(),
                             contentScale = ContentScale.Crop
                         )
-                        Column(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .align(Alignment.Center)
                                 .padding(8.dp)
                                 .border(
                                     width = 4.dp,
@@ -169,7 +170,6 @@ fun Classes(
                                 contentDescription = "Аватарка",
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .align(Alignment.CenterHorizontally)
                                     .size(56.dp)
                                     .clip(CircleShape)
                                     .border(
@@ -179,22 +179,33 @@ fun Classes(
                                     ),
                                 contentScale = ContentScale.Crop
                             )
-                            Row(Modifier.fillMaxWidth()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.85f)
+                                    .align(Alignment.CenterVertically)
+                            ){
                                 Text(
                                     textAlign = TextAlign.Center,
                                     color = color,
-                                    text = "${item.firstName} ${item.lastName}",
+                                    text = item.firstName,
                                     fontSize = 18.sp,
-                                    modifier = Modifier.fillMaxWidth(0.85f)
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                                 Text(
                                     textAlign = TextAlign.Center,
-                                    color = Yellow,
-                                    text = rating.toString(),
+                                    color = color,
+                                    text = item.lastName,
                                     fontSize = 18.sp,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
+                            Text(
+                                textAlign = TextAlign.Center,
+                                color = Yellow,
+                                text = rating.toString(),
+                                fontSize = 18.sp,
+                                modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically)
+                            )
                         }
                     }
                 }

@@ -148,9 +148,10 @@ fun StaffPage(
                                             .build(),
                                         contentScale = ContentScale.Crop
                                     )
-                                    Column(
+                                    Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .align(Alignment.Center)
                                             .padding(8.dp)
                                             .border(
                                                 width = 4.dp,
@@ -164,7 +165,6 @@ fun StaffPage(
                                             contentDescription = "Аватарка",
                                             modifier = Modifier
                                                 .padding(4.dp)
-                                                .align(Alignment.CenterHorizontally)
                                                 .size(56.dp)
                                                 .clip(CircleShape)
                                                 .border(
@@ -174,27 +174,40 @@ fun StaffPage(
                                                 ),
                                             contentScale = ContentScale.Crop
                                         )
-                                        Row(Modifier.fillMaxWidth()) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.8f)
+                                                .align(Alignment.CenterVertically)
+                                        ){
                                             Text(
                                                 textAlign = TextAlign.Center,
                                                 color = color,
-                                                text = "${item.firstName} ${item.lastName}",
+                                                text = item.firstName,
                                                 fontSize = 18.sp,
-                                                modifier = Modifier.fillMaxWidth(0.85f)
+                                                modifier = Modifier.fillMaxWidth()
                                             )
                                             Text(
                                                 textAlign = TextAlign.Center,
-                                                color = Yellow,
-                                                text = rating.toString(),
+                                                color = color,
+                                                text = item.lastName,
                                                 fontSize = 18.sp,
                                                 modifier = Modifier.fillMaxWidth()
                                             )
                                         }
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            color = Yellow,
+                                            text = rating.toString(),
+                                            fontSize = 18.sp,
+                                            modifier = Modifier.fillMaxWidth(0.1f).align(Alignment.CenterVertically)
+                                        )
                                         if (item.isActive) {
                                             Box(
                                                 modifier = Modifier
                                                     .padding(8.dp)
-                                                    .align(Alignment.CenterHorizontally)
+                                                    .fillMaxWidth(1f)
+                                                    .fillMaxHeight()
+                                                    .align(Alignment.CenterVertically)
                                                     .clickable {
                                                         viewModel.deactivateStudent(item.id)
                                                     }
