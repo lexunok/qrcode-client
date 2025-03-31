@@ -1,5 +1,8 @@
 package com.lex.qr.pages
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,12 +20,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lex.qr.components.MenuProfile
 import com.lex.qr.components.Title
@@ -76,20 +83,44 @@ fun MainPage(
         }
     }
 
-    val requestPermissionsLauncher =
+    val requestPermissionsGeoLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true &&
-                permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
                 geolocationClient.startLocationUpdates(context)
             } else {
                 onToast("Ошибка в старте поиска геолокации")
             }
         }
 
+    var hasNotificationPermission by remember { mutableStateOf(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    ) }
+
+    val permissionNotificationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasNotificationPermission = isGranted
+    }
+
     LaunchedEffect(Unit) {
-        requestPermissionsLauncher.launch(
-            arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        requestPermissionsGeoLauncher.launch(
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!hasNotificationPermission) {
+                permissionNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
         geolocationClient.checkGps(context)
         viewModel.login()
     }
