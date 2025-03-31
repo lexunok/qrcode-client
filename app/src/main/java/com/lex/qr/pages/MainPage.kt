@@ -104,7 +104,7 @@ fun MainPage(
         ) {
             Box(modifier = Modifier
                 .fillMaxWidth()
-                .padding(paddingValues = PaddingValues(end = 56.dp))
+                .padding(paddingValues = PaddingValues(horizontal = 56.dp))
                 .align(Alignment.TopCenter)
             ) {
                 Title(title, Modifier.fillMaxWidth().align(Alignment.Center).padding(vertical = 12.dp))

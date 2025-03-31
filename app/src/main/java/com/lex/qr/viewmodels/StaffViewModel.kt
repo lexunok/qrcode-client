@@ -6,14 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lex.qr.pages.Page
 import com.lex.qr.utils.API
-import com.lex.qr.utils.CodeRequest
 import com.lex.qr.utils.CodeResponse
-import com.lex.qr.utils.GeolocationClient
-import com.lex.qr.utils.GetClassRequest
-import com.lex.qr.utils.GetClassResponse
-import com.lex.qr.utils.Group
 import com.lex.qr.utils.Student
-import com.lex.qr.utils.Subject
 import com.lex.qr.utils.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -125,6 +119,36 @@ class StaffViewModel @Inject constructor(private val api: API) : ViewModel() {
             _uiState.value = _uiState.value.copy(isLoading = true)
             _uiState.value.code?.let {
                 val response = api.deactivateStudent(id)
+                response.fold(
+                    onSuccess = {
+                        val students = api.getStudents(it.publicId)
+                        students.fold(
+                            onSuccess = {result->
+                                _uiState.value = _uiState.value.copy(students = result)
+                            },
+                            onFailure = {result->
+                                result.message?.let { msg ->
+                                    _uiEvent.send(UiEvent.ShowToast(msg))
+                                }
+                            }
+                        )
+                    },
+                    onFailure = {result->
+                        result.message?.let { msg ->
+                            _uiEvent.send(UiEvent.ShowToast(msg))
+                        }
+                    }
+                )
+            }
+            _uiState.value = _uiState.value.copy(isLoading = false)
+        }
+    }
+    fun activateStudent(id: String) {
+        viewModelScope.launch {
+
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.value.code?.let {
+                val response = api.activateStudent(id)
                 response.fold(
                     onSuccess = {
                         val students = api.getStudents(it.publicId)

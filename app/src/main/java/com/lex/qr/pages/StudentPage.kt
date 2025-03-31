@@ -46,13 +46,9 @@ import com.lex.qr.utils.Claims
 import com.lex.qr.utils.formatDateTime
 import com.lex.qr.viewmodels.StudentViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.lex.qr.utils.GeolocationClient
-import com.lex.qr.utils.TimerWorker
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.viewmodels.CurrentStudentPage
-import java.util.concurrent.TimeUnit
 
 @SuppressLint("HardwareIds")
 @Composable
@@ -137,7 +133,7 @@ fun StudentPage(
                                         contentDescription = "Оценка $star",
                                         tint = if (star <= uiState.currentRating) Yellow else LightGray,
                                         modifier = Modifier
-                                            .size(64.dp)
+                                            .size(60.dp)
                                             .padding(4.dp)
                                             .clickable { viewModel.evaluate(star) }
                                     )

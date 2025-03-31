@@ -69,7 +69,7 @@ fun GroupStatistics(group: Group, attendance: Attendance) {
             color = Blue,
             modifier = Modifier
                 .padding(start = 8.dp)
-                .width(40.dp),
+                .width(44.dp),
         )
     }
 }

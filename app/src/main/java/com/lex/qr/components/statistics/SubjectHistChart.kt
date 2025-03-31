@@ -67,7 +67,7 @@ fun SubjectHistChart(subjectsHist: List<SubjectHist>) {
                 color = Blue,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .width(40.dp),
+                    .width(44.dp),
             )
         }
     }

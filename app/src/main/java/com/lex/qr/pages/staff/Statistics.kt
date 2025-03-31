@@ -26,6 +26,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,8 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,6 +88,14 @@ fun Statistics(
                 else -> {}
             }
         }
+    }
+    IconButton(onClick = {viewModel.onBackPressed()}) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_40),
+            contentDescription = "Go back",
+            modifier = Modifier.size(40.dp),
+            tint = Blue
+        )
     }
     AnimatedContent(
         targetState = uiState.page,

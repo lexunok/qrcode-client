@@ -182,6 +182,11 @@ class API {
             client.delete("$url/class/deactivate/$id")
         }
     }
+    suspend fun activateStudent(id: String): Result<Student> {
+        return handleApiCall {
+            client.put("$url/class/activate/$id")
+        }
+    }
     suspend fun deleteGroup(id: String): Result<Group> {
         return handleApiCall {
             client.delete("$url/admin/group/$id")

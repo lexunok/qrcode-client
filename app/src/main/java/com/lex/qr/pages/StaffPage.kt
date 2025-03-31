@@ -220,6 +220,25 @@ fun StaffPage(
                                                 )
                                             }
                                         }
+                                        else {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(8.dp)
+                                                    .fillMaxWidth(1f)
+                                                    .fillMaxHeight()
+                                                    .align(Alignment.CenterVertically)
+                                                    .clickable {
+                                                        viewModel.activateStudent(item.id)
+                                                    }
+                                            ) {
+                                                Icon(
+                                                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_add_40),
+                                                    contentDescription = "Add student to class",
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    tint = Green
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
