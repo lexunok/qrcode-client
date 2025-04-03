@@ -283,7 +283,7 @@ fun Statistics(
                                 )
                                 Spacer(Modifier.height(40.dp))
 
-                                if (uiState.lineCharts.size > 1) {
+                                if (uiState.changedLineCharts.size > 1) {
                                     ZoomLineChart(
                                         uiState.zoomLevel,
                                         uiState.changedLineCharts
