@@ -23,10 +23,15 @@ import java.time.LocalDate
 import kotlinx.datetime.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 
 enum class CurrentStatisticsPage: Page {
     GroupList, StudentList, UserStatistics, GroupStatistics
+}
+
+enum class GraphZoomLevel{
+    DAYS, WEEKS, MONTHS
 }
 
 data class StatisticsState(
@@ -36,6 +41,7 @@ data class StatisticsState(
     val subjectsHist: List<SubjectHist> = emptyList(),
     val groupBars: List<GroupBar> = emptyList(),
     val lineCharts: List<LineChart> = emptyList(),
+    val changedLineCharts: List<LineChart> = emptyList(),
 
     val attendance: Attendance? = null,
     val selectedGroup: Group? = null,
@@ -45,7 +51,8 @@ data class StatisticsState(
     val isLoading: Boolean = false,
     val dateFrom: String = "",
     val dateTo: String = "",
-    val showDialog: Boolean = false
+    val showDialog: Boolean = false,
+    val zoomLevel: GraphZoomLevel = GraphZoomLevel.DAYS
     )
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel() {
@@ -99,7 +106,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 val lineChart = api.getStudentLineChart(request)
                 lineChart.fold(
                     onSuccess = {result->
-                        _uiState.value = _uiState.value.copy(lineCharts = result)
+                        _uiState.value = _uiState.value.copy(lineCharts = result, changedLineCharts = result)
                     },
                     onFailure = {result->
                         result.message?.let { msg ->
@@ -147,7 +154,7 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
                 val lineChart = api.getGroupLineChart(request)
                 lineChart.fold(
                     onSuccess = {result->
-                        _uiState.value = _uiState.value.copy(lineCharts = result)
+                        _uiState.value = _uiState.value.copy(lineCharts = result, changedLineCharts = result)
                     },
                     onFailure = {result->
                         result.message?.let { msg ->
@@ -179,7 +186,34 @@ class StatisticsViewModel @Inject constructor(private val api: API) : ViewModel(
             }
         }
     }
-
+    fun changeZoom(newZoom: GraphZoomLevel){
+        when(newZoom){
+            GraphZoomLevel.DAYS -> {
+                _uiState.value = _uiState.value.copy(
+                    changedLineCharts = _uiState.value.lineCharts,
+                    zoomLevel = newZoom
+                )
+            }
+            GraphZoomLevel.WEEKS -> {
+                val newList = _uiState.value.lineCharts.groupBy {
+                    it.date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                }.map { (weekStart, visits) -> LineChart(visits.sumOf { it.visitCount }, weekStart) }
+                _uiState.value = _uiState.value.copy(
+                    changedLineCharts = newList,
+                    zoomLevel = newZoom
+                )
+            }
+            GraphZoomLevel.MONTHS -> {
+                val newList = _uiState.value.lineCharts.groupBy {
+                    it.date.with(TemporalAdjusters.firstDayOfMonth())
+                }.map { (weekStart, visits) -> LineChart(visits.sumOf { it.visitCount }, weekStart) }
+                _uiState.value = _uiState.value.copy(
+                    changedLineCharts = newList,
+                    zoomLevel = newZoom
+                )
+            }
+        }
+    }
     fun getGroups() {
         viewModelScope.launch {
 
