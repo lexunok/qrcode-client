@@ -59,11 +59,7 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             QRTheme {
-                Box (modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = Blue)) {
-                    MainPage(geolocationClient)
-                }
+                MainPage(geolocationClient)
             }
         }
     }

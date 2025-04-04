@@ -102,6 +102,8 @@ class StudentViewModel @Inject constructor(private val api: API, private val wor
                 )
                 response.fold(
                     onSuccess = {
+                        getCurrent()
+
                         _uiState.value = _uiState.value.copy(isTimer = true, isLoading = false)
 
                         val workRequest = OneTimeWorkRequestBuilder<TimerWorker>()
@@ -113,7 +115,6 @@ class StudentViewModel @Inject constructor(private val api: API, private val wor
                         workManager.getWorkInfoByIdFlow(workRequest.id)
                             .filter { it.state == WorkInfo.State.SUCCEEDED }
                             .collect {
-                                getCurrent()
                                 _uiState.value = _uiState.value.copy(isTimer = false)
                             }
                     },

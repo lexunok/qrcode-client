@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -118,12 +119,19 @@ fun StaffPage(
                                 }
                             ){
                                 uiState.code?.let {
-                                    QrCodeView(
-                                        data = it.publicId,
-                                        modifier = Modifier
-                                            .size(300.dp)
-                                            .align(Alignment.Center)
-                                    )
+                                    Column (Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                                        QrCodeView(
+                                            data = it.publicId,
+                                            modifier = Modifier.size(300.dp)
+                                        )
+                                        Text(
+                                            color = Blue,
+                                            text = "Сделайте свайп вниз чтобы посмотреть присутствующих",
+                                            fontSize = 12.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -176,7 +184,7 @@ fun StaffPage(
                                         )
                                         Column(
                                             modifier = Modifier
-                                                .fillMaxWidth(0.8f)
+                                                .fillMaxWidth(0.7f)
                                                 .align(Alignment.CenterVertically)
                                         ){
                                             Text(
@@ -215,7 +223,7 @@ fun StaffPage(
                                                 Icon(
                                                     imageVector = ImageVector.vectorResource(id = R.drawable.baseline_close_40),
                                                     contentDescription = "Kick student from class",
-                                                    modifier = Modifier.fillMaxSize(),
+                                                    modifier = Modifier.fillMaxSize().size(40.dp),
                                                     tint = Red
                                                 )
                                             }
@@ -234,7 +242,7 @@ fun StaffPage(
                                                 Icon(
                                                     imageVector = ImageVector.vectorResource(id = R.drawable.baseline_add_40),
                                                     contentDescription = "Add student to class",
-                                                    modifier = Modifier.fillMaxSize(),
+                                                    modifier = Modifier.fillMaxSize().size(40.dp),
                                                     tint = Green
                                                 )
                                             }

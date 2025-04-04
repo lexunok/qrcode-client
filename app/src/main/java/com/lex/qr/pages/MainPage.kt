@@ -66,23 +66,6 @@ fun MainPage(
             viewModel.clearToast()
         }
     }
-
-    if (isLoading) {
-        Box (modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 28.dp, vertical = 64.dp)
-            .shadow(12.dp)
-            .background(color = Color.White, shape = RoundedCornerShape(12.dp))
-            .padding(20.dp)
-        ) {
-            CircularProgressIndicator(
-                color = Blue,
-                modifier = Modifier.size(100.dp).align(Alignment.Center),
-                strokeWidth = 12.dp
-            )
-        }
-    }
-
     val requestPermissionsGeoLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
@@ -125,44 +108,63 @@ fun MainPage(
         viewModel.login()
     }
 
-    user?.let {
-        Box (modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 56.dp)
-            .shadow(12.dp)
-            .background(color = Color.White, shape = RoundedCornerShape(12.dp))
-            .padding(16.dp)
-        ) {
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .padding(paddingValues = PaddingValues(horizontal = 56.dp))
-                .align(Alignment.TopCenter)
+    Box (modifier = Modifier
+        .fillMaxSize()
+        .background(color = Blue)) {
+        if (isLoading) {
+            Box (modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp, vertical = 64.dp)
+                .shadow(12.dp)
+                .background(color = Color.White, shape = RoundedCornerShape(12.dp))
+                .padding(20.dp)
             ) {
-                Title(title, Modifier.fillMaxWidth().align(Alignment.Center).padding(vertical = 12.dp))
+                CircularProgressIndicator(
+                    color = Blue,
+                    modifier = Modifier.size(100.dp).align(Alignment.Center),
+                    strokeWidth = 12.dp
+                )
             }
-
-            when (it.role) {
-                Role.ADMIN -> {
-                    AdminPage(onToast, changeTitle)
-                }
-                Role.STAFF -> {
-                    StaffPage(geolocationClient, onToast, changeTitle)
-                }
-                Role.STUDENT -> {
-                    StudentPage(geolocationClient, it, onToast, changeTitle)
-                }
-            }
-            MenuProfile(
-                modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp),
-                user = it,
-                showMenu = showMenu,
-                changeMenu = changeMenu,
-                onToast = onToast,
-                changeUser = changeUser,
-            )
         }
-    }
-    if (!isLoading && user == null) {
-        LoginPage(changeUser, onToast)
+        user?.let {
+            Box (modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 56.dp)
+                .shadow(12.dp)
+                .background(color = Color.White, shape = RoundedCornerShape(12.dp))
+                .padding(16.dp)
+            ) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues = PaddingValues(horizontal = 56.dp))
+                    .align(Alignment.TopCenter)
+                ) {
+                    Title(title, Modifier.fillMaxWidth().align(Alignment.Center).padding(vertical = 12.dp))
+                }
+
+                when (it.role) {
+                    Role.ADMIN -> {
+                        AdminPage(onToast, changeTitle)
+                    }
+                    Role.STAFF -> {
+                        StaffPage(geolocationClient, onToast, changeTitle)
+                    }
+                    Role.STUDENT -> {
+                        StudentPage(geolocationClient, it, onToast, changeTitle)
+                    }
+                }
+                MenuProfile(
+                    modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp),
+                    user = it,
+                    showMenu = showMenu,
+                    changeMenu = changeMenu,
+                    onToast = onToast,
+                    changeUser = changeUser,
+                )
+            }
+        }
+        if (!isLoading && user == null) {
+            LoginPage(changeUser, onToast)
+        }
     }
 }
