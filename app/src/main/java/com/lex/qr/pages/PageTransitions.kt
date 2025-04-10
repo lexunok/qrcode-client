@@ -9,6 +9,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import com.lex.qr.viewmodels.CurrentAdminPage
+import com.lex.qr.viewmodels.CurrentClassesPage
+import com.lex.qr.viewmodels.CurrentCodeFormPage
 import com.lex.qr.viewmodels.CurrentLoginPage
 import com.lex.qr.viewmodels.CurrentStaffPage
 import com.lex.qr.viewmodels.CurrentStatisticsPage
@@ -67,49 +69,44 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
                 from == CurrentAdminPage.CATEGORY && to == CurrentAdminPage.MAIN -> PageTransitionDirection.RIGHT
                 from == CurrentAdminPage.CATEGORY && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
 
-                from == CurrentAdminPage.MAIN && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
                 from == CurrentAdminPage.MAIN && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.MAIN && to == CurrentAdminPage.CREATE -> PageTransitionDirection.DOWN
+                from == CurrentAdminPage.MAIN && to == CurrentAdminPage.ARCHIVE -> PageTransitionDirection.RIGHT
 
-                from == CurrentAdminPage.CREATE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.CREATE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.UP
                 from == CurrentAdminPage.CREATE && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
+
+                from == CurrentAdminPage.ARCHIVE && to == CurrentAdminPage.CREATE -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.ARCHIVE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.ARCHIVE && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
                 else -> PageTransitionDirection.RIGHT
             }
         }
         from is CurrentStaffPage && to is CurrentStaffPage -> {
             when {
-                from == CurrentStaffPage.Main && to == CurrentStaffPage.Activity -> PageTransitionDirection.UP
                 from == CurrentStaffPage.Main && to == CurrentStaffPage.ClassList -> PageTransitionDirection.LEFT
                 from == CurrentStaffPage.Main && to == CurrentStaffPage.Statistics -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.QRLIVE && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.GROUP -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.SUBJECT && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.QRLIVE -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.CLASSES -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.GROUP && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.VISITS -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.CLASSES && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.RIGHT
-//                from == CurrentStaffPage.VISITS && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.DOWN
-//                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.ACTIVITY && to == CurrentStaffPage.STATS -> PageTransitionDirection.RIGHT
-//
-//                from == CurrentStaffPage.STATS && to == CurrentStaffPage.QRCODE -> PageTransitionDirection.LEFT
-//                from == CurrentStaffPage.STATS && to == CurrentStaffPage.SUBJECT -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.Main && to == CurrentStaffPage.CodeForm -> PageTransitionDirection.LEFT
+                from == CurrentStaffPage.Main && to == CurrentStaffPage.Activity -> PageTransitionDirection.UP
+
+                from == CurrentStaffPage.ClassList && to == CurrentStaffPage.Main -> PageTransitionDirection.RIGHT
+
+                from == CurrentStaffPage.Statistics && to == CurrentStaffPage.Main -> PageTransitionDirection.LEFT
+
+                from == CurrentStaffPage.CodeForm && to == CurrentStaffPage.Main -> PageTransitionDirection.RIGHT
+
+                from == CurrentStaffPage.Activity && to == CurrentStaffPage.Main -> PageTransitionDirection.DOWN
+                else -> PageTransitionDirection.RIGHT
+            }
+        }
+        from is CurrentCodeFormPage && to is CurrentCodeFormPage -> {
+            when {
+                from == CurrentCodeFormPage.SubjectList && to == CurrentCodeFormPage.GroupList -> PageTransitionDirection.LEFT
+
+                from == CurrentCodeFormPage.GroupList && to == CurrentCodeFormPage.LifeTime -> PageTransitionDirection.LEFT
+                from == CurrentCodeFormPage.GroupList && to == CurrentCodeFormPage.SubjectList -> PageTransitionDirection.RIGHT
+
+                from == CurrentCodeFormPage.LifeTime && to == CurrentCodeFormPage.GroupList -> PageTransitionDirection.RIGHT
                 else -> PageTransitionDirection.RIGHT
             }
         }
@@ -124,6 +121,20 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
                 from == CurrentStatisticsPage.UserStatistics && to == CurrentStatisticsPage.StudentList -> PageTransitionDirection.LEFT
 
                 from == CurrentStatisticsPage.GroupStatistics && to == CurrentStatisticsPage.StudentList -> PageTransitionDirection.LEFT
+                else -> PageTransitionDirection.RIGHT
+            }
+        }
+        from is CurrentClassesPage && to is CurrentClassesPage -> {
+            when {
+                from == CurrentClassesPage.SubjectList && to == CurrentClassesPage.GroupList -> PageTransitionDirection.LEFT
+
+                from == CurrentClassesPage.GroupList && to == CurrentClassesPage.Classes -> PageTransitionDirection.LEFT
+                from == CurrentClassesPage.GroupList && to == CurrentClassesPage.SubjectList -> PageTransitionDirection.RIGHT
+
+                from == CurrentClassesPage.Classes && to == CurrentClassesPage.Visits -> PageTransitionDirection.LEFT
+                from == CurrentClassesPage.Classes && to == CurrentClassesPage.GroupList -> PageTransitionDirection.RIGHT
+
+                from == CurrentClassesPage.Visits && to == CurrentClassesPage.Classes -> PageTransitionDirection.RIGHT
                 else -> PageTransitionDirection.RIGHT
             }
         }

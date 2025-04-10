@@ -220,17 +220,6 @@ fun Statistics(
                             }
                             }
                         }
-                        Button(
-                            onClick = {viewModel.getGroupStatistics()},
-                            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.7f).padding(bottom = 80.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                contentColor = Color.White,
-                                containerColor = Blue
-                            )
-                        ) {
-                            Text("Общая статистика", textAlign = TextAlign.Center, fontSize = 18.sp)
-                        }
                     }
                     Button(
                         onClick = {viewModel.getGroupStatistics()},

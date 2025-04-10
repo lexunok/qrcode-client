@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class CurrentAdminPage : Page {
-    EDITOR, LIST, CATEGORY, MAIN, CREATE
+    EDITOR, LIST, CATEGORY, MAIN, CREATE, ARCHIVE
 }
 
 enum class ObjectType{
@@ -135,6 +135,15 @@ class AdminViewModel @Inject constructor(private val api: API) : ViewModel(){
         }
     }
 
+    fun toArchive(){
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                page = CurrentAdminPage.ARCHIVE
+            )
+            _uiEvent.send(UiEvent.ChangeTitle("Архив"))
+        }
+    }
+
     fun onBackPressed(){
         viewModelScope.launch {
             when(_uiState.value.page) {
@@ -165,7 +174,7 @@ class AdminViewModel @Inject constructor(private val api: API) : ViewModel(){
                         _uiEvent.send(UiEvent.ChangeTitle("Предметы"))
                     }
                 }
-                CurrentAdminPage.CATEGORY, CurrentAdminPage.CREATE -> {
+                CurrentAdminPage.CATEGORY, CurrentAdminPage.CREATE, CurrentAdminPage.ARCHIVE -> {
                     _uiState.value = _uiState.value.copy(page = CurrentAdminPage.MAIN)
                     _uiEvent.send(UiEvent.ChangeTitle("Главная"))
                 }

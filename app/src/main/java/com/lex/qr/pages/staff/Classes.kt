@@ -1,6 +1,7 @@
 package com.lex.qr.pages.staff
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +44,7 @@ import coil.request.ImageRequest
 import com.lex.qr.R
 import com.lex.qr.components.staff.BaseList
 import com.lex.qr.pages.Page
+import com.lex.qr.pages.getPageTransitionSpec
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.ui.theme.Green
 import com.lex.qr.ui.theme.Red
@@ -87,137 +89,145 @@ fun Classes(
             tint = Blue
         )
     }
-    Box(Modifier.fillMaxSize()) {
-        when(uiState.page) {
-            CurrentClassesPage.SubjectList -> {
-                BaseList(uiState.subjects) {
-                    item: BaseItem -> viewModel.getGroupList(item as Subject)
+    AnimatedContent(
+        targetState = uiState.page,
+        transitionSpec = {
+            getPageTransitionSpec(initialState, targetState)
+        },
+        modifier = Modifier.fillMaxSize()
+    ){ currentPage ->
+        Box(modifier = Modifier.fillMaxSize()){
+            when(currentPage) {
+                CurrentClassesPage.SubjectList -> {
+                    BaseList(uiState.subjects) {
+                            item: BaseItem -> viewModel.getGroupList(item as Subject)
+                    }
                 }
-            }
-            CurrentClassesPage.GroupList -> {
-                BaseList(uiState.groups) {
-                    item: BaseItem -> viewModel.getClasses(item.id)
+                CurrentClassesPage.GroupList -> {
+                    BaseList(uiState.groups) {
+                            item: BaseItem -> viewModel.getClasses(item.id)
+                    }
                 }
-            }
-            CurrentClassesPage.Classes -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(top = 64.dp)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.9f),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(uiState.classes) { item ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            modifier = Modifier
-                                .clickable {viewModel.getStudents(item.publicId)}
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .border(
-                                    width = 4.dp,
-                                    color = Blue,
-                                    shape = RoundedCornerShape(8.dp)
+                CurrentClassesPage.Classes -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(top = 64.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.9f),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(uiState.classes) { item ->
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                modifier = Modifier
+                                    .clickable {viewModel.getStudents(item.publicId)}
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .border(
+                                        width = 4.dp,
+                                        color = Blue,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 4.dp
                                 ),
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
-                            ),
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Center,
-                                color = Blue,
-                                text = formatDateTime(item.createdAt),
-                                fontSize = 18.sp,
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(horizontal = 4.dp, vertical = 8.dp)
-                            )
-                            item.rating?.let {
+                            ) {
                                 Text(
                                     textAlign = TextAlign.Center,
-                                    color = Yellow,
-                                    text = "Средний рейтинг: $it",
+                                    color = Blue,
+                                    text = formatDateTime(item.createdAt),
                                     fontSize = 18.sp,
                                     modifier = Modifier.fillMaxWidth()
-                                        .padding(bottom = 8.dp)
+                                        .padding(horizontal = 4.dp, vertical = 8.dp)
                                 )
+                                item.rating?.let {
+                                    Text(
+                                        textAlign = TextAlign.Center,
+                                        color = Yellow,
+                                        text = "Средний рейтинг: $it",
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.fillMaxWidth()
+                                            .padding(bottom = 8.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-            CurrentClassesPage.Visits -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(top = 64.dp)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.9f),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(uiState.students) { item ->
-                        val color = if (item.isActive) Green else Red
-                        val rating = item.rating ?: 0
+                CurrentClassesPage.Visits -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(top = 64.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.9f),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(uiState.students) { item ->
+                            val color = if (item.isActive) Green else Red
+                            val rating = item.rating ?: 0
 
-                        val painter = rememberAsyncImagePainter(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.avatarUrl)
-                                .error(R.drawable.baseline_account_circle_24)
-                                .placeholder(R.drawable.baseline_account_circle_24)
-                                .build(),
-                            contentScale = ContentScale.Crop
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.Center)
-                                .padding(8.dp)
-                                .border(
-                                    width = 4.dp,
-                                    color = color,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(vertical = 12.dp, horizontal = 8.dp)
-                        ) {
-                            Image(
-                                painter = painter,
-                                contentDescription = "Аватарка",
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .size(56.dp)
-                                    .clip(CircleShape)
-                                    .border(
-                                        width = 2.dp,
-                                        color = Blue,
-                                        shape = CircleShape
-                                    ),
+                            val painter = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(item.avatarUrl)
+                                    .error(R.drawable.baseline_account_circle_24)
+                                    .placeholder(R.drawable.baseline_account_circle_24)
+                                    .build(),
                                 contentScale = ContentScale.Crop
                             )
-                            Column(
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.85f)
-                                    .align(Alignment.CenterVertically)
-                            ){
-                                Text(
-                                    textAlign = TextAlign.Center,
-                                    color = color,
-                                    text = item.firstName,
-                                    fontSize = 18.sp,
-                                    modifier = Modifier.fillMaxWidth()
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center)
+                                    .padding(8.dp)
+                                    .border(
+                                        width = 4.dp,
+                                        color = color,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(vertical = 12.dp, horizontal = 8.dp)
+                            ) {
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "Аватарка",
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .size(56.dp)
+                                        .clip(CircleShape)
+                                        .border(
+                                            width = 2.dp,
+                                            color = Blue,
+                                            shape = CircleShape
+                                        ),
+                                    contentScale = ContentScale.Crop
                                 )
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .align(Alignment.CenterVertically)
+                                ){
+                                    Text(
+                                        textAlign = TextAlign.Center,
+                                        color = color,
+                                        text = item.firstName,
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Text(
+                                        textAlign = TextAlign.Center,
+                                        color = color,
+                                        text = item.lastName,
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                                 Text(
                                     textAlign = TextAlign.Center,
-                                    color = color,
-                                    text = item.lastName,
+                                    color = Yellow,
+                                    text = rating.toString(),
                                     fontSize = 18.sp,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically)
                                 )
                             }
-                            Text(
-                                textAlign = TextAlign.Center,
-                                color = Yellow,
-                                text = rating.toString(),
-                                fontSize = 18.sp,
-                                modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically)
-                            )
                         }
                     }
                 }
