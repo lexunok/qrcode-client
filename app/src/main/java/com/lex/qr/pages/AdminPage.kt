@@ -1,69 +1,23 @@
 package com.lex.qr.pages
 
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.lex.qr.R
-import com.lex.qr.components.FunctionalButton
-import com.lex.qr.components.admin.AdminCardCategory
-import com.lex.qr.components.LazyListContent
-import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.NavButton
-import com.lex.qr.components.RadioSelect
-import com.lex.qr.components.admin.CreatePageButton
-import com.lex.qr.components.admin.CreatePageInput
-import com.lex.qr.components.admin.CreatePageText
-import com.lex.qr.components.admin.ShowGroupList
-import com.lex.qr.ui.theme.Blue
-import com.lex.qr.utils.Group
-import com.lex.qr.utils.Role
-import com.lex.qr.utils.Subject
+import com.lex.qr.pages.admin.Archive
+import com.lex.qr.pages.admin.Create
+import com.lex.qr.pages.admin.Editor
 import com.lex.qr.utils.UiEvent
-import com.lex.qr.utils.User
 import com.lex.qr.viewmodels.AdminViewModel
 import com.lex.qr.viewmodels.CurrentAdminPage
-import com.lex.qr.viewmodels.ObjectType
 
 
 @Composable
@@ -74,9 +28,7 @@ fun AdminPage(
     val viewModel: AdminViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    BackHandler(enabled = true) {
-        viewModel.onBackPressed()
-    }
+    val changeAdminPage = { newPage: Page -> viewModel.updatePage(newPage) }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
@@ -98,352 +50,18 @@ fun AdminPage(
         ) { currentPage ->
             Box(modifier = Modifier.fillMaxSize()){
                 when(currentPage) {
-                    CurrentAdminPage.EDITOR -> {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Column(modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth(0.85f)
-                                .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-                                .padding(10.dp)
-                                .heightIn(max = 500.dp)
-                                .verticalScroll(rememberScrollState())
-                            ) {
-                                uiState.selectedUser?.let {
-                                    CreatePageText("Почта")
-                                    CreatePageInput(uiState.email) {
-                                        newEmail -> viewModel.changeEmail(newEmail)
-                                    }
-                                    CreatePageText("Имя")
-                                    CreatePageInput(uiState.firstName) {
-                                        newFirstName -> viewModel.changeFirstName(newFirstName)
-                                    }
-                                    CreatePageText("Фамилия")
-                                    CreatePageInput(uiState.lastName) {
-                                        newLastName -> viewModel.changeLastName(newLastName)
-                                    }
-                                    CreatePageText("Роль")
-                                    RadioSelect(
-                                        uiState.role == Role.STAFF,
-                                        "Преподаватель"
-                                    ) { viewModel.changeRole(Role.STAFF) }
-                                    RadioSelect(
-                                        uiState.role == Role.STUDENT,
-                                        "Студент"
-                                    ) { viewModel.changeRole(Role.STUDENT) }
-                                    FunctionalButton(text = uiState.userGroup?.name ?: "Выбор группы") {
-                                        viewModel.getGroupList()
-                                    }
-                                    ShowGroupList(
-                                        uiState.showDialog,
-                                        uiState.isLoading,
-                                        uiState.groups,
-                                        uiState.selectedGroup,
-                                        {group -> viewModel.setSelectedGroup(group)},
-                                        {viewModel.onBackPressed()}
-                                    )
-                                    CreatePageButton("Сохранить") {
-                                        viewModel.updateUser()
-                                    }
-                                    CreatePageButton("Удалить") {
-                                        viewModel.deleteUser()
-                                    }
-                                }
-                                uiState.selectedGroup?.let {
-                                    CreatePageText("Название")
-                                    CreatePageInput(uiState.name) {
-                                        newName -> viewModel.changeName(newName)
-                                    }
-                                    CreatePageButton("Сохранить") {
-                                        viewModel.updateGroup()
-                                    }
-                                    CreatePageButton("Удалить") {
-                                        viewModel.deleteGroup()
-                                    }
-                                }
-                                uiState.selectedSubject?.let {
-                                    CreatePageText("Название")
-                                    CreatePageInput(uiState.name) {
-                                        newName -> viewModel.changeName(newName)
-                                    }
-                                    CreatePageButton("Сохранить") {
-                                        viewModel.updateSubject()
-                                    }
-                                    CreatePageButton("Удалить") {
-                                        viewModel.deleteSubject()
-                                    }
-                                }
-                            }
-                        }
+                    CurrentAdminPage.Editor -> {
+                        Editor(onToast, changeTitle, changeAdminPage)
                     }
-                    CurrentAdminPage.LIST -> {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            if(uiState.isLoading){
-                                LoadingColumn(
-                                    Modifier
-                                        .padding(top = 64.dp)
-                                        .fillMaxWidth(),
-                                    contentPadding = PaddingValues(16.dp)
-                                )
-                            }
-                            if (!uiState.isLoading) {
-                                LazyListContent(
-                                    items = when {
-                                        uiState.users.isNotEmpty() -> uiState.users
-                                        uiState.groups.isNotEmpty() -> uiState.groups
-                                        uiState.subjects.isNotEmpty() -> uiState.subjects
-                                        else -> emptyList()
-                                    },
-                                    Modifier
-                                        .padding(top = 64.dp)
-                                        .fillMaxWidth()
-                                        .fillMaxHeight(0.9f),
-                                    PaddingValues(16.dp),
-                                    onItemClick = { item ->
-                                        when (item) {
-                                            is User -> {
-                                                viewModel.selectUser(item)
-                                            }
-                                            is Group -> {
-                                                viewModel.selectGroup(item)
-                                            }
-                                            is Subject -> {
-                                                viewModel.selectSubject(item)
-                                            }
-                                        }
-                                    }
-                                ) { item ->
-                                    Text(
-                                        color = Blue,
-                                        text = when (item) {
-                                            is User -> "${item.firstName} ${item.lastName}"
-                                            is Group -> item.name
-                                            is Subject -> item.name
-                                            else -> ""
-                                        },
-                                        fontSize = 24.sp,
-                                        modifier = Modifier.padding(16.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    CurrentAdminPage.CATEGORY -> {
-                        Box(modifier = Modifier.fillMaxSize()){
-                            Column(
-                                modifier = Modifier
-                                    .padding(top = 64.dp)
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                            ) {
-                                AdminCardCategory("Пользователи") {
-                                    viewModel.selectUsers()
-                                }
-                                AdminCardCategory("Группы") {
-                                    viewModel.selectGroups()
-                                }
-                                AdminCardCategory("Предметы") {
-                                    viewModel.selectSubjects()
-                                }
-                            }
-                        }
-                    }
-                    CurrentAdminPage.MAIN -> {
+                    CurrentAdminPage.Main -> {
                         Box(modifier = Modifier.fillMaxSize()) {
                         }
                     }
-                    CurrentAdminPage.CREATE -> {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Column(modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth(0.85f)
-                                .border(width = 2.dp, color = Blue, shape = RoundedCornerShape(12.dp))
-                                .padding(10.dp)
-                                .heightIn(max = 500.dp)
-                                .verticalScroll(rememberScrollState())
-                            ) {
-                                CreatePageText("Выберите тип")
-                                RadioSelect(
-                                    uiState.selectedOption == ObjectType.USER,
-                                    "Пользователь"
-                                ) { viewModel.changeSelectedOption(ObjectType.USER) }
-                                RadioSelect(
-                                    uiState.selectedOption == ObjectType.USERS,
-                                    "Пользователи(csv)"
-                                ) { viewModel.changeSelectedOption(ObjectType.USERS) }
-                                RadioSelect(
-                                    uiState.selectedOption == ObjectType.GROUP,
-                                    "Группа"
-                                ) { viewModel.changeSelectedOption(ObjectType.GROUP) }
-                                RadioSelect(
-                                    uiState.selectedOption == ObjectType.SUBJECT,
-                                    "Предмет"
-                                ) { viewModel.changeSelectedOption(ObjectType.SUBJECT) }
-                                when (uiState.selectedOption) {
-                                    ObjectType.USER -> {
-                                        CreatePageText("Введите почту")
-                                        CreatePageInput(uiState.email){
-                                            newEmail -> viewModel.changeEmail(newEmail)
-                                        }
-                                        CreatePageText("Введите пароль")
-                                        CreatePageInput(uiState.password) {
-                                            newPassword -> viewModel.changePassword(newPassword)
-                                        }
-                                        CreatePageText("Введите имя")
-                                        CreatePageInput(uiState.firstName) {
-                                            newFirstName -> viewModel.changeFirstName(newFirstName)
-                                        }
-                                        CreatePageText("Введите фамилию")
-                                        CreatePageInput(uiState.lastName) {
-                                            newLastName -> viewModel.changeLastName(newLastName)
-                                        }
-                                        CreatePageText("Выберите роль")
-                                        RadioSelect(
-                                            uiState.role == Role.ADMIN,
-                                            "Админ"
-                                        ) { viewModel.changeRole(Role.ADMIN) }
-                                        RadioSelect(
-                                            uiState.role == Role.STAFF,
-                                            "Преподаватель"
-                                        ) { viewModel.changeRole(Role.STAFF) }
-                                        RadioSelect(
-                                            uiState.role == Role.STUDENT,
-                                            "Студент"
-                                        ) { viewModel.changeRole(Role.STUDENT) }
-                                        FunctionalButton(text = uiState.userGroup?.name ?: "Выбор группы") {
-                                            viewModel.getGroupList()
-                                        }
-                                        ShowGroupList(
-                                            uiState.showDialog,
-                                            uiState.isLoading,
-                                            uiState.groups,
-                                            uiState.selectedGroup,
-                                            {group -> viewModel.setSelectedGroup(group)},
-                                            {viewModel.onBackPressed()}
-                                        )
-                                    }
-                                    ObjectType.USERS -> {
-                                        val context = LocalContext.current
-                                        val launcher = rememberLauncherForActivityResult(
-                                            contract = ActivityResultContracts.GetContent(),
-                                            onResult = { uri ->
-                                                uri?.let { selectedFileUri ->
-                                                    viewModel.selectFile(context, selectedFileUri)
-                                                }
-                                            }
-                                        )
-                                        CreatePageButton("Выберите csv файл") {
-                                            launcher.launch("text/*")
-                                        }
-                                        CreatePageText(
-                                            when {
-                                                uiState.isLoading && uiState.fileContent == null -> "Загрузка..."
-                                                !uiState.isLoading && uiState.fileContent != null -> "Файл успешно загружен"
-                                                uiState.isLoading && uiState.fileContent != null -> "Отправка..."
-                                                uiState.errorMessage.isNotEmpty() -> uiState.errorMessage
-                                                else -> { "" }
-                                            }
-                                        )
-                                    }
-                                    ObjectType.SUBJECT, ObjectType.GROUP -> {
-                                        CreatePageText("Введите название")
-                                        CreatePageInput(uiState.name) {
-                                            newName -> viewModel.changeName(newName)
-                                        }
-                                    }
-                                    ObjectType.NULL -> {}
-                                }
-                                CreatePageButton(if (uiState.selectedOption != ObjectType.USERS) "Создать" else "Отправить") {
-                                    when (uiState.selectedOption) {
-                                        ObjectType.USER -> viewModel.createUser()
-                                        ObjectType.GROUP -> viewModel.createGroup()
-                                        ObjectType.SUBJECT -> viewModel.createSubject()
-                                        ObjectType.USERS -> viewModel.createUsers()
-                                        ObjectType.NULL -> {}
-                                    }
-                                }
-                            }
-                        }
+                    CurrentAdminPage.Create -> {
+                        Create(onToast, changeTitle, changeAdminPage)
                     }
-                    CurrentAdminPage.ARCHIVE -> {
-                        if (uiState.isLoading) {
-                            LoadingColumn(
-                                Modifier
-                                    .padding(top = 64.dp)
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(0.75f),
-                                contentPadding = PaddingValues(16.dp)
-                            )
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .padding(top = 64.dp)
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(0.75f),
-                                contentPadding = PaddingValues(16.dp)
-                            ) {
-                                item {
-                                    Card(
-                                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp)
-                                            .border(
-                                                width = 4.dp,
-                                                color = Blue,
-                                                shape = RoundedCornerShape(8.dp)
-                                            )
-                                            .clickable {  },
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                    ) {
-                                        Text(
-                                            textAlign = TextAlign.Center,
-                                            color = Blue,
-                                            text = "Семестр 1",
-                                            fontSize = 18.sp,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 4.dp, vertical = 12.dp)
-                                        )
-                                    }
-                                }
-                                item {
-                                    Card(
-                                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp)
-                                            .border(
-                                                width = 4.dp,
-                                                color = Blue,
-                                                shape = RoundedCornerShape(8.dp)
-                                            )
-                                            .clickable {  },
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                    ) {
-                                        Text(
-                                            textAlign = TextAlign.Center,
-                                            color = Blue,
-                                            text = "Семестр 2",
-                                            fontSize = 18.sp,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 4.dp, vertical = 12.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Button(
-                            onClick = {},
-                            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.7f).padding(bottom = 80.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                contentColor = Color.White,
-                                containerColor = Blue
-                            )
-                        ) {
-                            Text("Архивировать активный семестр", textAlign = TextAlign.Center, fontSize = 18.sp)
-                        }
+                    CurrentAdminPage.Archive -> {
+                        Archive()
                     }
                 }
             }

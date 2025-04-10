@@ -14,6 +14,8 @@ import com.lex.qr.viewmodels.CurrentCodeFormPage
 import com.lex.qr.viewmodels.CurrentLoginPage
 import com.lex.qr.viewmodels.CurrentStaffPage
 import com.lex.qr.viewmodels.CurrentStatisticsPage
+import com.lex.qr.viewmodels.admin.CurrentArchivePage
+import com.lex.qr.viewmodels.admin.CurrentEditorPage
 
 private enum class PageTransitionDirection {
     LEFT, RIGHT, UP, DOWN
@@ -56,29 +58,40 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
         }
         from is CurrentAdminPage && to is CurrentAdminPage -> {
             when {
-                from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.MAIN -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.EDITOR && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
+                from == CurrentAdminPage.Main && to == CurrentAdminPage.Editor -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.Main && to == CurrentAdminPage.Create -> PageTransitionDirection.DOWN
+                from == CurrentAdminPage.Main && to == CurrentAdminPage.Archive -> PageTransitionDirection.RIGHT
 
-                from == CurrentAdminPage.LIST && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.LIST && to == CurrentAdminPage.MAIN -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.LIST && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.LIST && to == CurrentAdminPage.EDITOR -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.Editor && to == CurrentAdminPage.Main -> PageTransitionDirection.RIGHT
+                from == CurrentAdminPage.Editor && to == CurrentAdminPage.Create -> PageTransitionDirection.RIGHT
+                from == CurrentAdminPage.Editor && to == CurrentAdminPage.Archive -> PageTransitionDirection.RIGHT
 
-                from == CurrentAdminPage.CATEGORY && to == CurrentAdminPage.LIST -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.CATEGORY && to == CurrentAdminPage.MAIN -> PageTransitionDirection.RIGHT
-                from == CurrentAdminPage.CATEGORY && to == CurrentAdminPage.CREATE -> PageTransitionDirection.RIGHT
+                from == CurrentAdminPage.Create && to == CurrentAdminPage.Editor -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.Create && to == CurrentAdminPage.Main -> PageTransitionDirection.UP
+                from == CurrentAdminPage.Create && to == CurrentAdminPage.Archive -> PageTransitionDirection.RIGHT
 
-                from == CurrentAdminPage.MAIN && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.MAIN && to == CurrentAdminPage.CREATE -> PageTransitionDirection.DOWN
-                from == CurrentAdminPage.MAIN && to == CurrentAdminPage.ARCHIVE -> PageTransitionDirection.RIGHT
+                from == CurrentAdminPage.Archive && to == CurrentAdminPage.Editor -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.Archive && to == CurrentAdminPage.Main -> PageTransitionDirection.LEFT
+                from == CurrentAdminPage.Archive && to == CurrentAdminPage.Create -> PageTransitionDirection.LEFT
+                else -> PageTransitionDirection.RIGHT
+            }
+        }
+        from is CurrentEditorPage && to is CurrentEditorPage -> {
+            when{
+                from == CurrentEditorPage.Category && to == CurrentEditorPage.ObjectList -> PageTransitionDirection.LEFT
 
-                from == CurrentAdminPage.CREATE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.UP
-                from == CurrentAdminPage.CREATE && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
+                from == CurrentEditorPage.ObjectList && to == CurrentEditorPage.Editor -> PageTransitionDirection.LEFT
+                from == CurrentEditorPage.ObjectList && to == CurrentEditorPage.Category -> PageTransitionDirection.RIGHT
 
-                from == CurrentAdminPage.ARCHIVE && to == CurrentAdminPage.CREATE -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.ARCHIVE && to == CurrentAdminPage.MAIN -> PageTransitionDirection.LEFT
-                from == CurrentAdminPage.ARCHIVE && to == CurrentAdminPage.CATEGORY -> PageTransitionDirection.LEFT
+                from == CurrentEditorPage.Editor && to == CurrentEditorPage.ObjectList -> PageTransitionDirection.RIGHT
+                else -> PageTransitionDirection.RIGHT
+            }
+        }
+        from is CurrentArchivePage && to is CurrentArchivePage -> {
+            when{
+                from == CurrentArchivePage.TermList && to == CurrentArchivePage.Term -> PageTransitionDirection.RIGHT
+
+                from == CurrentArchivePage.Term && to == CurrentArchivePage.TermList -> PageTransitionDirection.LEFT
                 else -> PageTransitionDirection.RIGHT
             }
         }
