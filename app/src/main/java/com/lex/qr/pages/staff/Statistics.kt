@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -177,10 +178,10 @@ fun Statistics(
                                         .build(),
                                     contentScale = ContentScale.Crop
                                 )
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .align(Alignment.Center)
                                         .padding(8.dp)
                                         .border(
                                             width = 4.dp,
@@ -189,34 +190,34 @@ fun Statistics(
                                         )
                                         .clickable {
                                             viewModel.getUserStatistics(item)
-                                        },
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 8.dp)
                                 ) {
-                                    Image(
-                                        painter = painter,
-                                        contentDescription = "Аватарка",
-                                        modifier = Modifier
-                                            .padding(top = 12.dp)
-                                            .align(Alignment.CenterHorizontally)
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .border(
-                                                width = 2.dp,
-                                                color = Blue,
-                                                shape = CircleShape
-                                            ),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                    Text(
-                                        textAlign = TextAlign.Center,
-                                        color = Blue,
-                                        text = "${item.firstName} ${item.lastName}",
-                                        fontSize = 18.sp,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 12.dp)
-                                    )
-                                }
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "Аватарка",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .padding(4.dp)
+                                        .size(56.dp)
+                                        .clip(CircleShape)
+                                        .border(
+                                            width = 2.dp,
+                                            color = Blue,
+                                            shape = CircleShape
+                                        ),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Text(
+                                    textAlign = TextAlign.Center,
+                                    color = Blue,
+                                    text = "${item.firstName} ${item.lastName}",
+                                    fontSize = 18.sp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.CenterVertically)
+                                )
+                            }
                             }
                         }
                         Button(

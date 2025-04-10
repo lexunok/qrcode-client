@@ -22,26 +22,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lex.qr.ui.theme.Blue
 import com.lex.qr.utils.LineChart
+import com.lex.qr.viewmodels.GraphZoomLevel
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun LineChart(visits: List<LineChart>) {
+fun LineChart(
+    visits: List<LineChart>,
+    zoomLevel: GraphZoomLevel
+) {
     val maxVisits = visits.maxOfOrNull { it.visitCount }?.toFloat() ?: 1f // Максимальное значение по Y
     val weeksCount = visits.size // Количество точек (недель)
 
     Text(
-        text = "График:",
+        text = when(zoomLevel) {
+            GraphZoomLevel.DAYS -> { "График дней:" }
+            GraphZoomLevel.WEEKS -> { "График недель:" }
+            GraphZoomLevel.MONTHS -> { "График месяцев:" }
+        },
         textAlign = TextAlign.Start,
         fontSize = 20.sp,
         color = Blue,
         modifier = Modifier.fillMaxWidth().padding(top = 20.dp, start = 4.dp, end = 4.dp, bottom = 4.dp),
     )
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        modifier = Modifier.fillMaxWidth().padding(top = 50.dp)
     ) {
         Column(
             modifier = Modifier
-                .width(20.dp)
+                .width(30.dp)
                 .height(320.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {

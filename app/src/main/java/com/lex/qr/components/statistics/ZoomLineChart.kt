@@ -29,22 +29,22 @@ fun ZoomLineChart(
 
                     if (currentScale > 1.1f) {
                         when (zoomLevel) {
-                            GraphZoomLevel.DAYS -> changeZoom(GraphZoomLevel.WEEKS)
-                            GraphZoomLevel.WEEKS -> changeZoom(GraphZoomLevel.MONTHS)
-                            GraphZoomLevel.MONTHS -> {}
+                            GraphZoomLevel.MONTHS -> changeZoom(GraphZoomLevel.WEEKS)
+                            GraphZoomLevel.WEEKS -> changeZoom(GraphZoomLevel.DAYS)
+                            GraphZoomLevel.DAYS -> {}
                         }
                         currentScale = 1f
                     } else if (currentScale < 0.9f) {
                         when (zoomLevel) {
-                            GraphZoomLevel.MONTHS -> changeZoom(GraphZoomLevel.WEEKS)
-                            GraphZoomLevel.WEEKS -> changeZoom(GraphZoomLevel.DAYS)
-                            GraphZoomLevel.DAYS -> {}
+                            GraphZoomLevel.DAYS -> changeZoom(GraphZoomLevel.WEEKS)
+                            GraphZoomLevel.WEEKS -> changeZoom(GraphZoomLevel.MONTHS)
+                            GraphZoomLevel.MONTHS -> {}
                         }
                         currentScale = 1f
                     }
                 }
             }
     ){
-        LineChart(list)
+        LineChart(list, zoomLevel)
     }
 }
