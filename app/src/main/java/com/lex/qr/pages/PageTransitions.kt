@@ -89,9 +89,15 @@ private fun getTransitionDirection(from: Page, to: Page): PageTransitionDirectio
         }
         from is CurrentArchivePage && to is CurrentArchivePage -> {
             when{
-                from == CurrentArchivePage.TermList && to == CurrentArchivePage.Term -> PageTransitionDirection.RIGHT
+                from == CurrentArchivePage.Semesters && to == CurrentArchivePage.Semester -> PageTransitionDirection.RIGHT
 
-                from == CurrentArchivePage.Term && to == CurrentArchivePage.TermList -> PageTransitionDirection.LEFT
+                from == CurrentArchivePage.Semester && to == CurrentArchivePage.Subjects -> PageTransitionDirection.RIGHT
+                from == CurrentArchivePage.Semester && to == CurrentArchivePage.Groups -> PageTransitionDirection.RIGHT
+                from == CurrentArchivePage.Semester && to == CurrentArchivePage.Semesters -> PageTransitionDirection.LEFT
+
+                from == CurrentArchivePage.Subjects && to == CurrentArchivePage.Semester -> PageTransitionDirection.LEFT
+
+                from == CurrentArchivePage.Groups && to == CurrentArchivePage.Semester -> PageTransitionDirection.LEFT
                 else -> PageTransitionDirection.RIGHT
             }
         }

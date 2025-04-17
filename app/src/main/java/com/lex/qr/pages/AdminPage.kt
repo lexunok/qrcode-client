@@ -61,7 +61,7 @@ fun AdminPage(
                         Create(onToast, changeTitle, changeAdminPage)
                     }
                     CurrentAdminPage.Archive -> {
-                        Archive()
+                        Archive(onToast, changeTitle, changeAdminPage)
                     }
                 }
             }
