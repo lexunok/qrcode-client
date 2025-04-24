@@ -240,3 +240,18 @@ data class StatisticRequest(
 
 @Serializable
 data class GroupBar(val title: String, val count: Int)
+
+
+//ARCHIVE
+@Serializable
+data class Semester(
+    val id: String,
+    @SerialName("is_active")
+    val isActive: Boolean,
+    @SerialName("created_at")
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val createdAt: LocalDateTime,
+    @SerialName("deleted_at")
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val deletedAt: LocalDateTime?,
+)

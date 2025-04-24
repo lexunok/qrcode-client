@@ -127,7 +127,7 @@ fun Archive(
                                     Text(
                                         textAlign = TextAlign.Center,
                                         color = color,
-                                        text = item.name,
+                                        text = viewModel.writeSemesterName(item),
                                         fontSize = 18.sp,
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -138,7 +138,7 @@ fun Archive(
                         }
                     }
                     Button(
-                        onClick = { viewModel.archiveActiveSemester() },
+                        onClick = { viewModel.semestersButton() },
                         modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.7f).padding(bottom = 80.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -146,7 +146,10 @@ fun Archive(
                             containerColor = Blue
                         )
                     ) {
-                        Text("Архивировать активный семестр", textAlign = TextAlign.Center, fontSize = 18.sp)
+                        Text(
+                            "${if (uiState.hasActive) "Архивировать активный" else "Открыть новый"} семестр",
+                            textAlign = TextAlign.Center, fontSize = 18.sp
+                        )
                     }
                 }
                 CurrentArchivePage.Semester -> {
@@ -169,7 +172,7 @@ fun Archive(
                                     .verticalScroll(scrollState)
                             ) {
                                 Text(
-                                    text = semester.name,
+                                    text = viewModel.writeSemesterName(semester),
                                     textAlign = TextAlign.Start,
                                     fontSize = 20.sp,
                                     color = Blue,

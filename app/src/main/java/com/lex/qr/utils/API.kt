@@ -349,4 +349,32 @@ class API {
             }
         }
     }
+    ////////////
+    //ARCHIVE
+    ////////////
+    suspend fun getGroupsInArchive(id: String): Result<List<Group>>{
+        return handleApiCall {
+            client.get("$url/admin/group/archive/$id")
+        }
+    }
+    suspend fun getSubjectsInArchive(id: String): Result<List<Subject>>{
+        return handleApiCall {
+            client.get("$url/admin/subject/archive/$id")
+        }
+    }
+    suspend fun getSemesters(): Result<List<Semester>>{
+        return handleApiCall {
+            client.get("$url/admin/semester")
+        }
+    }
+    suspend fun openSemester(): Result<Semester>{
+        return handleApiCall {
+            client.post("$url/admin/semester")
+        }
+    }
+    suspend fun closeSemester(): Result<Semester>{
+        return handleApiCall {
+            client.delete("$url/admin/semester")
+        }
+    }
 }
