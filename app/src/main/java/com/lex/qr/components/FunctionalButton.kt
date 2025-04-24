@@ -25,6 +25,7 @@ import com.lex.qr.ui.theme.Blue
 @Composable
 fun FunctionalButton(
     text: String,
+    fillFraction: Float = 1f,
     onClick: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -37,8 +38,8 @@ fun FunctionalButton(
     Box(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth()
             .scale(scale)
+            .fillMaxWidth(fillFraction)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {

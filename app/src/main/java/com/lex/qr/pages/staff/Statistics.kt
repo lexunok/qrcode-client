@@ -55,9 +55,9 @@ import com.lex.qr.components.statistics.GroupStatistics
 import com.lex.qr.components.LoadingColumn
 import com.lex.qr.components.SelectDates
 import com.lex.qr.components.ShowSubjectList
+import com.lex.qr.components.statistics.LineChart
 import com.lex.qr.components.statistics.SubjectHistChart
 import com.lex.qr.components.statistics.UserStatistics
-import com.lex.qr.components.statistics.ZoomLineChart
 import com.lex.qr.pages.Page
 import com.lex.qr.pages.getPageTransitionSpec
 import com.lex.qr.ui.theme.Blue
@@ -274,10 +274,9 @@ fun Statistics(
                                 Spacer(Modifier.height(40.dp))
 
                                 if (uiState.changedLineCharts.size > 1) {
-                                    ZoomLineChart(
-                                        uiState.zoomLevel,
-                                        uiState.changedLineCharts
-                                    ) { zoomSize -> viewModel.changeZoom(zoomSize) }
+                                    LineChart(uiState.changedLineCharts, uiState.zoomLevel){
+                                        zoomLevel -> viewModel.changeZoom(zoomLevel)
+                                    }
                                     Spacer(Modifier.height(40.dp))
                                 }
 
@@ -333,10 +332,9 @@ fun Statistics(
                                 Spacer(Modifier.height(40.dp))
 
                                 if (uiState.lineCharts.size > 1) {
-                                    ZoomLineChart(
-                                        uiState.zoomLevel,
-                                        uiState.changedLineCharts
-                                    ) { zoomSize -> viewModel.changeZoom(zoomSize) }
+                                    LineChart(uiState.changedLineCharts, uiState.zoomLevel){
+                                        zoomLevel -> viewModel.changeZoom(zoomLevel)
+                                    }
                                     Spacer(Modifier.height(40.dp))
                                 }
 
