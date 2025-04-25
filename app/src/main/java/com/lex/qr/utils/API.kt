@@ -357,9 +357,19 @@ class API {
             client.get("$url/admin/group/archive/$id")
         }
     }
+    suspend fun restoreGroup(id: String): Result<Group>{
+        return handleApiCall {
+            client.put("$url/admin/group/restore/$id")
+        }
+    }
     suspend fun getSubjectsInArchive(id: String): Result<List<Subject>>{
         return handleApiCall {
             client.get("$url/admin/subject/archive/$id")
+        }
+    }
+    suspend fun restoreSubject(id: String): Result<Subject>{
+        return handleApiCall {
+            client.put("$url/admin/subject/restore/$id")
         }
     }
     suspend fun getSemesters(): Result<List<Semester>>{
