@@ -124,6 +124,34 @@ class API {
             Result.failure(e)
         }
     }
+    suspend fun createSchedule(fileContent: String): Result<Unit> {
+        return try {
+            val response = client.post("$url/schedule/save") {
+                headers {
+                    append(HttpHeaders.ContentType, "multipart/form-data")
+                }
+                setBody(
+                    MultiPartFormDataContent(
+                        formData {
+                            append("file", fileContent.toByteArray(), Headers.build {
+                                append(HttpHeaders.ContentType, "text/csv")
+                                append(HttpHeaders.ContentDisposition, "filename=\"schedule.csv\"")
+                            })
+                        }
+                    )
+                )
+            }
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            }
+            else {
+                val error = response.body<Error>()
+                Result.failure(Exception(error.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     suspend fun createGroup(request: CreateGroupRequest): Result<Group> {
         return handleApiCall {
             client.post("$url/admin/group") {
