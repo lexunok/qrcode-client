@@ -2,6 +2,7 @@ package com.lex.qr.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.lex.qr.utils.API
 import com.lex.qr.utils.Claims
 import com.lex.qr.utils.GeolocationClient
@@ -9,6 +10,8 @@ import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.utils.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,6 +86,16 @@ class MainViewModel @Inject constructor(
                         _user.value = it
                         api.jwtToken = it.token
                         _isLoggedIn.value = true
+
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (!task.isSuccessful) {
+                                return@addOnCompleteListener
+                            }
+                            val token = task.result
+                            CoroutineScope(Dispatchers.IO).launch {
+                                api.updateFcm(token)
+                            }
+                        }
                     },
                     onFailure = {
                         _isLoggedIn.value = false

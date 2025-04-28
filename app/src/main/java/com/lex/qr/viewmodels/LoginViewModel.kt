@@ -8,6 +8,7 @@ import com.lex.qr.utils.API
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.lex.qr.pages.Page
 import com.lex.qr.utils.LoginRequest
 import com.lex.qr.utils.NewPasswordRequest
@@ -15,6 +16,8 @@ import com.lex.qr.utils.RecoveryPassword
 import com.lex.qr.utils.UiEvent
 import com.lex.qr.utils.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -75,6 +78,16 @@ class LoginViewModel @Inject constructor(private val api: API, private val userP
                         userPrefs.saveUser(_uiState.value.email, _uiState.value.password)
                         api.jwtToken = it.token
                         _uiEvent.send(UiEvent.ChangeUser(it))
+
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (!task.isSuccessful) {
+                                return@addOnCompleteListener
+                            }
+                            val token = task.result
+                            CoroutineScope(Dispatchers.IO).launch {
+                                api.updateFcm(token)
+                            }
+                        }
                     },
                     onFailure = {
                         _uiEvent.send(UiEvent.ChangeUser(null))

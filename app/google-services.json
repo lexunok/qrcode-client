@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "595169423697",
+    "project_id": "qrcode-dcbc2",
+    "storage_bucket": "qrcode-dcbc2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595169423697:android:e8469f5ad63b226f31e370",
+        "android_client_info": {
+          "package_name": "com.lex.qr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKSINUrEPcXyeLs3OroWzOffCD9pmQpeU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

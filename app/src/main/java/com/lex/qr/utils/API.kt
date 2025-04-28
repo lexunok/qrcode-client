@@ -69,6 +69,11 @@ class API {
         }
     }
 
+    suspend fun updateFcm(token: String): Result<String?> {
+        return handleApiCall {
+            client.post("$url/profile/fcm/$token")
+        }
+    }
     suspend fun login(request: LoginRequest): Result<Claims> {
         return handleApiCall {
             client.post("$url/auth/login") {

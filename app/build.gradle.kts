@@ -6,6 +6,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     kotlin("plugin.serialization")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -71,6 +72,7 @@ android {
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("io.ktor:ktor-client-core:2.3.0")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.0")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.0")
@@ -84,6 +86,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

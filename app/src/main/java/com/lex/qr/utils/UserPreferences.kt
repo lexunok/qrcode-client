@@ -28,9 +28,7 @@ class UserPreferences(context: Context) {
         )
     }
 
-    fun isLoggedIn(): Boolean {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-    }
+    fun isLoggedIn() = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
     fun clearUser() {
         prefs.edit { clear() }
