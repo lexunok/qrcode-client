@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class ObjectType{
-    SUBJECT, GROUP, USER, USERS, NULL
+    SUBJECT, GROUP, USER, USERS, SCHEDULE, NULL
 }
 
 data class CreateState(
@@ -77,7 +77,7 @@ class CreateViewModel @Inject constructor(private val api: API) : ViewModel() {
                     )
                     _uiState.value = _uiState.value.copy(selectedOption = objectType)
                 }
-                ObjectType.USERS -> {
+                ObjectType.USERS, ObjectType.SCHEDULE -> {
                     _uiState.value = _uiState.value.copy(
                         fileContent = null,
                         errorMessage = ""
@@ -189,6 +189,25 @@ class CreateViewModel @Inject constructor(private val api: API) : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             val response = api.createSubject(CreateSubjectRequest(_uiState.value.name))
+            response.fold(
+                onSuccess = { _uiEvent.send(UiEvent.ShowToast("Успешно")) },
+                onFailure = { error ->
+                    error.message?.let { msg ->
+                        _uiEvent.send(UiEvent.ShowToast(msg))
+                    }
+                }
+            )
+            _uiState.value = _uiState.value.copy(isLoading = false)
+            _uiState.value = _uiState.value.copy(selectedOption = ObjectType.NULL)
+            _uiEvent.send(UiEvent.ChangePage(CurrentAdminPage.Main))
+            _uiEvent.send(UiEvent.ChangeTitle("Главная"))
+        }
+    }
+
+    fun createSchedule(){
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val response = api.createSchedule(_uiState.value.fileContent!!)
             response.fold(
                 onSuccess = { _uiEvent.send(UiEvent.ShowToast("Успешно")) },
                 onFailure = { error ->

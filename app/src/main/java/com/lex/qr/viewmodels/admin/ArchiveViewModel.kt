@@ -105,6 +105,9 @@ class ArchiveViewModel @Inject constructor(private val api: API) : ViewModel(){
                     _uiState.value = _uiState.value.copy(semesters = it)
                     if (it.find { s -> s.isActive } != null)
                         _uiState.value = _uiState.value.copy(hasActive = true)
+                    else {
+                        _uiState.value = _uiState.value.copy(hasActive = false)
+                    }
                 },
                 onFailure = { error ->
                     error.message?.let { msg ->
@@ -134,7 +137,6 @@ class ArchiveViewModel @Inject constructor(private val api: API) : ViewModel(){
                 val response = api.closeSemester()
                 response.fold(
                     onSuccess = {
-                        _uiState.value = _uiState.value.copy(hasActive = false)
                         _uiEvent.send(UiEvent.ShowToast("Активный семестр в архиве"))
                     },
                     onFailure = { error ->
@@ -147,7 +149,6 @@ class ArchiveViewModel @Inject constructor(private val api: API) : ViewModel(){
                 val response = api.openSemester()
                 response.fold(
                     onSuccess = {
-                        _uiState.value = _uiState.value.copy(hasActive = true)
                         _uiEvent.send(UiEvent.ShowToast("Новый семестр открыт"))
                     },
                     onFailure = { error ->
@@ -161,6 +162,11 @@ class ArchiveViewModel @Inject constructor(private val api: API) : ViewModel(){
             response.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(semesters = it)
+                    if (it.find { s -> s.isActive } != null)
+                        _uiState.value = _uiState.value.copy(hasActive = true)
+                    else {
+                        _uiState.value = _uiState.value.copy(hasActive = false)
+                    }
                 },
                 onFailure = { error ->
                     error.message?.let { msg ->

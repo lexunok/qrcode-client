@@ -86,6 +86,10 @@ fun Create(
                 uiState.selectedOption == ObjectType.SUBJECT,
                 "Предмет"
             ) { viewModel.changeSelectedOption(ObjectType.SUBJECT) }
+            RadioSelect(
+                uiState.selectedOption == ObjectType.SCHEDULE,
+                "Расписание"
+            ) { viewModel.changeSelectedOption(ObjectType.SCHEDULE) }
             when (uiState.selectedOption) {
                 ObjectType.USER -> {
                     CreatePageText("Введите почту")
@@ -129,7 +133,7 @@ fun Create(
                         {viewModel.onBackPressed()}
                     )
                 }
-                ObjectType.USERS -> {
+                ObjectType.USERS, ObjectType.SCHEDULE -> {
                     val context = LocalContext.current
                     val launcher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.GetContent(),
@@ -168,6 +172,7 @@ fun Create(
                     ObjectType.GROUP -> viewModel.createGroup()
                     ObjectType.SUBJECT -> viewModel.createSubject()
                     ObjectType.USERS -> viewModel.createUsers()
+                    ObjectType.SCHEDULE -> viewModel.createSchedule()
                     ObjectType.NULL -> {}
                 }
             }
